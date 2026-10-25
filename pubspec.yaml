@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  collection: ^1.19.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -38,7 +39,6 @@ dependencies:
   path_provider: any
   media_kit: any
   media_kit_video: any
-  media_kit_libs_windows_video: any
   flutter_riverpod: ^2.5.1
   riverpod_annotation: ^2.3.5
   talker_flutter: ^4.1.2
@@ -50,6 +50,7 @@ dependencies:
   http: ^1.6.0
   discord_rpc: ^0.0.2
   flutter_colorpicker: ^1.1.0
+  media_kit_libs_linux: ^1.2.1
 
 dev_dependencies:
   flutter_test:

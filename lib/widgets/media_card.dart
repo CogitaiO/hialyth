@@ -39,6 +39,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
         const PopupMenuItem(value: 'delete', child: Text("Delete from library", style: TextStyle(color: Colors.redAccent))),
       ],
     ).then((value) {
+      if (!context.mounted) return;
       if (value == 'delete'){
         _confirmDelete(context, ref);
       } else if (value == 'edit') {

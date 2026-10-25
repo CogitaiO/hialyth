@@ -1,15 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
+import '../theme/app_theme_extension.dart';
 
 class CustomTitleBar extends StatefulWidget {
-  final Color backgroundColor;
+  final Color? backgroundColor;
   final Widget? leading; // Кастомная кнопка слева (например, Назад)
   final Widget? title;   // Кастомный текст/виджет по центру
 
   const CustomTitleBar({
     super.key,
-    this.backgroundColor = const Color(0xFF151515),
+    this.backgroundColor,
     this.leading,
     this.title,
   });
@@ -65,10 +66,11 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
   Widget build(BuildContext context) {
     if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) return const SizedBox.shrink();
     if (_isPiP) return const SizedBox.shrink(); // В PiP шапка не нужна вообще
+    final tokens = context.appTheme;
 
     return Container(
       height: 40, // Сделали чуть выше для удобства хвата
-      color: widget.backgroundColor,
+      color: widget.backgroundColor ?? tokens.titleBarSurface,
       child: Row(
         children:[
           // === ЛЕВАЯ ЧАСТЬ (Логотип или кнопка Назад) ===
@@ -84,9 +86,9 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
           if (widget.title != null)
             widget.title!
           else
-            const Text(
+            Text(
               'Nekaido', 
-              style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1),
+              style: TextStyle(color: tokens.textSecondary, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1),
             ),
 
           // === ЦЕНТР: Зона перетаскивания ===

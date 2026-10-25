@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -221,12 +220,8 @@ class _MoreMenu extends ConsumerWidget {
            if (value == 'edit') AnimeDialogs.showEditDialog(context, ref, anime, accentColor);
            if (value == 'stats') AnimeDialogs.showAnimeStatsDialog(context, anime, accentColor);
            if (value == 'mark_all') {
-             for (String path in anime.sortedEpisodes) {
-               if (!anime.watchedEpisodes.contains(path)) {
-                 await ref.read(animeRepoProvider).markEpisodeAsWatched(anime.id, path);
-               }
-             }
-          }
+              await ref.read(animeRepoProvider).markAllEpisodesWatched(anime.id);
+           }
         },
         child: _HoverButton(icon: Icons.more_horiz, tooltip: "Опции", accentColor: accentColor),
       ),

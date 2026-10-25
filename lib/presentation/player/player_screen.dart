@@ -27,7 +27,6 @@ class PlayerScreen extends ConsumerStatefulWidget {
 
 class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   late final VideoController _videoController;
-  DateTime? _lastTap;
   late final AppLifecycleListener _lifecycleListener;
   final FocusNode _playerFocusNode = FocusNode();
   int _seekAccumulator = 0;
@@ -72,6 +71,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   void dispose() {
     talker.info('PlayerScreen: Closing screen (dispose)');
+    _lifecycleListener.dispose();
     try {
       talker.info('PlayerScreen: VideoController destroyed successfully');
     } catch (e, st) {

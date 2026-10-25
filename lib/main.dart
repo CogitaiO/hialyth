@@ -15,6 +15,7 @@ import 'providers/repositories_provider.dart';
 import 'presentation/library_screen.dart';
 import 'providers/library_provider.dart';
 import 'providers/settings_provider.dart';
+import 'theme/app_theme_extension.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,11 +99,11 @@ class MyApp extends ConsumerWidget {
           selectionColor: accentColor.withValues(alpha: 0.3),
           selectionHandleColor: accentColor,
         ),
+        extensions: const [AppThemeExtension.dark()],
       ),
       home: const LibraryScreen(), 
     );
   }
 }
-
 
 

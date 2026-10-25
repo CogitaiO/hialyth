@@ -33,7 +33,7 @@ final animeColorProvider = FutureProvider.family<Color, Anime>((ref, anime) asyn
                    ?? palette.darkVibrantColor?.color 
                    ?? Colors.redAccent;
 
-    anime.ambientColorValue = calcColor.value;
+    anime.ambientColorValue = calcColor.toARGB32();
     await ref.read(animeRepoProvider).saveAnime(anime);
 
     return calcColor;

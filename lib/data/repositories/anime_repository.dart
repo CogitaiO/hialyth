@@ -66,6 +66,28 @@ class AnimeRepository {
     }
   }
 
+  Future<void> markAllEpisodesWatched(Id id) async {
+    try {
+      await db.writeTxn(() async {
+        final anime = await db.animes.get(id);
+        if (anime == null) return;
+
+        final unwatchedEpisodes = anime.sortedEpisodes
+            .where((path) => !anime.watchedEpisodes.contains(path));
+        if (unwatchedEpisodes.isEmpty) return;
+
+        anime.watchedEpisodes = {
+          ...anime.watchedEpisodes,
+          ...unwatchedEpisodes,
+        }.toList();
+        await db.animes.put(anime);
+        talker.info('Все эпизоды просмотрены в "${anime.title}"');
+      });
+    } catch (e, st) {
+      talker.handle(e, st, 'Ошибка при отметке всех эпизодов просмотренными');
+    }
+  }
+
   Future<Anime?> getAnimeByTitle(String title) async {
     try {
       return await db.animes.filter().titleEqualTo(title).findFirst();
@@ -132,7 +154,7 @@ class AnimeRepository {
 
         anime.notes = [...anime.notes, note];
         await db.animes.put(anime);
-        talker.info('Заметка добавлена к "${anime.title}" на ${seconds}с.');
+        talker.info('Заметка добавлена к "${anime.title}" на $seconds с.');
       });
     } catch (e, st) {
       talker.handle(e, st, 'Ошибка сохранения заметки');

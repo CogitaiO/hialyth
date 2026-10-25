@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/anime.dart';
 import '../../data/repositories/anime_repository.dart';
 import '../../data/services/aniskip_service.dart';
+import '../../data/services/anime_filename_parser.dart';
 import '../../providers/repositories_provider.dart';
 import 'player_state.dart';
 import '../../core/logger.dart'; 
@@ -264,23 +265,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
             // Вытаскиваем только имя файла
             final fileName = path.split(Platform.pathSeparator).last;
             
-            // Умная регулярка: ищет "[01]", "- 01", "Ep 01"
-            int? epNumber;
-            final regex = RegExp(r'(?:\s|-|\[|[Ee]p\s*)(\d{1,4})(?:v\d+)?(?:\s|-|\]|\.)');
-            for (final match in regex.allMatches(fileName)) {
-              final val = int.tryParse(match.group(1)!);
-              // Игнорируем разрешения видео (1080, 720, 480) и года (2023)
-              if (val != null && val != 1080 && val != 720 && val != 480 && val < 2000) {
-                epNumber = val;
-                break;
-              }
-            }
-
-            // Запасной план: ищем последние цифры перед .mkv (для формата "Наруто 01.mkv")
-            if (epNumber == null) {
-              final fallback = RegExp(r'(\d+)(?:v\d+)?\.\w+$').firstMatch(fileName);
-              if (fallback != null) epNumber = int.tryParse(fallback.group(1)!);
-            }
+            final epNumber = AnimeFilenameParser.parseEpisodeNumber(fileName);
 
             // Проверяем, смогли ли найти номер
             if (epNumber != null) {
