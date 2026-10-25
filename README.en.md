@@ -1,4 +1,4 @@
-# Nekaido
+# Hialyth
 
 **Language:** English · [Русский](README.md)
 
