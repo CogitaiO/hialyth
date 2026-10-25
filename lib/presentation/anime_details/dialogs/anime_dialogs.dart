@@ -10,9 +10,13 @@ import '../../../../providers/repositories_provider.dart';
 class AnimeDialogs {
   static void openFolderInOs(String? path) {
      if (path == null) return;
-     if (Platform.isWindows) Process.run('explorer', [path]);
-     else if (Platform.isMacOS) Process.run('open', [path]);
-     else if (Platform.isLinux) Process.run('xdg-open', [path]);
+      if (Platform.isWindows) {
+        Process.run('explorer', [path]);
+      } else if (Platform.isMacOS) {
+        Process.run('open', [path]);
+      } else if (Platform.isLinux) {
+        Process.run('xdg-open', [path]);
+      }
   }
 
   //Диалог статистики

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate'; 
 import 'package:nekaido_pre/data/repositories/anime_repository.dart';
+import 'package:nekaido_pre/data/services/anime_filename_parser.dart';
 import 'package:nekaido_pre/data/services/shikimori_service.dart';
 import 'package:nekaido_pre/domain/anime.dart';
 import '../../core/logger.dart'; 
@@ -10,12 +11,6 @@ import '../../core/logger.dart';
 class FileDiscoveryService {
   final AnimeRepository _repository;
   FileDiscoveryService(this._repository);
-
-  // Регулярки теперь static, чтобы Изолят имел к ним доступ
-  static final _extensionRegex = RegExp(r'\.(mkv|mp4|avi)$', caseSensitive: false);
-  static final _bracketsRegex = RegExp(r'\[.*?\]|\(.*?\)');
-  static final _spacesRegex = RegExp(r'\s+');
-  static final _episodeNumRegex = RegExp(r'\s+\d+(v\d+)?$');
 
   Future<void> scanAndGroupFiles(String folderPath) async {
     try {
@@ -71,7 +66,7 @@ class FileDiscoveryService {
     for (final entity in directory.listSync(recursive: true, followLinks: false)) {
       if (entity is File && _isVideoFile(entity.path)) {
         final fileName = entity.uri.pathSegments.last;
-        final title = _parseAnimeTitle(fileName);
+        final title = AnimeFilenameParser.parseTitle(fileName);
         
         grouped.putIfAbsent(title, () =>[]).add(entity.path);
       }
@@ -80,17 +75,4 @@ class FileDiscoveryService {
   }
 
   static bool _isVideoFile(String path) => path.endsWith('.mp4') || path.endsWith('.mkv') || path.endsWith('.avi');
-
-  static String _parseAnimeTitle(String fileName) {
-    String title = fileName.replaceAll(_extensionRegex, '');
-    title = title.replaceAll(RegExp(r'\d{3,4}p|x264|x265|h264|h265|hevc|hi10p', caseSensitive: false), '');
-    title = title.replaceAll(RegExp(r'[_.]'), ' ');
-    title = title.replaceAll(_bracketsRegex, '');
-    title = title.replaceAll(_spacesRegex, ' ').trim();
-    title = title.replaceAll(RegExp(r'\s+(?:ep|episode|серия)?\s?\d+(?:\s?v\d+)?$', caseSensitive: false), '');
-    
-    if (title.endsWith(' -')) title = title.substring(0, title.length - 2);
-    
-    return title.trim();
-  }
 }

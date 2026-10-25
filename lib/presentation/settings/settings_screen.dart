@@ -7,6 +7,8 @@ import '../../providers/library_provider.dart';
 import '../../providers/repositories_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../widgets/custom_title_bar.dart';
+import '../../theme/app_icons.dart';
+import '../../theme/app_theme_extension.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget{
   const SettingsScreen({super.key});
@@ -18,29 +20,30 @@ class SettingsScreen extends ConsumerStatefulWidget{
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   int _selectedIndex = 0;
 
- @override
+  @override
   Widget build(BuildContext context) {
     final accentColor = Color(ref.watch(settingsProvider).accentColorValue);
+    final tokens = context.appTheme;
 
     return Escapable(
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F0F0F),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         // Убрали AppBar! Теперь используем Column:
         body: Column(
           children:[
             // НАШ КАСТОМНЫЙ ТАЙТЛ БАР
             CustomTitleBar(
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                icon: Icon(AppIcons.back, color: tokens.textPrimary),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: const Text("Settings", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              title: Text("Settings", style: TextStyle(color: tokens.textPrimary, fontWeight: FontWeight.bold)),
             ),
             
             // ОСНОВНОЙ КОНТЕНТ (обернут в Expanded, чтобы занять остаток экрана)
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children:[
@@ -48,14 +51,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       width: 250,
                       child: Column(
                         children:[
-                          _MenuTab(title: "Appearance", icon: Icons.palette_rounded, index: 0, currentIndex: _selectedIndex, accentColor: accentColor, onTap: () => setState(() => _selectedIndex = 0)),
-                          _MenuTab(title: "Player", icon: Icons.play_circle_rounded, index: 1, currentIndex: _selectedIndex, accentColor: accentColor, onTap: () => setState(() => _selectedIndex = 1)),
-                          _MenuTab(title: "Library", icon: Icons.folder_copy_rounded, index: 2, currentIndex: _selectedIndex, accentColor: accentColor, onTap: () => setState(() => _selectedIndex = 2)),
-                          _MenuTab(title: "Advanced", icon: Icons.settings_applications_rounded, index: 3, currentIndex: _selectedIndex, accentColor: accentColor, onTap: () => setState(() => _selectedIndex = 3)),
+                          _MenuTab(title: "Appearance", icon: AppIcons.appearance, index: 0, currentIndex: _selectedIndex, accentColor: accentColor, onTap: () => setState(() => _selectedIndex = 0)),
+                          _MenuTab(title: "Player", icon: AppIcons.playback, index: 1, currentIndex: _selectedIndex, accentColor: accentColor, onTap: () => setState(() => _selectedIndex = 1)),
+                          _MenuTab(title: "Library", icon: AppIcons.library, index: 2, currentIndex: _selectedIndex, accentColor: accentColor, onTap: () => setState(() => _selectedIndex = 2)),
+                          _MenuTab(title: "Advanced", icon: AppIcons.advancedSettings, index: 3, currentIndex: _selectedIndex, accentColor: accentColor, onTap: () => setState(() => _selectedIndex = 3)),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 32),
+                    const SizedBox(width: AppSpacing.xl),
                     Expanded(
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
@@ -98,6 +101,7 @@ class _AppearanceSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final tokens = context.appTheme;
     final currentColor = Color(settings.accentColorValue);
 
     final List<Color> presetColors = [
@@ -112,29 +116,29 @@ class _AppearanceSettings extends ConsumerWidget {
       _SectionHeader(title: "Theme & Colors"),
       _SettingsCard(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children:[
-              const Text("App Accent Color", style: TextStyle(color: Colors.white, fontSize: 16)),
-              const SizedBox(height: 16),
+              Text("App Accent Color", style: TextStyle(color: tokens.textPrimary, fontSize: 16)),
+              const SizedBox(height: AppSpacing.md),
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
                 children:[
                   ...presetColors.map((c) {
                     final isSelected = settings.accentColorValue == c.toARGB32();
                     return GestureDetector(
                       onTap: () => notifier.updateAccentColor(c),
                       child: Container(
-                        margin: const EdgeInsets.only(right: 12),
+                        margin: const EdgeInsets.only(right: AppSpacing.sm),
                         width: 40, height: 40,
                         decoration: BoxDecoration(
                           color: c, shape: BoxShape.circle,
-                          border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
+                          border: isSelected ? Border.all(color: tokens.textPrimary, width: 3) : null,
                           boxShadow: isSelected ?[BoxShadow(color: c.withValues(alpha: 0.5), blurRadius: 10)] :[],
                         ),
-                        child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
+                        child: isSelected ? Icon(AppIcons.selected, color: tokens.textPrimary, size: 20) : null,
                       ),
                     );
                   }),
@@ -151,7 +155,7 @@ class _AppearanceSettings extends ConsumerWidget {
                         ),
                         border: Border.all(color: Colors.white54, width: 2),
                       ),
-                      child: const Icon(Icons.colorize, color: Colors.white, size: 20),
+                      child: Icon(AppIcons.colorPicker, color: tokens.textPrimary, size: 20),
                     ),
                   )
                 ],
@@ -160,13 +164,13 @@ class _AppearanceSettings extends ConsumerWidget {
           ),
         ),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: AppSpacing.lg),
       _SectionHeader(title: "Integrations"),
       _SettingsCard(
         child: SwitchListTile(
           activeThumbColor: accentColor,
-          title: const Text("Discord Rich Presence", style: TextStyle(color: Colors.white)),
-          subtitle: const Text("Show the anime you are watching in your Discord status", style: TextStyle(color: Colors.white38)),
+          title: Text("Discord Rich Presence", style: TextStyle(color: tokens.textPrimary)),
+          subtitle: Text("Show the anime you are watching in your Discord status", style: TextStyle(color: tokens.textSubtle)),
           value: settings.discordRpcEnabled,
           onChanged: (val) => notifier.toggleDiscordRpc(val),
         ),
@@ -176,12 +180,13 @@ class _AppearanceSettings extends ConsumerWidget {
 
   void _showColorPickerDialog(BuildContext context, Color initialColor, AppSettingsNotifier notifier) {
     Color tempColor = initialColor;
+    final tokens = context.appTheme;
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text('Pick Custom Color', style: TextStyle(color: Colors.white)),
+        backgroundColor: tokens.cardSurface,
+        title: Text('Pick Custom Color', style: TextStyle(color: tokens.textPrimary)),
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: tempColor,
@@ -198,12 +203,12 @@ class _AppearanceSettings extends ConsumerWidget {
         ),
         actions:[
           TextButton(
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: Text('Cancel', style: TextStyle(color: tokens.textMuted)),
             onPressed: () => Navigator.pop(ctx),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: initialColor),
-            child: const Text('Apply', style: TextStyle(color: Colors.white)),
+              child: Text('Apply', style: TextStyle(color: tokens.textPrimary)),
             onPressed: () {
               notifier.updateAccentColor(tempColor);
               Navigator.pop(ctx);
@@ -223,6 +228,7 @@ class _PlayerSettings extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final tokens = context.appTheme;
 
     return ListView(
       children: [
@@ -232,27 +238,27 @@ class _PlayerSettings extends ConsumerWidget {
             children: [
               SwitchListTile(
                 activeThumbColor: accentColor,
-                title: const Text("Auto-skip Openings/Endings", style: TextStyle(color: Colors.white)),
-                subtitle: const Text("Automatically skip if AniSkip finds timestamps", style: TextStyle(color: Colors.white38)),
+                title: Text("Auto-skip Openings/Endings", style: TextStyle(color: tokens.textPrimary)),
+                subtitle: Text("Automatically skip if AniSkip finds timestamps", style: TextStyle(color: tokens.textSubtle)),
                 value: settings.autoSkipEnabled,
                 onChanged: (val) => notifier.toggleAutoSkip(val),
               ),
             ],
           )
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.lg),
         _SectionHeader(title: "Languages (Priority)"),
         _SettingsCard(
           child: Column(
             children: [
               ListTile(
-                title: const Text("Audio Language", style: TextStyle(color: Colors.white)),
+                title: Text("Audio Language", style: TextStyle(color: tokens.textPrimary)),
                 trailing: DropdownButton<String>(
-                  dropdownColor: const Color(0xFF1A1A1A),
+                  dropdownColor: tokens.cardSurface,
                   value: settings.audioLanguage.startsWith('jpn') ? 'jpn' : 'eng',
                   items: [
-                    DropdownMenuItem(value: 'jpn', child: Text("Japanese (Original)", style: TextStyle(color: Colors.white))),
-                    DropdownMenuItem(value: 'eng', child: Text("English (Dub)", style: TextStyle(color: Colors.white))),
+                    DropdownMenuItem(value: 'jpn', child: Text("Japanese (Original)", style: TextStyle(color: tokens.textPrimary))),
+                    DropdownMenuItem(value: 'eng', child: Text("English (Dub)", style: TextStyle(color: tokens.textPrimary))),
                   ],
                   onChanged: (val) {
                     if (val == 'jpn') notifier.updateAudioLang('jpn,jp,eng,en,rus,ru');
@@ -260,15 +266,15 @@ class _PlayerSettings extends ConsumerWidget {
                   },
                 ),
               ),
-              const Divider(color: Colors.white12, height: 1),
+              Divider(color: tokens.borderSubtle, height: 1),
               ListTile(
-                title: const Text("Subtitle Language", style: TextStyle(color: Colors.white)),
+                title: Text("Subtitle Language", style: TextStyle(color: tokens.textPrimary)),
                 trailing: DropdownButton<String>(
-                  dropdownColor: const Color(0xFF1A1A1A),
+                  dropdownColor: tokens.cardSurface,
                   value: settings.subLanguage.startsWith('eng') ? 'eng' : 'rus',
-                  items: const[
-                    DropdownMenuItem(value: 'eng', child: Text("English", style: TextStyle(color: Colors.white))),
-                    DropdownMenuItem(value: 'rus', child: Text("Russian", style: TextStyle(color: Colors.white)))
+                items: [
+                    DropdownMenuItem(value: 'eng', child: Text("English", style: TextStyle(color: tokens.textPrimary))),
+                    DropdownMenuItem(value: 'rus', child: Text("Russian", style: TextStyle(color: tokens.textPrimary)))
                   ],
                   onChanged: (val) {
                     if (val == 'eng') notifier.updateSubLang('eng,en,rus,ru');
@@ -279,20 +285,20 @@ class _PlayerSettings extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.lg),
         _SectionHeader(title: "Video Decoder"),
         _SettingsCard(
           child: ListTile(
-            title: const Text("Hardware Acceleration", style: TextStyle(color: Colors.white)),
-            subtitle: const Text("Change this if video is lagging or shows a black screen", style: TextStyle(color: Colors.white38)),
+            title: Text("Hardware Acceleration", style: TextStyle(color: tokens.textPrimary)),
+            subtitle: Text("Change this if video is lagging or shows a black screen", style: TextStyle(color: tokens.textSubtle)),
             trailing: DropdownButton<String>(
-              dropdownColor: const Color(0xFF1A1A1A),
+              dropdownColor: tokens.cardSurface,
               value: settings.hwdec,
-              items: const[
-                DropdownMenuItem(value: 'auto', child: Text("Auto", style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'auto-safe', child: Text("Auto (Safe)", style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'd3d11va', child: Text("Windows (d3d11va)", style: TextStyle(color: Colors.white))),
-                DropdownMenuItem(value: 'no', child: Text("Disabled (CPU)", style: TextStyle(color: Colors.redAccent))),
+              items: [
+                DropdownMenuItem(value: 'auto', child: Text("Auto", style: TextStyle(color: tokens.textPrimary))),
+                DropdownMenuItem(value: 'auto-safe', child: Text("Auto (Safe)", style: TextStyle(color: tokens.textPrimary))),
+                DropdownMenuItem(value: 'd3d11va', child: Text("Windows (d3d11va)", style: TextStyle(color: tokens.textPrimary))),
+                DropdownMenuItem(value: 'no', child: Text("Disabled (CPU)", style: TextStyle(color: tokens.destructive))),
               ],
               onChanged: (val) {
                 if (val != null) notifier.updateHwdec(val);
@@ -317,23 +323,24 @@ class _MenuTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context){
+    final tokens = context.appTheme;
     final isSelected = index == currentIndex;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadii.lg),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
         decoration: BoxDecoration(
           color: isSelected ? accentColor.withValues(alpha: 0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? accentColor : Colors.white54, size: 22),
-            const SizedBox(width: 16),
-            Text(title, style: TextStyle(color: isSelected ? accentColor : Colors.white70, fontSize: 16, fontWeight: isSelected ? 
+            Icon(icon, color: isSelected ? accentColor : tokens.textMuted, size: 22),
+            const SizedBox(width: AppSpacing.md),
+            Text(title, style: TextStyle(color: isSelected ? accentColor : tokens.textSecondary, fontSize: 16, fontWeight: isSelected ?
                                         FontWeight.bold : FontWeight.w500)),
           ],
         ),
@@ -349,6 +356,7 @@ class _LibrarySettings extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final folders = ref.watch(savedFoldersProvider);
+    final tokens = context.appTheme;
     return ListView(
       children: [
         _SectionHeader(title: "Scanned Folders"),
@@ -357,22 +365,22 @@ class _LibrarySettings extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (folders.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Center(child: Text("No folders added yet", style: TextStyle(color: Colors.white38))),
+                Padding(
+                   padding: const EdgeInsets.all(AppSpacing.lg),
+                   child: Center(child: Text("No folders added yet", style: TextStyle(color: tokens.textSubtle))),
                 )
               else 
                 ...folders.map((folder) => ListTile(
-                  leading: const Icon(Icons.folder,color: Colors.white54),
-                  title: Text(folder, style: const TextStyle(color: Colors.white)),
+                   leading: Icon(AppIcons.folder, color: tokens.textMuted),
+                   title: Text(folder, style: TextStyle(color: tokens.textPrimary)),
                   trailing:  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white38),
+                     icon: Icon(AppIcons.close, color: tokens.textSubtle),
                     onPressed: () => ref.read(savedFoldersProvider.notifier).removeFolder(folder),
                     tooltip: "Remove from library",
                   ),
                 ),
               ),
-              const Divider(color: Colors.white12, height: 1),
+              Divider(color: tokens.borderSubtle, height: 1),
               InkWell(
                 onTap: () async {
                   final String? folderPath = await FilePicker.getDirectoryPath();
@@ -380,18 +388,20 @@ class _LibrarySettings extends ConsumerWidget {
                     ref.read(savedFoldersProvider.notifier).addFolder(folderPath);
                     ref.read(scannerProvider).scanAndGroupFiles(folderPath);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Folder added to scan queue"), 
-                      backgroundColor: Colors.lightGreen));
+                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                         content: const Text("Folder added to scan queue"),
+                         backgroundColor: tokens.success,
+                       ));
                     }
                   }
                 },
                 child: Padding(
-                  padding:  const EdgeInsets.all(16.0),
+                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add, color: accentColor),
-                      const SizedBox(width: 8),
+                       Icon(AppIcons.add, color: accentColor),
+                       const SizedBox(width: AppSpacing.xs),
                       Text("Add New Folder", style: TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
                     ],
                   ),
@@ -400,13 +410,13 @@ class _LibrarySettings extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white.withValues(alpha: 0.1),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: tokens.surfaceHover,
+            foregroundColor: tokens.textPrimary,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.lg)),
           ),
           onPressed: folders.isEmpty ? null : () async {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Scan started...")));
@@ -415,11 +425,13 @@ class _LibrarySettings extends ConsumerWidget {
               await scanner.scanAndGroupFiles(folder);
             }
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Scan completed!"), 
-              backgroundColor: Colors.lightGreen));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: const Text("Scan completed!"),
+                backgroundColor: tokens.success,
+              ));
             }
           },
-          icon: const Icon(Icons.sync_rounded),
+          icon: const Icon(AppIcons.rescan),
           label: const Text("Rescan Library"),
         ),
       ],
@@ -433,6 +445,7 @@ class _AdvancedSettings extends ConsumerWidget{
 
   @override
   Widget build(BuildContext context, WidgetRef ref){
+    final tokens = context.appTheme;
     return ListView(
       children: [
         _SectionHeader(title: "Danger Zone"),
@@ -440,27 +453,27 @@ class _AdvancedSettings extends ConsumerWidget{
           child: ListTile(
             iconColor: Theme.of(context).colorScheme.error,
             textColor: Theme.of(context).colorScheme.error,
-            leading: const Icon(Icons.delete_forever),
+            leading: Icon(AppIcons.delete),
             title: const Text("Clear Database", style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text("Removes all titles, watch history, and notes. Media files on disk will NOT be deleted.", 
-                                  style: TextStyle(color: Colors.white38)),
+            subtitle: Text("Removes all titles, watch history, and notes. Media files on disk will NOT be deleted.",
+                                  style: TextStyle(color: tokens.textSubtle)),
             onTap: () {
               showDialog(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text("Clear everything?", style: TextStyle(color: Colors.white)),
-                  content: const Text("This action cannot be undone.", style: TextStyle(color: Colors.white70)), 
-                                    backgroundColor: const Color(0xFF1A1A1A),
+                  title: Text("Clear everything?", style: TextStyle(color: tokens.textPrimary)),
+                  content: Text("This action cannot be undone.", style: TextStyle(color: tokens.textSecondary)),
+                  backgroundColor: tokens.cardSurface,
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel", 
-                                                                    style: TextStyle(color: Colors.white54))),
+                    TextButton(onPressed: () => Navigator.pop(ctx), child: Text("Cancel",
+                                                                    style: TextStyle(color: tokens.textMuted))),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                      style: ElevatedButton.styleFrom(backgroundColor: tokens.destructive),
                       onPressed: () async {
                         await ref.read(animeRepoProvider).clearAll();
                         if (ctx.mounted) Navigator.pop(ctx);
                       },
-                      child: const Text("Delete", style: TextStyle(color: Colors.white)),
+                      child: Text("Delete", style: TextStyle(color: tokens.textPrimary)),
                     ),
                   ],
                 ),
@@ -479,9 +492,10 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12, left: 4),
-      child: Text(title, style: const TextStyle(color: Colors.white54, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.2)), 
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm, left: AppSpacing.xxs),
+      child: Text(title, style: TextStyle(color: tokens.textMuted, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
     );
   }
 }
@@ -492,11 +506,12 @@ class _SettingsCard extends StatelessWidget {
 
   @override 
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        color: tokens.cardSurface,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        border: Border.all(color: tokens.borderSubtle),
       ),
       child: child,
     );
