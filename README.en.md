@@ -2,11 +2,11 @@
 
 **Language:** English · [Русский](README.md)
 
-Nekaido is a desktop application for organizing and watching a local anime collection. The project aims to bring together a media library, anime metadata, and a convenient local video player.
+Hialyth is a desktop application for organizing and watching a local anime collection. The project aims to bring together a media library, anime metadata, and a convenient local video player.
 
 ## Project status
 
-Nekaido is under active development and is at an early stage. The main workflows are in place, but the application and its interface are still evolving. Bugs, unfinished features, and differences in platform support are expected. No stable release is currently announced.
+Hialyth is under active development and is at an early stage. The main workflows are in place, but the application and its interface are still evolving. Bugs, unfinished features, and differences in platform support are expected. No stable release is currently announced.
 
 ## Features
 
@@ -15,7 +15,7 @@ Nekaido is under active development and is at an early stage. The main workflows
 - **Metadata and timestamps:** fetch anime details from Shikimori and opening/ending timestamps from AniSkip. These features require an internet connection.
 - **Settings and integrations:** choose an accent color, configure language and decoding preferences, enable OP/ED auto-skip, and use Discord Rich Presence.
 
-Video files recognized by the library scanner: `.mkv`, `.mp4`, and `.avi`. The library and media remain local; Nekaido does not delete the original files.
+Video files recognized by the library scanner: `.mkv`, `.mp4`, and `.avi`. The library and media remain local; Hialyth does not delete the original files.
 
 ## Technology
 
