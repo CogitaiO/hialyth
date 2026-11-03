@@ -15,16 +15,17 @@ import 'providers/repositories_provider.dart';
 import 'presentation/library_screen.dart';
 import 'providers/library_provider.dart';
 import 'providers/settings_provider.dart';
+import 'theme/app_palette.dart';
 import 'theme/app_theme_extension.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await windowManager.ensureInitialized();
-  await initLogger(); 
+  await initLogger();
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     try {
-      DiscordRPC.initialize(); 
+      DiscordRPC.initialize();
     } catch (e) {
       talker.debug('DiscordRPC initialization failed: $e');
     }
@@ -51,9 +52,9 @@ void main() async {
     };
 
     PlatformDispatcher.instance.onError = (error, stack) {
-    talker.handle(error, stack, 'Unhandled asynchronous error');
-    return true; // предотвращает полное падение приложения
-  };
+      talker.handle(error, stack, 'Unhandled asynchronous error');
+      return true; // предотвращает полное падение приложения
+    };
 
     runApp(
       ProviderScope(
@@ -77,7 +78,7 @@ class MyApp extends ConsumerWidget {
     const appTheme = AppThemeExtension.dark();
     final accentColorValue = ref.watch(settingsProvider).accentColorValue;
     final accentColor = Color(accentColorValue);
-    final onAccentColor = accentColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final onAccentColor = AppPalette.onAccent(accentColor);
     final colorScheme = ColorScheme.fromSeed(
       seedColor: accentColor,
       brightness: Brightness.dark,
@@ -96,7 +97,6 @@ class MyApp extends ConsumerWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: appTheme.pageSurface,
         colorScheme: colorScheme,
-
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: accentColor,
           selectionColor: accentColor.withValues(alpha: 0.3),
@@ -104,9 +104,7 @@ class MyApp extends ConsumerWidget {
         ),
         extensions: const [appTheme],
       ),
-      home: const LibraryScreen(), 
+      home: const LibraryScreen(),
     );
   }
 }
-
-

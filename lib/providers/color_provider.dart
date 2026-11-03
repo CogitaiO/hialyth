@@ -4,15 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 import '../domain/anime.dart';
+import '../theme/app_palette.dart';
 import 'repositories_provider.dart';
 
-final animeColorProvider = FutureProvider.family<Color, Anime>((ref, anime) async {
+final animeColorProvider =
+    FutureProvider.family<Color, Anime>((ref, anime) async {
   if (anime.ambientColorValue != null) {
     return Color(anime.ambientColorValue!);
   }
 
   if (anime.coverUrl == null || anime.coverUrl!.isEmpty) {
-    return Colors.redAccent;
+    return AppPalette.fallbackAccent;
   }
 
   try {
@@ -28,16 +30,16 @@ final animeColorProvider = FutureProvider.family<Color, Anime>((ref, anime) asyn
       maximumColorCount: 10,
     );
 
-    final calcColor = palette.vibrantColor?.color 
-                   ?? palette.dominantColor?.color 
-                   ?? palette.darkVibrantColor?.color 
-                   ?? Colors.redAccent;
+    final calcColor = palette.vibrantColor?.color ??
+        palette.dominantColor?.color ??
+        palette.darkVibrantColor?.color ??
+        AppPalette.fallbackAccent;
 
     anime.ambientColorValue = calcColor.toARGB32();
     await ref.read(animeRepoProvider).saveAnime(anime);
 
     return calcColor;
   } catch (e) {
-    return Colors.redAccent;
+    return AppPalette.fallbackAccent;
   }
 });

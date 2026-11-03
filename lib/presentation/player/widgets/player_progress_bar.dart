@@ -5,6 +5,7 @@ import 'track_selector_dialog.dart';
 import '../../../../providers/player/player_provider.dart';
 import '../../../../domain/anime.dart';
 import '../../../../providers/settings_provider.dart';
+import '../../../theme/app_palette.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class PlayerProgressBar extends ConsumerStatefulWidget {
@@ -30,6 +31,7 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
     final playbackSpeed =
         ref.watch(playerProvider.select((s) => s.playbackSpeed));
     final tokens = context.appTheme;
+    final accentColor = Color(ref.watch(settingsProvider).accentColorValue);
     double maxDuration = duration.inSeconds.toDouble();
     double currentPosition =
         _isDragging ? _dragValue : position.inSeconds.toDouble();
@@ -60,11 +62,9 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
                   ),
                   overlayShape: SliderComponentShape
                       .noOverlay, // Убираем родную тень Material
-                  activeTrackColor:
-                      Color(ref.watch(settingsProvider).accentColorValue),
+                  activeTrackColor: accentColor,
                   inactiveTrackColor: tokens.borderStrong,
-                  thumbColor:
-                      Color(ref.watch(settingsProvider).accentColorValue),
+                  thumbColor: accentColor,
 
                   trackShape: SkipIntervalTrackShape(
                     intervals: activeSkips
@@ -73,7 +73,9 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
                           ..endTime = s.endTime)
                         .toList(),
                     durationInSeconds: maxDuration,
-                    skipColor: Colors.white30.withValues(alpha: 0.8),
+                    skipColor: AppPalette.skipMarker,
+                    activeFallbackColor: accentColor,
+                    inactiveFallbackColor: tokens.borderStrong,
                   ),
                 ),
                 child: Slider(
