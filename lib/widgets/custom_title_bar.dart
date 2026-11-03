@@ -6,7 +6,7 @@ import '../theme/app_theme_extension.dart';
 class CustomTitleBar extends StatefulWidget {
   final Color? backgroundColor;
   final Widget? leading; // Кастомная кнопка слева (например, Назад)
-  final Widget? title;   // Кастомный текст/виджет по центру
+  final Widget? title; // Кастомный текст/виджет по центру
 
   const CustomTitleBar({
     super.key,
@@ -64,22 +64,26 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) return const SizedBox.shrink();
-    if (_isPiP) return const SizedBox.shrink(); // В PiP шапка не нужна вообще
+    if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) {
+      return const SizedBox.shrink();
+    }
+    // В PiP шапка не нужна вообще
+    if (_isPiP) return const SizedBox.shrink();
     final tokens = context.appTheme;
 
     return Container(
-      height: 40, // Сделали чуть выше для удобства хвата
+      height: AppSpacing.s40, // Сделали чуть выше для удобства хвата
       color: widget.backgroundColor ?? tokens.titleBarSurface,
       child: Row(
-        children:[
+        children: [
           // === ЛЕВАЯ ЧАСТЬ (Логотип или кнопка Назад) ===
-          if (widget.leading != null) 
+          if (widget.leading != null)
             widget.leading!
           else ...[
-            const SizedBox(width: 16),
-            Icon(Icons.movie_filter, color: Theme.of(context).colorScheme.primary, size: 18),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.md),
+            Icon(Icons.movie_filter,
+                color: Theme.of(context).colorScheme.primary, size: 18),
+            const SizedBox(width: AppSpacing.xs),
           ],
 
           // === ТЕКСТ / НАЗВАНИЕ ===
@@ -87,18 +91,22 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
             widget.title!
           else
             Text(
-              'Nekaido', 
-              style: TextStyle(color: tokens.textSecondary, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1),
+              'Nekaido',
+              style: TextStyle(
+                  color: tokens.textSecondary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1),
             ),
 
           // === ЦЕНТР: Зона перетаскивания ===
           // Если мы в FullScreen, перетаскивать нечего, но зону оставляем пустой
           Expanded(
-            child: _isFullScreen 
-              ? const SizedBox.shrink() 
-              : DragToMoveArea(
-                  child: Container(color: Colors.transparent),
-                ),
+            child: _isFullScreen
+                ? const SizedBox.shrink()
+                : DragToMoveArea(
+                    child: Container(color: Colors.transparent),
+                  ),
           ),
 
           // === ПРАВАЯ ЧАСТЬ: Кнопки ОС ===
@@ -121,7 +129,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
             ),
             _WindowButton(
               icon: Icons.close,
-              hoverColor: const Color(0xFFE81123),
+              hoverColor: tokens.windowCloseHover,
               onTap: () async => await windowManager.close(),
             ),
           ],
@@ -134,13 +142,13 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
 class _WindowButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final Color hoverColor;
+  final Color? hoverColor;
   final double iconSize;
 
   const _WindowButton({
     required this.icon,
     required this.onTap,
-    this.hoverColor = Colors.white24,
+    this.hoverColor,
     this.iconSize = 16,
   });
 
@@ -153,6 +161,9 @@ class _WindowButtonState extends State<_WindowButton> {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+    final hoverColor = widget.hoverColor ?? tokens.borderStrong;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -163,10 +174,12 @@ class _WindowButtonState extends State<_WindowButton> {
         child: Container(
           width: 46,
           height: double.infinity,
-          color: _isHovered ? widget.hoverColor : Colors.transparent,
+          color: _isHovered ? hoverColor : Colors.transparent,
           child: Icon(
             widget.icon,
-            color: _isHovered && widget.hoverColor != Colors.white24 ? Colors.white : Colors.white70,
+            color: _isHovered && widget.hoverColor != null
+                ? tokens.textPrimary
+                : tokens.textSecondary,
             size: widget.iconSize,
           ),
         ),

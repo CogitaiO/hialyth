@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_theme_extension.dart';
 
 class SeekRippleOverlay extends StatefulWidget {
   final bool isLeft;
@@ -16,10 +17,11 @@ class SeekRippleOverlay extends StatefulWidget {
   State<SeekRippleOverlay> createState() => _SeekRippleOverlayState();
 }
 
-class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProviderStateMixin {
+class _SeekRippleOverlayState extends State<SeekRippleOverlay>
+    with TickerProviderStateMixin {
   // Контроллер для фона (Волны) и бегущих стрелочек (600мс)
   late final AnimationController _rippleController;
-  
+
   // Контроллер для упругого прыжка текста (300мс)
   late final AnimationController _textPulseController;
 
@@ -40,8 +42,10 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
     super.initState();
 
     // 1. Инициализация контроллеров
-    _rippleController = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
-    _textPulseController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _rippleController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600));
+    _textPulseController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
 
     // 2. Ripple Layer (Фоновая рябь)
     _rippleScale = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -55,9 +59,11 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
     // Функция-помощник: стрелка загорается, держится и гаснет
     Animation<double> buildArrowAnimation(double startDelay) {
       return TweenSequence<double>([
-        TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 1.0), weight: 20),
+        TweenSequenceItem(
+            tween: Tween<double>(begin: 0.0, end: 1.0), weight: 20),
         TweenSequenceItem(tween: ConstantTween<double>(1.0), weight: 30),
-        TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 0.0), weight: 50),
+        TweenSequenceItem(
+            tween: Tween<double>(begin: 1.0, end: 0.0), weight: 50),
       ]).animate(
         CurvedAnimation(
           parent: _rippleController,
@@ -98,7 +104,7 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
     return IgnorePointer(
       child: Stack(
         fit: StackFit.expand,
-        children:[
+        children: [
           // === ЛЕВАЯ ВОЛНА ===
           if (widget.isLeft) _buildSide(isRight: false),
 
@@ -110,6 +116,7 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
   }
 
   Widget _buildSide({required bool isRight}) {
+    final tokens = context.appTheme;
     // В зависимости от стороны, точка масштабирования будет слева или справа
     final align = isRight ? Alignment.centerRight : Alignment.centerLeft;
 
@@ -120,7 +127,7 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
         heightFactor: 1.0, // На всю высоту экрана
         child: Stack(
           alignment: align,
-          children:[
+          children: [
             // === 1. RIPPLE LAYER ===
             ScaleTransition(
               alignment: align,
@@ -129,12 +136,17 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
                 opacity: _rippleOpacity,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white, // Прозрачность контролируется FadeTransition (максимум 0.25)
+                    color: tokens
+                        .textPrimary, // Прозрачность контролируется FadeTransition (максимум 0.25)
                     borderRadius: BorderRadius.only(
-                      topLeft: isRight ? const Radius.circular(1000) : Radius.zero,
-                      bottomLeft: isRight ? const Radius.circular(1000) : Radius.zero,
-                      topRight: !isRight ? const Radius.circular(1000) : Radius.zero,
-                      bottomRight: !isRight ? const Radius.circular(1000) : Radius.zero,
+                      topLeft:
+                          isRight ? const Radius.circular(1000) : Radius.zero,
+                      bottomLeft:
+                          isRight ? const Radius.circular(1000) : Radius.zero,
+                      topRight:
+                          !isRight ? const Radius.circular(1000) : Radius.zero,
+                      bottomRight:
+                          !isRight ? const Radius.circular(1000) : Radius.zero,
                     ),
                   ),
                 ),
@@ -145,9 +157,9 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children:[
+                children: [
                   _buildIconSequence(isRight: isRight),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   _buildLabelLayer(),
                 ],
               ),
@@ -164,14 +176,18 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
     Widget buildArrow(bool right) {
       return Transform.scale(
         scaleX: right ? 1.0 : -1.0,
-        child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
+        child: Icon(
+          Icons.play_arrow_rounded,
+          color: context.appTheme.textPrimary,
+          size: 36,
+        ),
       );
     }
 
-    // Собираем массив стрелочек. 
+    // Собираем массив стрелочек.
     // Если вправо: ->(1) ->(2) ->(3)
     // Если влево: <-(3) <-(2) <-(1) (первой загорается та, что ближе к центру)
-    List<Widget> arrows =[
+    List<Widget> arrows = [
       FadeTransition(opacity: _arrow1, child: buildArrow(isRight)),
       FadeTransition(opacity: _arrow2, child: buildArrow(isRight)),
       FadeTransition(opacity: _arrow3, child: buildArrow(isRight)),
@@ -193,12 +209,16 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay> with TickerProvid
       scale: _textScale,
       child: Text(
         "${widget.seconds > 0 ? '+' : ''}${widget.seconds} sec",
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: context.appTheme.textPrimary,
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          shadows:[
-            Shadow(color: Colors.black54, blurRadius: 6, offset: Offset(0, 2))
+          shadows: [
+            Shadow(
+              color: context.appTheme.scrim(0.54),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
       ),

@@ -5,10 +5,11 @@ import 'package:file_picker/file_picker.dart';
 import 'package:nekaido_pre/data/services/shikimori_service.dart';
 import 'dart:io';
 
-import '../domain/anime.dart';  
+import '../domain/anime.dart';
 import '../presentation/anime_details/anime_details_screen.dart';
 import '../../providers/repositories_provider.dart';
 import '../presentation/anime_details/dialogs/anime_dialogs.dart';
+import '../theme/app_theme_extension.dart';
 
 class AnimeCard extends ConsumerStatefulWidget {
   final Anime anime;
@@ -19,33 +20,64 @@ class AnimeCard extends ConsumerStatefulWidget {
 }
 
 class _AnimeCardState extends ConsumerState<AnimeCard> {
-
   bool _isHovered = false;
   //Метод вызова контекстного меню
-  void _showContextMenu(BuildContext context, WidgetRef ref, Offset tapPosition) {
+  void _showContextMenu(
+      BuildContext context, WidgetRef ref, Offset tapPosition) {
+    final tokens = context.appTheme;
     showMenu<String>(
-      context: context, 
-      color: Color(0xFF1A1A1A),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(12)),
+      context: context,
+      color: tokens.cardSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
       position: RelativeRect.fromLTRB(
-        tapPosition.dx, tapPosition.dy,
-        tapPosition.dx, tapPosition.dy,
+        tapPosition.dx,
+        tapPosition.dy,
+        tapPosition.dx,
+        tapPosition.dy,
       ),
       items: [
-        const PopupMenuItem(value: 'sync_api', child: Text("Refresh data from the network", style: TextStyle(color: Colors.white))),
-        const PopupMenuItem(value: 'edit', child: Text("Edir", style: TextStyle(color: Colors.white))),
-        const PopupMenuItem(value: 'collection', child: Text("To the collections", style: TextStyle(color: Colors.white))),
+        PopupMenuItem(
+          value: 'sync_api',
+          child: Text(
+            "Refresh data from the network",
+            style: TextStyle(color: tokens.textPrimary),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'edit',
+          child: Text("Edir", style: TextStyle(color: tokens.textPrimary)),
+        ),
+        PopupMenuItem(
+          value: 'collection',
+          child: Text(
+            "To the collections",
+            style: TextStyle(color: tokens.textPrimary),
+          ),
+        ),
         const PopupMenuDivider(),
-        const PopupMenuItem(value: 'delete', child: Text("Delete from library", style: TextStyle(color: Colors.redAccent))),
+        PopupMenuItem(
+          value: 'delete',
+          child: Text(
+            "Delete from library",
+            style: TextStyle(color: tokens.destructive),
+          ),
+        ),
       ],
     ).then((value) {
       if (!context.mounted) return;
-      if (value == 'delete'){
+      if (value == 'delete') {
         _confirmDelete(context, ref);
       } else if (value == 'edit') {
         _showEditDialog(context, ref);
       } else if (value == 'collection') {
-       AnimeDialogs.showCollectionDialog(context, ref, widget.anime, Colors.redAccent);
+        AnimeDialogs.showCollectionDialog(
+          context,
+          ref,
+          widget.anime,
+          context.appTheme.destructive,
+        );
       } else if (value == 'sync_api') {
         _syncWithApi(context, ref);
       }
@@ -59,13 +91,14 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
     return GestureDetector(
       onTap: () {
         Navigator.push(
-          context, 
+          context,
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 400),
-            pageBuilder: (context, animation, secondaryAnimation) => 
-              AnimeDetailsScreen(animeId: widget.anime.id, heroTag: heroTag),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                return FadeTransition(opacity: animation, child: child);
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                AnimeDetailsScreen(animeId: widget.anime.id, heroTag: heroTag),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
             },
           ),
         );
@@ -86,71 +119,90 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
             children: [
               Expanded(
                 child: Hero(
-                   tag:  heroTag,
+                  tag: heroTag,
                   child: ClipRRect(
-                    borderRadius: BorderRadiusGeometry.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.lg),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        Container(color: Colors.white10),
+                        Container(color: context.appTheme.surfaceHover),
                         if (widget.anime.coverUrl != null)
-                          widget.anime.coverUrl!.startsWith('http') 
-                            ?CachedNetworkImage(
-                              imageUrl: widget.anime.coverUrl!,
-                              fit: BoxFit.cover,
-                              memCacheWidth: 300,
-                              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                              errorWidget: (context, url, error) => const Icon(Icons.heart_broken_rounded, color: Colors.white24, size: 40),
-                            )
-                          : Image.file(
-                              File(widget.anime.coverUrl!),
-                              fit: BoxFit.cover,
-                              cacheWidth: 300,
-                            ),
-
-                        
-                            
-                        if (widget.anime.coverUrl == null)
-                          const Center(child: Icon(Icons.image, color: Colors.white24, size: 40)),
-
-                        Positioned(
-                            bottom: 0, left: 0, right: 0, height: 40,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter, end: Alignment.topCenter,
-                                  colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent]
+                          widget.anime.coverUrl!.startsWith('http')
+                              ? CachedNetworkImage(
+                                  imageUrl: widget.anime.coverUrl!,
+                                  fit: BoxFit.cover,
+                                  memCacheWidth: 300,
+                                  placeholder: (context, url) => const Center(
+                                      child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Icon(
+                                    Icons.heart_broken_rounded,
+                                    color: context.appTheme.textDisabled,
+                                    size: 40,
+                                  ),
                                 )
-                              ),
+                              : Image.file(
+                                  File(widget.anime.coverUrl!),
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 300,
+                                ),
+                        if (widget.anime.coverUrl == null)
+                          Center(
+                            child: Icon(
+                              Icons.image,
+                              color: context.appTheme.textDisabled,
+                              size: 40,
                             ),
                           ),
-                          if (widget.anime.watchProgress > 0)
-                            Positioned(
-                              bottom: 0, left: 0, right: 0,
-                               child: LinearProgressIndicator(
-                                
-                                value: widget.anime.watchProgress,
-                                color: Theme.of(context).colorScheme.primary,
-                                backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                                minHeight: 4,
-                               ),
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: 40,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                context.appTheme.scrim(0.8),
+                                Colors.transparent,
+                              ],
+                            )),
+                          ),
+                        ),
+                        if (widget.anime.watchProgress > 0)
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: LinearProgressIndicator(
+                              value: widget.anime.watchProgress,
+                              color: Theme.of(context).colorScheme.primary,
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.1),
+                              minHeight: 4,
                             ),
-                        ],
-                      ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.anime.title,
-                  maxLines: 2,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold, 
-                    fontSize: 13, 
-                    color: _isHovered ? Colors.redAccent : Colors.white,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                widget.anime.title,
+                maxLines: 2,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: _isHovered
+                      ? context.appTheme.destructive
+                      : context.appTheme.textPrimary,
                 ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -160,59 +212,87 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {
     showDialog(
-      context: context, 
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text("Delete anime", style: TextStyle(color: Colors.white)),
-        content: const Text("The anime will be removed from the database. The video files themselves remain on the disk.", 
-                            style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx), 
-            child: const Text("Cancel", style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
-             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-             onPressed: () {
-              ref.read(animeRepoProvider).deleteAnime(widget.anime.id);
-              Navigator.pop(ctx);
-             },
-             child: const Text("Delete", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      )
-    );
+        context: context,
+        builder: (ctx) => AlertDialog(
+              backgroundColor: context.appTheme.cardSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.xl),
+              ),
+              title: Text(
+                "Delete anime",
+                style: TextStyle(color: context.appTheme.textPrimary),
+              ),
+              content: Text(
+                "The anime will be removed from the database. The video files themselves remain on the disk.",
+                style: TextStyle(color: context.appTheme.textSecondary),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(
+                    "Cancel",
+                    style: TextStyle(color: context.appTheme.textMuted),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: context.appTheme.destructive,
+                  ),
+                  onPressed: () {
+                    ref.read(animeRepoProvider).deleteAnime(widget.anime.id);
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(
+                    "Delete",
+                    style: TextStyle(color: context.appTheme.textPrimary),
+                  ),
+                ),
+              ],
+            ));
   }
 
   void _showEditDialog(BuildContext context, WidgetRef ref) {
     final titleController = TextEditingController(text: widget.anime.title);
-    final coverController =  TextEditingController(text: widget.anime.coverUrl ?? '');
+    final coverController =
+        TextEditingController(text: widget.anime.coverUrl ?? '');
 
     showDialog(
-      context: context, 
+      context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text("Edit", style: TextStyle(color: Colors.white)),
+        backgroundColor: context.appTheme.cardSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.xl),
+        ),
+        title: Text(
+          "Edit",
+          style: TextStyle(color: context.appTheme.textPrimary),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(labelText: "Title", labelStyle: TextStyle(color: Theme.of(context).colorScheme.primary)),
+              style: TextStyle(color: context.appTheme.textPrimary),
+              decoration: InputDecoration(
+                labelText: "Title",
+                labelStyle:
+                    TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             TextField(
               controller: coverController,
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: context.appTheme.textPrimary),
               decoration: InputDecoration(
-                labelText: "URL posters", 
-                labelStyle: TextStyle(color: Colors.redAccent),
+                labelText: "URL posters",
+                labelStyle: TextStyle(color: context.appTheme.destructive),
                 suffixIcon: IconButton(
-                  icon: Icon(Icons.folder_open, color: Theme.of(context).colorScheme.primary),
+                  icon: Icon(Icons.folder_open,
+                      color: Theme.of(context).colorScheme.primary),
                   tooltip: "Select from computer",
                   onPressed: () async {
-                    FilePickerResult? result = await FilePicker.pickFiles(type: FileType.image);
+                    FilePickerResult? result =
+                        await FilePicker.pickFiles(type: FileType.image);
                     if (result != null && result.files.single.path != null) {
                       coverController.text = result.files.single.path!;
                     }
@@ -223,18 +303,28 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Отмена", style: TextStyle(color: Colors.white54))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              "Отмена",
+              style: TextStyle(color: context.appTheme.textMuted),
+            ),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.appTheme.destructive,
+            ),
             onPressed: () {
               ref.read(animeRepoProvider).editAnimeDetails(
-                widget.anime, 
-                titleController.text, 
-                coverController.text.isNotEmpty ? coverController.text : ''
-              );
+                  widget.anime,
+                  titleController.text,
+                  coverController.text.isNotEmpty ? coverController.text : '');
               Navigator.pop(ctx);
             },
-            child: const Text("Save", style: TextStyle(color: Colors.white)),
+            child: Text(
+              "Save",
+              style: TextStyle(color: context.appTheme.textPrimary),
+            ),
           ),
         ],
       ),
@@ -243,7 +333,9 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
 
   Future<void> _syncWithApi(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('We are looking for data for "${widget.anime.title}"...')),
+      SnackBar(
+          content:
+              Text('We are looking for data for "${widget.anime.title}"...')),
     );
     final shikimori = ShikimoriService();
     final meta = await shikimori.fetchAnimeDetails(widget.anime.title);
@@ -257,9 +349,9 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Data updated successfully!'), 
-            backgroundColor: Colors.green
+          SnackBar(
+            content: const Text('Data updated successfully!'),
+            backgroundColor: context.appTheme.success,
           ),
         );
       }
@@ -267,9 +359,8 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Unable to find data on Shikimori'), 
-            backgroundColor: Theme.of(context).colorScheme.error
-          ),
+              content: Text('Unable to find data on Shikimori'),
+              backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
     }

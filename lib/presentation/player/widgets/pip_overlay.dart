@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../../../providers/player/player_provider.dart';
+import '../../../theme/app_theme_extension.dart';
 
-class PipOverlay extends ConsumerWidget{
+class PipOverlay extends ConsumerWidget {
   const PipOverlay({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = context.appTheme;
     final isVisible = ref.watch(playerProvider.select((s) => s.isUiVisible));
     final isPlaying = ref.watch(playerProvider.select((s) => s.isPlaying));
     final volume = ref.watch(playerProvider.select((s) => s.volume));
@@ -15,11 +17,11 @@ class PipOverlay extends ConsumerWidget{
 
     return IgnorePointer(
       ignoring: !isVisible,
-      child: AnimatedOpacity (
+      child: AnimatedOpacity(
         opacity: isVisible ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 200),
         child: Container(
-          color: Colors.black54,
+          color: tokens.scrim(0.54),
           child: Stack(
             children: [
               Positioned.fill(
@@ -30,38 +32,41 @@ class PipOverlay extends ConsumerWidget{
                   ),
                 ),
               ),
-
               Center(
                 child: IconButton(
                   iconSize: 48,
                   icon: Icon(
-                    isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                    color: Colors.white,
+                    isPlaying
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_fill,
+                    color: tokens.textPrimary,
                   ),
                   onPressed: () => notifier.togglePlay(),
                 ),
               ),
-
               Positioned(
-                bottom: 8,
-                left: 8,
-                right: 8,
+                bottom: AppSpacing.xs,
+                left: AppSpacing.xs,
+                right: AppSpacing.xs,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
                       iconSize: 20,
                       icon: Icon(
-                        volume == 0 ? Icons.volume_off : (volume < 50 ? Icons.volume_down : Icons.volume_up),
-                        color: Colors.white,
+                        volume == 0
+                            ? Icons.volume_off
+                            : (volume < 50
+                                ? Icons.volume_down
+                                : Icons.volume_up),
+                        color: tokens.textPrimary,
                       ),
                       onPressed: () => notifier.toggleMute(),
                     ),
-
                     IconButton(
                       iconSize: 20,
                       tooltip: "Вернуться",
-                      icon: const Icon(Icons.open_in_new, color: Colors.white),
+                      icon: Icon(Icons.open_in_new, color: tokens.textPrimary),
                       onPressed: () => notifier.togglePiP(),
                     ),
                   ],

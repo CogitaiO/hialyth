@@ -8,6 +8,7 @@ import '../../../../providers/repositories_provider.dart';
 import '../../player/player_screen.dart';
 import '../dialogs/anime_dialogs.dart';
 import '../../../../providers/settings_provider.dart';
+import '../../../theme/app_theme_extension.dart';
 
 class LeftControlPanel extends ConsumerWidget {
   final Anime anime;
@@ -24,63 +25,88 @@ class LeftControlPanel extends ConsumerWidget {
   void _playEpisode(BuildContext context, String path) {
     if (!File(path).existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Ошибка:  Файл видео не найден!"), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: const Text("Ошибка:  Файл видео не найден!"),
+          backgroundColor: context.appTheme.destructive,
+        ),
       );
       return;
     }
     Navigator.push(
-      context, 
-      MaterialPageRoute(builder: (context) => PlayerScreen(animeId: anime.id, videoPath: path)),
+      context,
+      MaterialPageRoute(
+          builder: (context) =>
+              PlayerScreen(animeId: anime.id, videoPath: path)),
     );
   }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = context.appTheme;
     //Данные для постера
     ImageProvider? imageProvider;
     if (anime.coverUrl != null) {
       imageProvider = anime.coverUrl!.startsWith('http')
-        ? CachedNetworkImageProvider(anime.coverUrl!) as ImageProvider
-        : FileImage(File(anime.coverUrl!));
+          ? CachedNetworkImageProvider(anime.coverUrl!) as ImageProvider
+          : FileImage(File(anime.coverUrl!));
     }
 
     //Логика умной кнопки
     final sortedEpisodes = anime.sortedEpisodes;
-    final nextEpisodePath = anime.nextEpisodeToPlay ?? (sortedEpisodes.isNotEmpty ? sortedEpisodes.first : '');
-    final nextEpisodeIndex = sortedEpisodes.isNotEmpty ? sortedEpisodes.indexOf(nextEpisodePath) + 1 : 0;
+    final nextEpisodePath = anime.nextEpisodeToPlay ??
+        (sortedEpisodes.isNotEmpty ? sortedEpisodes.first : '');
+    final nextEpisodeIndex = sortedEpisodes.isNotEmpty
+        ? sortedEpisodes.indexOf(nextEpisodePath) + 1
+        : 0;
     final isAllWatched = anime.nextEpisodeToPlay == null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Hero(
-          tag: heroTag, 
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              height: 400,
-              decoration: BoxDecoration(
-                color: Colors.black26,
-                borderRadius: BorderRadius.circular(16),
-                image: imageProvider != null ? DecorationImage(image: imageProvider, fit: BoxFit.cover) : null,
-                 border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                 boxShadow: [BoxShadow(color: accentColor.withValues(alpha: 0.4), blurRadius: 40, offset: const Offset(0, 20))],
+            tag: heroTag,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                height: 400,
+                decoration: BoxDecoration(
+                  color: tokens.surfaceOverlay,
+                  borderRadius: BorderRadius.circular(AppRadii.xl),
+                  image: imageProvider != null
+                      ? DecorationImage(image: imageProvider, fit: BoxFit.cover)
+                      : null,
+                  border: Border.all(color: tokens.surfaceHover),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.4),
+                      blurRadius: 40,
+                      offset: const Offset(0, 20),
+                    ),
+                  ],
+                ),
+                child: imageProvider == null
+                    ? Center(
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: 60,
+                          color: tokens.textDisabled,
+                        ),
+                      )
+                    : null,
               ),
-              child: imageProvider == null
-                  ? const Center(child: Icon(Icons.image_not_supported, size: 60, color: Colors.white24)) 
-                  : null,
-            ),
-          )
-        ),
-        const SizedBox(height: 24),
-
+            )),
+        const SizedBox(height: AppSpacing.lg),
         if (sortedEpisodes.isNotEmpty)
           ElevatedButton(
-            onPressed:  () => _playEpisode(context, nextEpisodePath),
+            onPressed: () => _playEpisode(context, nextEpisodePath),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: isAllWatched ? Colors.white24 : accentColor,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              backgroundColor:
+                  isAllWatched ? tokens.surfaceDisabled : accentColor,
+              foregroundColor: tokens.textPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+              ),
               elevation: 10,
               shadowColor: accentColor.withValues(alpha: 0.5),
             ),
@@ -92,33 +118,34 @@ class LeftControlPanel extends ConsumerWidget {
                   offset: const Offset(0, -1.5),
                   child: Text(
                     isAllWatched ? "Пересмотреть" : "Эпизод $nextEpisodeIndex",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, height: 1.1),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold, height: 1.1),
                   ),
                 ),
-                const SizedBox(width: 8)
+                const SizedBox(width: AppSpacing.xs)
               ],
             ),
           ),
-        const SizedBox(height: 12),
-
+        const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
-            Expanded(flex: 2, child: _StatusMenu(anime: anime, accentColor: accentColor)),
-            const SizedBox(width: 8),
             Expanded(
-              flex: 1,
-              child: _HoverButton(
-                icon: Icons.bookmark_add_rounded,
-                tooltip: "Подборка",
-                accentColor: accentColor,
-                onTap: () => AnimeDialogs.showCollectionDialog(context, ref, anime, accentColor),
-              )
-            ),
-            const SizedBox(width: 8),
+                flex: 2,
+                child: _StatusMenu(anime: anime, accentColor: accentColor)),
+            const SizedBox(width: AppSpacing.xs),
             Expanded(
-              flex: 1,
-              child: _MoreMenu(anime: anime, accentColor: accentColor)
-            ),
+                flex: 1,
+                child: _HoverButton(
+                  icon: Icons.bookmark_add_rounded,
+                  tooltip: "Подборка",
+                  accentColor: accentColor,
+                  onTap: () => AnimeDialogs.showCollectionDialog(
+                      context, ref, anime, accentColor),
+                )),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+                flex: 1,
+                child: _MoreMenu(anime: anime, accentColor: accentColor)),
           ],
         )
       ],
@@ -133,55 +160,107 @@ class _StatusMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = context.appTheme;
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStateProperty.all(const Color(0xFF1A1A1A)),
-        shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+        backgroundColor: WidgetStateProperty.all(tokens.cardSurface),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
+        ),
       ),
       menuChildren: [
         MenuItemButton(
-          onPressed: () => ref.read(animeRepoProvider).updateStatus(anime.id, AnimeStatus.planned),
-          child: const Padding(padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16), 
-                              child: Text("В планах", style: TextStyle(color: Colors.white))),
+          onPressed: () => ref
+              .read(animeRepoProvider)
+              .updateStatus(anime.id, AnimeStatus.planned),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.xs,
+              horizontal: AppSpacing.md,
+            ),
+            child: Text(
+              "В планах",
+              style: TextStyle(color: tokens.textPrimary),
+            ),
+          ),
         ),
         MenuItemButton(
-          onPressed: () => ref.read(animeRepoProvider).updateStatus(anime.id, AnimeStatus.watching),
-          child: const Padding(padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16), 
-                              child: Text("Смотрю", style: TextStyle(color: Colors.blueAccent))),
+          onPressed: () => ref
+              .read(animeRepoProvider)
+              .updateStatus(anime.id, AnimeStatus.watching),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.xs,
+              horizontal: AppSpacing.md,
+            ),
+            child: Text("Смотрю", style: TextStyle(color: tokens.info)),
+          ),
         ),
         MenuItemButton(
-          onPressed: () => ref.read(animeRepoProvider).updateStatus(anime.id, AnimeStatus.completed),
-          child: const Padding(padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16), 
-                                child: Text("Просмотрено", style: TextStyle(color: Colors.green))),
+          onPressed: () => ref
+              .read(animeRepoProvider)
+              .updateStatus(anime.id, AnimeStatus.completed),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.xs,
+              horizontal: AppSpacing.md,
+            ),
+            child: Text(
+              "Просмотрено",
+              style: TextStyle(color: tokens.success),
+            ),
+          ),
         ),
       ],
-      builder: (context,controller, child) {
+      builder: (context, controller, child) {
         return Material(
-          color: Colors.white.withValues(alpha: 0.05),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Colors.white12)),
+          color: tokens.surfaceSubtle,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            side: BorderSide(color: tokens.borderSubtle),
+          ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-             onTap: () => controller.isOpen ? controller.close() : controller.open(),
-             child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      anime.status == AnimeStatus.planned ? "В планах" :
-                      anime.status == AnimeStatus.watching ? "Смотрю" :
-                      anime.status == AnimeStatus.completed ? "Просмотрено" : "Брошено",
-                      style: TextStyle(
-                        fontSize: 16,  fontWeight: FontWeight.bold,
-                         color: anime.status == AnimeStatus.planned ? Colors.white :
-                                anime.status == AnimeStatus.watching ? Colors.blueAccent :
-                                anime.status == AnimeStatus.completed ? Colors.green : Color(ref.watch(settingsProvider).accentColorValue),
-                      ),
+            onTap: () =>
+                controller.isOpen ? controller.close() : controller.open(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    anime.status == AnimeStatus.planned
+                        ? "В планах"
+                        : anime.status == AnimeStatus.watching
+                            ? "Смотрю"
+                            : anime.status == AnimeStatus.completed
+                                ? "Просмотрено"
+                                : "Брошено",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: anime.status == AnimeStatus.planned
+                          ? tokens.textPrimary
+                          : anime.status == AnimeStatus.watching
+                              ? tokens.info
+                              : anime.status == AnimeStatus.completed
+                                  ? tokens.success
+                                  : Color(
+                                      ref
+                                          .watch(settingsProvider)
+                                          .accentColorValue,
+                                    ),
                     ),
-                    const Icon(Icons.arrow_drop_down, color: Colors.white54),
-                  ],
-                ),
-             ),
+                  ),
+                  Icon(Icons.arrow_drop_down, color: tokens.textMuted),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -194,36 +273,72 @@ class _MoreMenu extends ConsumerWidget {
   final Color accentColor;
   const _MoreMenu({required this.anime, required this.accentColor});
 
+  PopupMenuItem<String> _menuItem(
+    AppThemeExtension tokens,
+    String value,
+    IconData icon,
+    String label,
+  ) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, color: tokens.textSecondary, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Text(label, style: TextStyle(color: tokens.textPrimary)),
+        ],
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) { 
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tokens = context.appTheme;
     return Theme(
       data: Theme.of(context).copyWith(
-        popupMenuTheme: PopupMenuThemeData(color: Color(0xFF1A1A1A), 
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(12))),
-      ), 
+        popupMenuTheme: PopupMenuThemeData(
+          color: tokens.cardSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
+        ),
+      ),
       child: PopupMenuButton<String>(
         tooltip: "Больше опций",
         offset: const Offset(0, 50),
         itemBuilder: (context) => [
-          const PopupMenuItem(value: 'stats', child: Row(children:[Icon(Icons.bar_chart, color: Colors.white70, size: 20),
-                SizedBox(width: 12), Text("Статистика", style: TextStyle(color: Colors.white))])),
-          const PopupMenuItem(value: 'mark_all', child: Row(children:[Icon(Icons.done_all, color: Colors.white70, size: 20),
-                SizedBox(width: 12), Text("Отметить всё просмотренным", style: TextStyle(color: Colors.white))])),
-          const PopupMenuItem(value: 'folder', child: Row(children:[Icon(Icons.folder_open, color: Colors.white70, size: 20),
-                SizedBox(width: 12), Text("Открыть папку на ПК", style: TextStyle(color: Colors.white))])),
+          _menuItem(tokens, 'stats', Icons.bar_chart, "Статистика"),
+          _menuItem(
+            tokens,
+            'mark_all',
+            Icons.done_all,
+            "Отметить всё просмотренным",
+          ),
+          _menuItem(
+            tokens,
+            'folder',
+            Icons.folder_open,
+            "Открыть папку на ПК",
+          ),
           const PopupMenuDivider(),
-          const PopupMenuItem(value: 'edit', child: Row(children:[Icon(Icons.edit, color: Colors.white70, size: 20),
-                SizedBox(width: 12), Text("Редактировать постер", style: TextStyle(color: Colors.white))])),
+          _menuItem(tokens, 'edit', Icons.edit, "Редактировать постер"),
         ],
         onSelected: (value) async {
-           if (value == 'folder') AnimeDialogs.openFolderInOs(anime.folderPath);
-           if (value == 'edit') AnimeDialogs.showEditDialog(context, ref, anime, accentColor);
-           if (value == 'stats') AnimeDialogs.showAnimeStatsDialog(context, anime, accentColor);
-           if (value == 'mark_all') {
-              await ref.read(animeRepoProvider).markAllEpisodesWatched(anime.id);
-           }
+          if (value == 'folder') {
+            AnimeDialogs.openFolderInOs(anime.folderPath);
+          }
+          if (value == 'edit') {
+            AnimeDialogs.showEditDialog(context, ref, anime, accentColor);
+          }
+          if (value == 'stats') {
+            AnimeDialogs.showAnimeStatsDialog(context, anime, accentColor);
+          }
+          if (value == 'mark_all') {
+            await ref.read(animeRepoProvider).markAllEpisodesWatched(anime.id);
+          }
         },
-        child: _HoverButton(icon: Icons.more_horiz, tooltip: "Опции", accentColor: accentColor),
+        child: _HoverButton(
+            icon: Icons.more_horiz, tooltip: "Опции", accentColor: accentColor),
       ),
     );
   }
@@ -235,7 +350,11 @@ class _HoverButton extends StatefulWidget {
   final Color accentColor;
   final VoidCallback? onTap;
 
-  const _HoverButton({required this.icon, required this.tooltip, required this.accentColor, this.onTap});
+  const _HoverButton(
+      {required this.icon,
+      required this.tooltip,
+      required this.accentColor,
+      this.onTap});
 
   @override
   State<_HoverButton> createState() => _HoverButtonState();
@@ -246,6 +365,7 @@ class _HoverButtonState extends State<_HoverButton> {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appTheme;
     return MouseRegion(
       onEnter: (_) => setState(() => isHovered = true),
       onExit: (_) => setState(() => isHovered = false),
@@ -254,18 +374,24 @@ class _HoverButtonState extends State<_HoverButton> {
         message: widget.tooltip,
         child: GestureDetector(
           onTap: widget.onTap,
-           child: AnimatedContainer(
+          child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            height: 48,
+            height: AppSpacing.s48,
             decoration: BoxDecoration(
-              color: isHovered ? widget.accentColor : Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isHovered ? widget.accentColor : Colors.white12),
+              color: isHovered ? widget.accentColor : tokens.surfaceSubtle,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              border: Border.all(
+                color: isHovered ? widget.accentColor : tokens.borderSubtle,
+              ),
             ),
-            child: Icon(widget.icon, color: isHovered ? Colors.white : Colors.white70, size: 24),
+            child: Icon(
+              widget.icon,
+              color: isHovered ? tokens.textPrimary : tokens.textSecondary,
+              size: 24,
+            ),
           ),
         ),
       ),
     );
-  } 
+  }
 }
