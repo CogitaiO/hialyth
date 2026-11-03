@@ -1,7 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../../theme/app_palette.dart';
 
-class AmbientBackground extends StatelessWidget{
+class AmbientBackground extends StatelessWidget {
   final Color color;
   const AmbientBackground({super.key, required this.color});
 
@@ -10,15 +11,22 @@ class AmbientBackground extends StatelessWidget{
     return Stack(
       children: [
         Positioned(
-          top: -200, left: -200,
+          top: -200,
+          left: -200,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 800),
             curve: Curves.easeInOut,
-            width: 800, height: 800,
+            width: 800,
+            height: 800,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.15),
-              boxShadow: [BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 200)],
+              color: AppPalette.posterGlow(color),
+              boxShadow: [
+                BoxShadow(
+                  color: AppPalette.posterShadow(color),
+                  blurRadius: 200,
+                ),
+              ],
             ),
           ),
         ),

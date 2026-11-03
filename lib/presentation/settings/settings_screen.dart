@@ -8,6 +8,7 @@ import '../../providers/repositories_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../widgets/custom_title_bar.dart';
 import '../../theme/app_icons.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_theme_extension.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -143,29 +144,6 @@ class _AppearanceSettings extends ConsumerWidget {
     final tokens = context.appTheme;
     final currentColor = Color(settings.accentColorValue);
 
-    final List<Color> presetColors = [
-      Color(0xFFF8BBD0),
-      Color(0xFFE1BEE7),
-      Color(0xFFD1C4E9),
-      Color(0xFFC5CAE9),
-      Color(0xFFBBDEFB),
-      Color(0xFFB3E5FC),
-      Color(0xFFB2DFDB),
-      Color(0xFFDCEDC8),
-      Color(0xFF546E7A),
-      Color(0xFF7E57C2),
-      Color(0xFF26A69A),
-      Color(0xFF66BB6A),
-      Color(0xFF9CCC65),
-      Color(0xFFFFB74D),
-      Color(0xFFFFA726),
-      Color(0xFFFF8A65),
-      Color(0xFF263238),
-      Color(0xFF303F9F),
-      Color(0xFF880E4F),
-      Color(0xFF1B5E20),
-    ];
-
     return ListView(children: [
       _SectionHeader(title: "Theme & Colors"),
       _SettingsCard(
@@ -181,7 +159,7 @@ class _AppearanceSettings extends ConsumerWidget {
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
                 children: [
-                  ...presetColors.map((c) {
+                  ...AppPalette.accentPresets.map((c) {
                     final isSelected =
                         settings.accentColorValue == c.toARGB32();
                     return GestureDetector(
@@ -220,14 +198,7 @@ class _AppearanceSettings extends ConsumerWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const SweepGradient(
-                          colors: [
-                            Colors.red,
-                            Colors.yellow,
-                            Colors.green,
-                            Colors.blue,
-                            Colors.purple,
-                            Colors.red
-                          ],
+                          colors: AppPalette.accentSpectrum,
                         ),
                         border: Border.all(color: tokens.textMuted, width: 2),
                       ),
