@@ -36,13 +36,13 @@ class AnimeDetailsScreen extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, _) => Center(
                   child: Text(
-                    "Ошибка: $err",
+                    "Error: $err",
                     style: TextStyle(color: context.appTheme.textPrimary),
                   ),
                 ),
                 data: (anime) {
                   if (anime == null) {
-                    return const Center(child: Text("Тайтл не найден"));
+                    return const Center(child: Text("Title not found"));
                   }
 
                   final accentColor =

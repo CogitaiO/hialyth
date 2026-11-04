@@ -27,7 +27,7 @@ class LeftControlPanel extends ConsumerWidget {
     if (!File(path).existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Ошибка:  Файл видео не найден!"),
+          content: const Text("Video file not found."),
           backgroundColor: context.appTheme.destructive,
         ),
       );
@@ -116,7 +116,7 @@ class LeftControlPanel extends ConsumerWidget {
                 Transform.translate(
                   offset: const Offset(0, -1.5),
                   child: Text(
-                    isAllWatched ? "Пересмотреть" : "Эпизод $nextEpisodeIndex",
+                    isAllWatched ? "Replay" : "Episode $nextEpisodeIndex",
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold, height: 1.1),
                   ),
@@ -136,7 +136,7 @@ class LeftControlPanel extends ConsumerWidget {
                 flex: 1,
                 child: _HoverButton(
                   icon: AppIcons.collectionAdd,
-                  tooltip: "Подборка",
+                  tooltip: "Collection",
                   accentColor: accentColor,
                   onTap: () => AnimeDialogs.showCollectionDialog(
                       context, ref, anime, accentColor),
@@ -180,7 +180,7 @@ class _StatusMenu extends ConsumerWidget {
               horizontal: AppSpacing.md,
             ),
             child: Text(
-              "В планах",
+              "Planned",
               style: TextStyle(color: tokens.textPrimary),
             ),
           ),
@@ -194,7 +194,7 @@ class _StatusMenu extends ConsumerWidget {
               vertical: AppSpacing.xs,
               horizontal: AppSpacing.md,
             ),
-            child: Text("Смотрю", style: TextStyle(color: tokens.info)),
+            child: Text("Watching", style: TextStyle(color: tokens.info)),
           ),
         ),
         MenuItemButton(
@@ -207,7 +207,7 @@ class _StatusMenu extends ConsumerWidget {
               horizontal: AppSpacing.md,
             ),
             child: Text(
-              "Просмотрено",
+              "Completed",
               style: TextStyle(color: tokens.success),
             ),
           ),
@@ -234,12 +234,12 @@ class _StatusMenu extends ConsumerWidget {
                 children: [
                   Text(
                     anime.status == AnimeStatus.planned
-                        ? "В планах"
+                        ? "Planned"
                         : anime.status == AnimeStatus.watching
-                            ? "Смотрю"
+                            ? "Watching"
                             : anime.status == AnimeStatus.completed
-                                ? "Просмотрено"
-                                : "Брошено",
+                                ? "Completed"
+                                : "Dropped",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -303,24 +303,24 @@ class _MoreMenu extends ConsumerWidget {
         ),
       ),
       child: PopupMenuButton<String>(
-        tooltip: "Больше опций",
+        tooltip: "More options",
         offset: const Offset(0, 50),
         itemBuilder: (context) => [
-          _menuItem(tokens, 'stats', AppIcons.stats, "Статистика"),
+          _menuItem(tokens, 'stats', AppIcons.stats, "Statistics"),
           _menuItem(
             tokens,
             'mark_all',
             AppIcons.doneAll,
-            "Отметить всё просмотренным",
+            "Mark all as watched",
           ),
           _menuItem(
             tokens,
             'folder',
             AppIcons.folderOpen,
-            "Открыть папку на ПК",
+            "Open folder in file manager",
           ),
           const PopupMenuDivider(),
-          _menuItem(tokens, 'edit', AppIcons.edit, "Редактировать постер"),
+          _menuItem(tokens, 'edit', AppIcons.edit, "Edit poster"),
         ],
         onSelected: (value) async {
           if (value == 'folder') {
@@ -337,7 +337,7 @@ class _MoreMenu extends ConsumerWidget {
           }
         },
         child: _HoverButton(
-            icon: AppIcons.more, tooltip: "Опции", accentColor: accentColor),
+            icon: AppIcons.more, tooltip: "Options", accentColor: accentColor),
       ),
     );
   }

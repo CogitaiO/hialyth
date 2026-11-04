@@ -29,8 +29,8 @@ class TrackSelectorDialog extends ConsumerWidget {
               TabBar(
                 unselectedLabelColor: tokens.textMuted,
                 tabs: const [
-                  Tab(icon: Icon(AppIcons.audio), text: "Озвучка"),
-                  Tab(icon: Icon(AppIcons.subtitles), text: "Субтитры"),
+                  Tab(icon: Icon(AppIcons.audio), text: "Audio"),
+                  Tab(icon: Icon(AppIcons.subtitles), text: "Subtitles"),
                 ],
               ),
               Expanded(
@@ -70,7 +70,7 @@ class TrackSelectorDialog extends ConsumerWidget {
     if (tracks.isEmpty) {
       return Center(
         child: Text(
-          "Нет доступных дорожек",
+          "No tracks available",
           style: TextStyle(color: context.appTheme.textMuted),
         ),
       );
@@ -81,7 +81,7 @@ class TrackSelectorDialog extends ConsumerWidget {
     final Map<String, int> fileCounters = {}; // Disambiguate duplicate subtitle files.
 
     for (var track in tracks) {
-      String name = "Неизвестно";
+      String name = "Unknown";
 
       if (track is AudioTrack) {
         name = track.title ?? track.language ?? track.id;
@@ -110,10 +110,10 @@ class TrackSelectorDialog extends ConsumerWidget {
       }
 
       // Friendlier names for special tracks.
-      if (track is AudioTrack && track.id == 'auto') name = "Автоматически";
-      if (track is AudioTrack && track.id == 'no') name = "Отключить";
-      if (track is SubtitleTrack && track.id == 'auto') name = "Автоматически";
-      if (track is SubtitleTrack && track.id == 'no') name = "Отключить";
+      if (track is AudioTrack && track.id == 'auto') name = "Auto";
+      if (track is AudioTrack && track.id == 'no') name = "Off";
+      if (track is SubtitleTrack && track.id == 'auto') name = "Auto";
+      if (track is SubtitleTrack && track.id == 'no') name = "Off";
 
       trackNames[track] = name;
     }

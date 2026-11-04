@@ -24,7 +24,7 @@ class PlayerOverlay extends ConsumerWidget {
 
     final isOp = activeSkip?.type == 'op';
 
-    String displayTitle = "Загрузка...";
+    String displayTitle = "Loading...";
 
     if (videoPath.isNotEmpty) {
       // Start with the file name as a fallback.
@@ -39,7 +39,7 @@ class PlayerOverlay extends ConsumerWidget {
         final epIndex = playlist.indexOf(videoPath) + 1;
 
         if (epIndex > 0) {
-          displayTitle = '${anime.title} Эпизод $epIndex';
+          displayTitle = '${anime.title} · Episode $epIndex';
         } else {
           displayTitle = anime.title;
         }
@@ -172,7 +172,7 @@ class PlayerOverlay extends ConsumerWidget {
                     ),
                     icon: const Icon(AppIcons.skipForward, size: 24),
                     label: Text(
-                      isOp ? "Пропустить опенинг" : "Пропустить эндинг",
+                      isOp ? "Skip opening" : "Skip ending",
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold),
                     ),

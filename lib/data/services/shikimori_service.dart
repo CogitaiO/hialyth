@@ -25,7 +25,7 @@ class ShikimoriService {
 
       final posterUrl = '$_baseUrl${detailsData['image']['original']}';
 
-      final rawDescription = detailsData['description'] ?? detailsData['russian'] ?? "Нет описания";
+      final rawDescription = detailsData['description'] ?? detailsData['russian'] ?? 'No description';
       final description = _cleanBbCode(rawDescription);
 
       return {
@@ -34,7 +34,7 @@ class ShikimoriService {
         'description': description,
       };
     } catch(e, st) {
-       talker.handle(e, st, "Ошибка парсинга Shikimori для: $title");
+       talker.handle(e, st, 'Failed to parse Shikimori data for: $title');
        return null;
     }
   }

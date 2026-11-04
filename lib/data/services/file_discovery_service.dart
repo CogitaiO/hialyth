@@ -30,7 +30,7 @@ class FileDiscoveryService {
           anime.episodePaths = episodes;
           animesToSave.add(anime);
         } else {
-          talker.info("Ищем данные в интернете для: $title...");
+          talker.info('Fetching metadata online for: $title...');
 
           final meta = await shikimori.fetchAnimeDetails(title);
 
@@ -47,12 +47,12 @@ class FileDiscoveryService {
         }
       }
       await _repository.addScannedAnime(animesToSave);
-      talker.info("Сканирование и парсинг завершены!");
+      talker.info('Scanning and parsing completed!');
     }catch(e,st) {
       if (e is TimeoutException) {
-        talker.error("Сканирование отменено: папка слишком большая");
+        talker.error('Scan canceled: folder is too large');
       } else {
-        talker.handle(e, st, "Критическая ошибка сканирования");
+        talker.handle(e, st, 'Critical scan error');
       }
     }
   }

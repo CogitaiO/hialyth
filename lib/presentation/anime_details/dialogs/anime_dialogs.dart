@@ -42,7 +42,7 @@ class AnimeDialogs {
                 Icon(AppIcons.stats, color: accentColor),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
-                  "Информация",
+                  "Information",
                   style: TextStyle(color: tokens.textPrimary),
                 ),
               ],
@@ -50,31 +50,31 @@ class AnimeDialogs {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildStatRow(context, "Добавлено:", dateAdded),
+                _buildStatRow(context, "Added:", dateAdded),
                 const SizedBox(height: AppSpacing.sm),
                 _buildStatRow(
                   context,
-                  "Просмотрено:",
-                  "$watchedCount из ${anime.sortedEpisodes.length}",
+                  "Watched:",
+                  "$watchedCount of ${anime.sortedEpisodes.length}",
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _buildStatRow(
                   context,
-                  "Потрачено:",
-                  "~${totalHours.toStringAsFixed(1)} часов",
+                  "Watch time:",
+                  "~${totalHours.toStringAsFixed(1)} hours",
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _buildStatRow(
                   context,
-                  "Папка:",
-                  anime.folderPath ?? "Неизвестно",
+                  "Folder:",
+                  anime.folderPath ?? "Unknown",
                 ),
               ],
             ),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Закрыть", style: TextStyle(color: accentColor)))
+                  child: Text("Close", style: TextStyle(color: accentColor)))
             ],
           );
         });
@@ -101,7 +101,7 @@ class AnimeDialogs {
               Icon(AppIcons.edit, color: accentColor),
               const SizedBox(width: AppSpacing.xs),
               Text(
-                "Редактировать",
+                "Edit",
                 style: TextStyle(color: tokens.textPrimary),
               ),
             ],
@@ -115,7 +115,7 @@ class AnimeDialogs {
                   controller: titleController,
                   style: TextStyle(color: tokens.textPrimary),
                   decoration: InputDecoration(
-                    hintText: "Название",
+                    hintText: "Title",
                     focusedBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: accentColor),
                     ),
@@ -126,7 +126,7 @@ class AnimeDialogs {
                     controller: coverController,
                     style: TextStyle(color: tokens.textPrimary),
                     decoration: InputDecoration(
-                      hintText: "URL Постера",
+                      hintText: "Poster URL",
                       focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(color: accentColor)),
                       suffixIcon: IconButton(
@@ -148,7 +148,7 @@ class AnimeDialogs {
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(
-                "Отмена",
+                "Cancel",
                 style: TextStyle(color: tokens.textMuted),
               ),
             ),
@@ -163,7 +163,7 @@ class AnimeDialogs {
                 Navigator.pop(ctx);
               },
               child: Text(
-                "Сохранить",
+                "Save",
                 style: TextStyle(color: tokens.textPrimary),
               ),
             ),
@@ -194,7 +194,7 @@ class AnimeDialogs {
                   borderRadius: BorderRadius.circular(AppRadii.xl),
                 ),
                 title: Text(
-                  "In collections",
+                  "Collections",
                   style: TextStyle(color: tokens.textPrimary),
                 ),
                 content: SizedBox(
@@ -208,7 +208,7 @@ class AnimeDialogs {
                         style: TextStyle(color: tokens.textPrimary),
                         autofocus: true,
                         decoration: InputDecoration(
-                          hintText: "New collections",
+                          hintText: "New collection",
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: accentColor),
                           ),
@@ -218,7 +218,7 @@ class AnimeDialogs {
                       if (availableCollections.isNotEmpty) ...[
                         const SizedBox(height: AppSpacing.md),
                         Text(
-                          "Or choose from existing ones",
+                          "Or choose an existing collection",
                           style:
                               TextStyle(color: tokens.textMuted, fontSize: 12),
                         ),
