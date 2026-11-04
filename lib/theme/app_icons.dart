@@ -1,77 +1,78 @@
-import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 
 /// Semantic icon names keep the UI independent of the icon family.
 ///
-/// Primary actions use filled rounded icons; navigation, secondary actions,
-/// and passive states use outlined variants. To swap icon families, edit only
-/// this file.
+/// Iconsax exposes two variants in this package: the base constants are Bold
+/// (filled) and the `_copy` suffix is Linear (outlined). Primary actions and
+/// active states use Bold; navigation, secondary actions, and passive states
+/// use Linear. To swap icon families, edit only this file.
 abstract final class AppIcons {
-  static const back = Icons.arrow_back_rounded;
-  static const close = Icons.close_rounded;
-  static const search = Icons.search_rounded;
-  static const settings = Icons.settings_outlined;
-  static const more = Icons.more_horiz_rounded;
-  static const dropdown = Icons.arrow_drop_down_rounded;
+  static const back = Iconsax.arrow_left_copy;
+  static const close = Iconsax.close_circle_copy;
+  static const search = Iconsax.search_normal_copy;
+  static const settings = Iconsax.setting_2_copy;
+  static const more = Iconsax.more_copy;
+  static const dropdown = Iconsax.arrow_down_1_copy;
 
-  static const all = Icons.all_inclusive_rounded;
-  static const watching = Icons.play_circle_outline_rounded;
-  static const planned = Icons.watch_later_rounded;
-  static const completed = Icons.check_circle_outline_rounded;
-  static const dropped = Icons.cancel_outlined;
-  static const collections = Icons.folder_special_outlined;
-  static const addFolder = Icons.create_new_folder_rounded;
-  static const folder = Icons.folder_rounded;
-  static const folderOpen = Icons.folder_open_rounded;
-  static const movie = Icons.movie_creation_rounded;
-  static const appLogo = Icons.movie_filter_rounded;
-  static const videoLibrary = Icons.video_library_rounded;
-  static const playlist = Icons.format_list_bulleted_rounded;
-  static const image = Icons.image_rounded;
-  static const imageSearch = Icons.image_search_rounded;
-  static const imageMissing = Icons.image_not_supported_rounded;
-  static const imageBroken = Icons.heart_broken_rounded;
-  static const fileFormat = Icons.memory_rounded;
+  static const all = Iconsax.category_copy;
+  static const watching = Iconsax.play_circle_copy;
+  static const planned = Iconsax.clock_copy;
+  static const completed = Iconsax.tick_circle_copy;
+  static const dropped = Iconsax.close_circle_copy;
+  static const collections = Iconsax.folder_favorite_copy;
+  static const addFolder = Iconsax.folder_add_copy;
+  static const folder = Iconsax.folder_copy;
+  static const folderOpen = Iconsax.folder_open_copy;
+  static const movie = Iconsax.video_copy;
+  static const appLogo = Iconsax.video_play;
+  static const videoLibrary = Iconsax.video_square_copy;
+  static const playlist = Iconsax.music_playlist_copy;
+  static const image = Iconsax.image_copy;
+  static const imageSearch = Iconsax.search_normal_copy;
+  static const imageMissing = Iconsax.gallery_slash_copy;
+  static const imageBroken = Iconsax.gallery_slash_copy;
+  static const fileFormat = Iconsax.cpu_copy;
 
-  static const play = Icons.play_arrow_rounded;
-  static const pause = Icons.pause_rounded;
-  static const replay = Icons.replay_rounded;
-  static const next = Icons.skip_next_rounded;
-  static const skipForward = Icons.fast_forward_rounded;
-  static const volumeOff = Icons.volume_off_rounded;
-  static const volumeDown = Icons.volume_down_rounded;
-  static const volumeUp = Icons.volume_up_rounded;
-  static const subtitles = Icons.subtitles_rounded;
-  static const audio = Icons.audiotrack_rounded;
-  static const pip = Icons.picture_in_picture_alt_rounded;
-  static const fullscreen = Icons.fullscreen_rounded;
-  static const playCircle = Icons.play_circle_fill_rounded;
-  static const playCircleOutline = Icons.play_circle_outline_rounded;
-  static const pauseCircle = Icons.pause_circle_filled_rounded;
-  static const checkCircle = Icons.check_circle_rounded;
-  static const checkCircleOutline = Icons.check_circle_outline_rounded;
-  static const circleOutline = Icons.radio_button_unchecked_rounded;
+  static const play = Iconsax.play;
+  static const pause = Iconsax.pause;
+  static const replay = Iconsax.repeat_circle;
+  static const next = Iconsax.next;
+  static const skipForward = Iconsax.forward;
+  static const volumeOff = Iconsax.volume_slash;
+  static const volumeDown = Iconsax.volume_low;
+  static const volumeUp = Iconsax.volume_high;
+  static const subtitles = Iconsax.subtitle;
+  static const audio = Iconsax.musicnote_copy;
+  static const pip = Iconsax.copy;
+  static const fullscreen = Iconsax.maximize;
+  static const playCircle = Iconsax.play_circle;
+  static const playCircleOutline = Iconsax.play_circle_copy;
+  static const pauseCircle = Iconsax.pause_circle;
+  static const checkCircle = Iconsax.tick_circle;
+  static const checkCircleOutline = Iconsax.tick_circle_copy;
+  static const circleOutline = Iconsax.record_copy;
 
-  static const add = Icons.add_rounded;
-  static const edit = Icons.edit_rounded;
-  static const editNote = Icons.edit_note_rounded;
-  static const delete = Icons.delete_outline_rounded;
-  static const check = Icons.check_rounded;
-  static const doneAll = Icons.done_all_rounded;
-  static const stats = Icons.bar_chart_rounded;
-  static const notes = Icons.sticky_note_2_rounded;
-  static const collectionAdd = Icons.bookmark_add_rounded;
-  static const openExternal = Icons.open_in_new_rounded;
-  static const shield = Icons.shield_outlined;
+  static const add = Iconsax.add;
+  static const edit = Iconsax.edit_2_copy;
+  static const editNote = Iconsax.note_1_copy;
+  static const delete = Iconsax.trash_copy;
+  static const check = Iconsax.check;
+  static const doneAll = Iconsax.tick_square_copy;
+  static const stats = Iconsax.chart_2_copy;
+  static const notes = Iconsax.note_2_copy;
+  static const collectionAdd = Iconsax.bookmark_copy;
+  static const openExternal = Iconsax.export_copy;
+  static const shield = Iconsax.shield;
 
-  static const minimize = Icons.minimize_rounded;
-  static const maximize = Icons.crop_square_rounded;
-  static const restore = Icons.filter_none_rounded;
+  static const minimize = Iconsax.minus_copy;
+  static const maximize = Iconsax.maximize_copy;
+  static const restore = Iconsax.copy_copy;
 
-  static const appearance = Icons.palette_rounded;
-  static const playback = Icons.play_circle_rounded;
-  static const library = Icons.folder_copy_rounded;
-  static const advancedSettings = Icons.settings_applications_rounded;
-  static const selected = Icons.check_rounded;
-  static const colorPicker = Icons.colorize_rounded;
-  static const rescan = Icons.sync_rounded;
+  static const appearance = Iconsax.colorfilter_copy;
+  static const playback = Iconsax.play_circle_copy;
+  static const library = Iconsax.folder_2_copy;
+  static const advancedSettings = Iconsax.setting_4_copy;
+  static const selected = Iconsax.check;
+  static const colorPicker = Iconsax.color_swatch_copy;
+  static const rescan = Iconsax.refresh_copy;
 }
