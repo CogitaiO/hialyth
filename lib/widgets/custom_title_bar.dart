@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
+import '../theme/app_icons.dart';
 import '../theme/app_theme_extension.dart';
 
 class CustomTitleBar extends StatefulWidget {
@@ -80,7 +81,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
             widget.leading!
           else ...[
             const SizedBox(width: AppSpacing.md),
-            Icon(Icons.movie_filter,
+            Icon(AppIcons.appLogo,
                 color: Theme.of(context).colorScheme.primary, size: 18),
             const SizedBox(width: AppSpacing.xs),
           ],
@@ -109,11 +110,11 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
           // Window controls are hidden in fullscreen.
           if (!_isFullScreen && (Platform.isWindows || Platform.isLinux)) ...[
             _WindowButton(
-              icon: Icons.minimize,
+              icon: AppIcons.minimize,
               onTap: () async => await windowManager.minimize(),
             ),
             _WindowButton(
-              icon: _isMaximized ? Icons.filter_none : Icons.crop_square,
+              icon: _isMaximized ? AppIcons.restore : AppIcons.maximize,
               iconSize: _isMaximized ? 12 : 14,
               onTap: () async {
                 if (_isMaximized) {
@@ -124,7 +125,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
               },
             ),
             _WindowButton(
-              icon: Icons.close,
+              icon: AppIcons.close,
               hoverColor: tokens.windowCloseHover,
               onTap: () async => await windowManager.close(),
             ),

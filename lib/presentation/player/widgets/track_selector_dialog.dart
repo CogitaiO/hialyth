@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
 import '../../../../providers/player/player_provider.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class TrackSelectorDialog extends ConsumerWidget {
@@ -28,8 +29,8 @@ class TrackSelectorDialog extends ConsumerWidget {
               TabBar(
                 unselectedLabelColor: tokens.textMuted,
                 tabs: const [
-                  Tab(icon: Icon(Icons.audiotrack_rounded), text: "Озвучка"),
-                  Tab(icon: Icon(Icons.subtitles_rounded), text: "Субтитры"),
+                  Tab(icon: Icon(AppIcons.audio), text: "Озвучка"),
+                  Tab(icon: Icon(AppIcons.subtitles), text: "Субтитры"),
                 ],
               ),
               Expanded(
@@ -140,7 +141,10 @@ class TrackSelectorDialog extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
           ),
           trailing: isSelected
-              ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+              ? Icon(
+                  AppIcons.check,
+                  color: Theme.of(context).colorScheme.primary,
+                )
               : null,
           onTap: () {
             onSelect(track);

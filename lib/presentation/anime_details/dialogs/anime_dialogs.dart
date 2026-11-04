@@ -6,6 +6,7 @@ import 'package:nekaido_pre/providers/library_provider.dart';
 
 import '../../../../domain/anime.dart';
 import '../../../../providers/repositories_provider.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class AnimeDialogs {
@@ -38,7 +39,7 @@ class AnimeDialogs {
             ),
             title: Row(
               children: [
-                Icon(Icons.bar_chart, color: accentColor),
+                Icon(AppIcons.stats, color: accentColor),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   "Информация",
@@ -97,7 +98,7 @@ class AnimeDialogs {
           ),
           title: Row(
             children: [
-              Icon(Icons.edit, color: accentColor),
+              Icon(AppIcons.edit, color: accentColor),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 "Редактировать",
@@ -129,7 +130,7 @@ class AnimeDialogs {
                       focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(color: accentColor)),
                       suffixIcon: IconButton(
-                        icon: Icon(Icons.image_search_rounded,
+                        icon: Icon(AppIcons.imageSearch,
                             color: accentColor),
                         onPressed: () async {
                           FilePickerResult? result =

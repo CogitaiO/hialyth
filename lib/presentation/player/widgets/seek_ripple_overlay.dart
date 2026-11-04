@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class SeekRippleOverlay extends StatefulWidget {
@@ -163,7 +164,7 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
       return Transform.scale(
         scaleX: right ? 1.0 : -1.0,
         child: Icon(
-          Icons.play_arrow_rounded,
+          AppIcons.play,
           color: context.appTheme.textPrimary,
           size: 36,
         ),

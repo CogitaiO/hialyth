@@ -5,6 +5,7 @@ import 'dart:io';
 import '../../../../providers/player/player_provider.dart';
 import '../../../../providers/library_provider.dart';
 import '../../../../providers/settings_provider.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class PlayerSidebar extends ConsumerWidget {
@@ -60,7 +61,7 @@ class PlayerSidebar extends ConsumerWidget {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.close, color: tokens.textMuted),
+                        icon: Icon(AppIcons.close, color: tokens.textMuted),
                         onPressed: () => {
                           FocusManager.instance.primaryFocus?.unfocus(),
                           ref.read(playerProvider.notifier).toggleSideBar(),
@@ -75,9 +76,9 @@ class PlayerSidebar extends ConsumerWidget {
                   dividerColor: tokens.borderSubtle,
                   tabs: const [
                     Tab(
-                        icon: Icon(Icons.video_library_rounded),
+                        icon: Icon(AppIcons.videoLibrary),
                         text: "Episodes"),
-                    Tab(icon: Icon(Icons.bookmark_rounded), text: "Notes"),
+                    Tab(icon: Icon(AppIcons.notes), text: "Notes"),
                   ],
                 ),
                 Expanded(
@@ -143,10 +144,10 @@ class PlayerSidebar extends ConsumerWidget {
                     : Colors.transparent,
                 leading: Icon(
                   isCurrent
-                      ? Icons.play_circle_filled_rounded
+                      ? AppIcons.playCircle
                       : (isWatched
-                          ? Icons.check_circle_outline
-                          : Icons.circle_outlined),
+                          ? AppIcons.checkCircleOutline
+                          : AppIcons.circleOutline),
                   color: isCurrent
                       ? Color(ref.watch(settingsProvider).accentColorValue)
                       : (isWatched ? tokens.success : tokens.textSubtle),
@@ -282,7 +283,7 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
                     backgroundColor:
                         Color(ref.watch(settingsProvider).accentColorValue)
                             .withValues(alpha: 0.2)),
-                icon: Icon(Icons.add_rounded,
+                icon: Icon(AppIcons.add,
                     color: Theme.of(context).colorScheme.primary),
                 onPressed: () => _saveNote(animeId, currentPath),
               ),
@@ -310,7 +311,7 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.edit_note_rounded,
+                            AppIcons.editNote,
                             size: 48,
                             color: tokens.surfaceHover,
                           ),
@@ -382,7 +383,7 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
                         ),
                         trailing: IconButton(
                           icon: Icon(
-                            Icons.delete_outline_rounded,
+                            AppIcons.delete,
                             color: tokens.textSubtle,
                             size: 20,
                           ),

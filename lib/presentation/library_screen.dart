@@ -7,6 +7,7 @@ import '../../providers/settings_provider.dart';
 import '../../core/debouncer.dart';
 import '../widgets/media_card.dart';
 import '../widgets/custom_title_bar.dart';
+import '../theme/app_icons.dart';
 import '../theme/app_theme_extension.dart';
 
 class LibraryScreen extends ConsumerWidget {
@@ -63,7 +64,7 @@ class LibraryScreen extends ConsumerWidget {
             }
           }
         },
-        icon: Icon(Icons.create_new_folder_rounded,
+        icon: Icon(AppIcons.addFolder,
             color: context.appTheme.textPrimary),
         label: Text("Add folder",
             style: TextStyle(
@@ -103,7 +104,7 @@ class _LeftSidebar extends StatelessWidget {
                       spreadRadius: -2)
                 ],
               ),
-              child: Icon(Icons.movie_creation,
+              child: Icon(AppIcons.movie,
                   color: context.appTheme.textPrimary, size: 24),
             ),
           ),
@@ -119,23 +120,23 @@ class _LeftSidebar extends StatelessWidget {
                 children: [
                   const SizedBox(height: AppSpacing.xs),
                   _SidebarIcon(
-                      icon: Icons.all_inclusive,
+                      icon: AppIcons.all,
                       tooltip: "Вся библиотека",
                       index: 0),
                   _SidebarIcon(
-                      icon: Icons.play_circle_outline,
+                      icon: AppIcons.watching,
                       tooltip: "Смотрю",
                       index: 1),
                   _SidebarIcon(
-                      icon: Icons.watch_later_outlined,
+                      icon: AppIcons.planned,
                       tooltip: "В планах",
                       index: 2),
                   _SidebarIcon(
-                      icon: Icons.check_circle_outline,
+                      icon: AppIcons.completed,
                       tooltip: "Просмотрено",
                       index: 3),
                   _SidebarIcon(
-                      icon: Icons.cancel_outlined,
+                      icon: AppIcons.dropped,
                       tooltip: "Брошено",
                       index: 4),
                   const SizedBox(height: AppSpacing.md),
@@ -146,7 +147,7 @@ class _LeftSidebar extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _SidebarIcon(
-                      icon: Icons.folder_special_outlined,
+                      icon: AppIcons.collections,
                       tooltip: "Мои подборки",
                       index: 5),
                 ],
@@ -154,7 +155,7 @@ class _LeftSidebar extends StatelessWidget {
             ),
           ),
           const _SidebarIcon(
-              icon: Icons.settings,
+              icon: AppIcons.settings,
               tooltip: "Settings",
               index: -1,
               isBottom: true),
@@ -311,7 +312,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
                     hintText: "Search...",
                     hintStyle: TextStyle(color: tokens.textSubtle),
                     prefixIcon:
-                        Icon(Icons.search_rounded, color: tokens.textMuted),
+                        Icon(AppIcons.search, color: tokens.textMuted),
                     filled: true,
                     fillColor: tokens.surfaceSubtle,
                     border: OutlineInputBorder(
@@ -438,7 +439,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
           title: Row(
             children: [
               Icon(
-                Icons.shield_outlined,
+                AppIcons.shield,
                 color: context.appTheme.destructive,
                 size: 28,
               ),

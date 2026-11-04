@@ -8,6 +8,7 @@ import '../../../../providers/repositories_provider.dart';
 import '../../player/player_screen.dart';
 import '../dialogs/anime_dialogs.dart';
 import '../../../../providers/settings_provider.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class LeftControlPanel extends ConsumerWidget {
@@ -85,7 +86,7 @@ class LeftControlPanel extends ConsumerWidget {
                 child: imageProvider == null
                     ? Center(
                         child: Icon(
-                          Icons.image_not_supported,
+                          AppIcons.imageMissing,
                           size: 60,
                           color: tokens.textDisabled,
                         ),
@@ -111,7 +112,7 @@ class LeftControlPanel extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(isAllWatched ? Icons.replay : Icons.play_arrow, size: 26),
+                Icon(isAllWatched ? AppIcons.replay : AppIcons.play, size: 26),
                 Transform.translate(
                   offset: const Offset(0, -1.5),
                   child: Text(
@@ -134,7 +135,7 @@ class LeftControlPanel extends ConsumerWidget {
             Expanded(
                 flex: 1,
                 child: _HoverButton(
-                  icon: Icons.bookmark_add_rounded,
+                  icon: AppIcons.collectionAdd,
                   tooltip: "Подборка",
                   accentColor: accentColor,
                   onTap: () => AnimeDialogs.showCollectionDialog(
@@ -255,7 +256,7 @@ class _StatusMenu extends ConsumerWidget {
                                     ),
                     ),
                   ),
-                  Icon(Icons.arrow_drop_down, color: tokens.textMuted),
+                  Icon(AppIcons.dropdown, color: tokens.textMuted),
                 ],
               ),
             ),
@@ -305,21 +306,21 @@ class _MoreMenu extends ConsumerWidget {
         tooltip: "Больше опций",
         offset: const Offset(0, 50),
         itemBuilder: (context) => [
-          _menuItem(tokens, 'stats', Icons.bar_chart, "Статистика"),
+          _menuItem(tokens, 'stats', AppIcons.stats, "Статистика"),
           _menuItem(
             tokens,
             'mark_all',
-            Icons.done_all,
+            AppIcons.doneAll,
             "Отметить всё просмотренным",
           ),
           _menuItem(
             tokens,
             'folder',
-            Icons.folder_open,
+            AppIcons.folderOpen,
             "Открыть папку на ПК",
           ),
           const PopupMenuDivider(),
-          _menuItem(tokens, 'edit', Icons.edit, "Редактировать постер"),
+          _menuItem(tokens, 'edit', AppIcons.edit, "Редактировать постер"),
         ],
         onSelected: (value) async {
           if (value == 'folder') {
@@ -336,7 +337,7 @@ class _MoreMenu extends ConsumerWidget {
           }
         },
         child: _HoverButton(
-            icon: Icons.more_horiz, tooltip: "Опции", accentColor: accentColor),
+            icon: AppIcons.more, tooltip: "Опции", accentColor: accentColor),
       ),
     );
   }
