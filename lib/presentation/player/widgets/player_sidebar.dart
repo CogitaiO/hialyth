@@ -153,7 +153,7 @@ class PlayerSidebar extends ConsumerWidget {
                       : (isWatched ? tokens.success : tokens.textSubtle),
                 ),
                 title: Text(
-                  "Эпизод ${index + 1}",
+                  "Episode ${index + 1}",
                   style: TextStyle(
                       color: isCurrent
                           ? Color(ref.watch(settingsProvider).accentColorValue)

@@ -87,7 +87,7 @@ class _LeftSidebar extends StatelessWidget {
         children: [
           const SizedBox(height: AppSpacing.lg),
           Tooltip(
-            message: "Режим: Аниме\n(Нажми для смены)",
+            message: "Mode: Anime\n(Click to switch)",
             decoration: BoxDecoration(
               color: context.appTheme.surfaceTooltip,
               borderRadius: BorderRadius.circular(AppRadii.md),
@@ -121,23 +121,23 @@ class _LeftSidebar extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xs),
                   _SidebarIcon(
                       icon: AppIcons.all,
-                      tooltip: "Вся библиотека",
+                      tooltip: "All titles",
                       index: 0),
                   _SidebarIcon(
                       icon: AppIcons.watching,
-                      tooltip: "Смотрю",
+                      tooltip: "Watching",
                       index: 1),
                   _SidebarIcon(
                       icon: AppIcons.planned,
-                      tooltip: "В планах",
+                      tooltip: "Planned",
                       index: 2),
                   _SidebarIcon(
                       icon: AppIcons.completed,
-                      tooltip: "Просмотрено",
+                      tooltip: "Completed",
                       index: 3),
                   _SidebarIcon(
                       icon: AppIcons.dropped,
-                      tooltip: "Брошено",
+                      tooltip: "Dropped",
                       index: 4),
                   const SizedBox(height: AppSpacing.md),
                   Divider(
@@ -148,7 +148,7 @@ class _LeftSidebar extends StatelessWidget {
                   const SizedBox(height: AppSpacing.md),
                   _SidebarIcon(
                       icon: AppIcons.collections,
-                      tooltip: "Мои подборки",
+                      tooltip: "My collections",
                       index: 5),
                 ],
               ),
@@ -445,15 +445,15 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                "Рекомендация по сети",
+                "Network recommendation",
                 style: TextStyle(color: context.appTheme.textPrimary),
               ),
             ],
           ),
           content: Text(
-            "Для корректной работы приложения (загрузки постеров, описаний и поиска таймкодов пропусков опенингов) используются зарубежные сервисы Shikimori и AniSkip.\n\n"
-            "Если вы находитесь в РФ, некоторые из них могут блокироваться провайдерами.\n\n"
-            "В случае сбоев или бесконечных загрузок настоятельно рекомендуется включить VPN (например, с маршрутизацией для определенных IP) или использовать средства обхода блокировок.",
+            "Hialyth uses the external services Shikimori and AniSkip to load posters, descriptions, and skip timestamps.\n\n"
+            "Some providers may block these services in certain regions.\n\n"
+            "If you experience errors or endless loading, enable a VPN (for example, with routing for specific IPs) or another workaround.",
             style:
                 TextStyle(color: context.appTheme.textSecondary, height: 2.5),
           ),
@@ -467,7 +467,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
                 Navigator.pop(ctx);
               },
               child: Text(
-                "Понятно",
+                "Got it",
                 style: TextStyle(color: context.appTheme.textPrimary),
               ),
             ),
@@ -484,7 +484,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(
         child: Text(
-          "Ошибка БД: $err",
+          "Database error: $err",
           style: TextStyle(color: context.appTheme.textPrimary),
         ),
       ),
@@ -493,7 +493,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
         if (filteredList.isEmpty) {
           return Center(
             child: Text(
-              "Ничего не найдено",
+              "Nothing found",
               style: TextStyle(color: context.appTheme.textMuted),
             ),
           );

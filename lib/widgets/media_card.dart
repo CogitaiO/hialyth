@@ -47,12 +47,12 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
         ),
         PopupMenuItem(
           value: 'edit',
-          child: Text("Edir", style: TextStyle(color: tokens.textPrimary)),
+          child: Text("Edit", style: TextStyle(color: tokens.textPrimary)),
         ),
         PopupMenuItem(
           value: 'collection',
           child: Text(
-            "To the collections",
+            "Add to collection",
             style: TextStyle(color: tokens.textPrimary),
           ),
         ),
@@ -284,7 +284,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
               controller: coverController,
               style: TextStyle(color: context.appTheme.textPrimary),
               decoration: InputDecoration(
-                labelText: "URL posters",
+                labelText: "Poster URL",
                 labelStyle: TextStyle(color: context.appTheme.destructive),
                 suffixIcon: IconButton(
                   icon: Icon(AppIcons.folderOpen,
@@ -306,7 +306,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              "Отмена",
+              "Cancel",
               style: TextStyle(color: context.appTheme.textMuted),
             ),
           ),

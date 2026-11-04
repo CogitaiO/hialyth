@@ -19,7 +19,7 @@ class RightInfoPanel extends StatelessWidget {
     if (!File(path).existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Файл не найден!"),
+          content: const Text("File not found."),
           backgroundColor: context.appTheme.destructive,
         ),
       );
@@ -60,7 +60,7 @@ class RightInfoPanel extends StatelessWidget {
         Row(
           children: [
             _buildInfoChip(context, AppIcons.videoLibrary,
-                "Серий: ${sortedEpisodes.length}"),
+                "Episodes: ${sortedEpisodes.length}"),
             const SizedBox(width: AppSpacing.sm),
             _buildInfoChip(context, AppIcons.fileFormat, fileExtension),
             const SizedBox(width: AppSpacing.sm),
@@ -69,7 +69,7 @@ class RightInfoPanel extends StatelessWidget {
                 context,
                 AppIcons.folder,
                 anime.folderPath?.split(Platform.pathSeparator).last ??
-                    "Неизвестно",
+                    "Unknown",
               ),
             ),
           ],
@@ -85,7 +85,7 @@ class RightInfoPanel extends StatelessWidget {
           ),
           child: Text(
             anime.descripion ??
-                "Описание пока отсутствует. Обновите данные из сети.",
+                "No description yet. Refresh data from the network.",
             style: TextStyle(
               color: anime.descripion == null
                   ? tokens.textSubtle
@@ -100,7 +100,7 @@ class RightInfoPanel extends StatelessWidget {
         const SizedBox(height: AppSpacing.xl),
 
         Text(
-          "Список эпизодов",
+          "Episodes",
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -235,7 +235,7 @@ class _EpisodeTileState extends State<_EpisodeTile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Эпизод ${widget.index}",
+                      "Episode ${widget.index}",
                       style: TextStyle(
                         color: widget.isWatched
                             ? tokens.textSubtle

@@ -23,7 +23,7 @@ class AniSkipService {
 
       // Log non-200 responses for diagnostics.
       if (response.statusCode != 200) {
-        talker.warning('AniSkip: Ошибка сервера ${response.statusCode}. Ответ: ${response.body}');
+        talker.warning('AniSkip: Server error ${response.statusCode}. Response: ${response.body}');
         return[];
       }
 
@@ -40,10 +40,10 @@ class AniSkipService {
         ));
       }
       
-      talker.info('AniSkip: Успех! Найдено ${intervals.length} пропусков для эпизода $episodeNumber');
+      talker.info('AniSkip: Success! Found ${intervals.length} skip intervals for episode $episodeNumber');
       return intervals;
     } catch (e) {
-      talker.error('AniSkip: Критическая ошибка сети ($e)');
+      talker.error('AniSkip: Critical network error ($e)');
       return[];
     }
   }
