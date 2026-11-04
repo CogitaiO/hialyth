@@ -6,6 +6,7 @@
 |---|---|---|
 | [`ux/ux-ia-contract.md`](ux/ux-ia-contract.md) | Draft v0.1 | Сценарии, информационная архитектура, состояния, навигация, адаптивность |
 | [`design/design-contract.md`](design/design-contract.md) | Draft v0.1 | Визуальный язык, токены, компоненты, motion, accessibility, glass |
+| [`architecture/i18n.md`](architecture/i18n.md) | Proposal v0.1 | Локализация, ARB, смена языка интерфейса и хранение выбора |
 
 ## Порядок работы
 
