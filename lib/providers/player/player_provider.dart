@@ -9,7 +9,9 @@ import '../../domain/anime.dart';
 import '../../data/repositories/anime_repository.dart';
 import '../../data/services/aniskip_service.dart';
 import '../../data/services/anime_filename_parser.dart';
+import '../../data/services/playback_progress_service.dart';
 import '../../providers/repositories_provider.dart';
+import 'playback_progress_tracker.dart';
 import 'player_state.dart';
 import '../../core/logger.dart'; 
 import '../library_provider.dart';
@@ -25,15 +27,14 @@ final playerProvider = StateNotifierProvider.autoDispose<PlayerNotifier, AppPlay
 class PlayerNotifier extends StateNotifier<AppPlayerState> {
   final SharedPreferences _prefs;
   final AnimeRepository _repository;
+  final PlaybackProgressTracker _progress;
   final Player player = Player();
   final List<StreamSubscription> _subscriptions =[];
   final DiscordService _discordService = DiscordService(); 
   Timer? _uiTimer;
   Timer? _nextEpTimer;
 
-  int _lastSavedSeconds = -1; 
   int _lastStateSeconds = -1; // Throttle UI updates to one per second.
-  bool _isEpisodeMarkedWatched = false; // Prevent duplicate writes at 90% progress.
   bool _isLoading = false; // Guard against duplicate load requests.
   bool _isAutoSkipping = false;
   bool _wasFullScreen = false;
@@ -42,8 +43,15 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   Offset _previousPosition = Offset.zero;
   double _lastVolume = 100.0;
 
-  PlayerNotifier(this._repository, this._prefs) : 
-    super(AppPlayerState(volume: _prefs.getDouble('player_volume') ?? 100.0)) {
+  PlayerNotifier(
+    AnimeRepository repository,
+    SharedPreferences prefs, {
+    PlaybackProgressTracker? progress,
+  })  : _repository = repository,
+        _prefs = prefs,
+        _progress = progress ??
+            PlaybackProgressTracker(PlaybackProgressService(repository)),
+        super(AppPlayerState(volume: prefs.getDouble('player_volume') ?? 100.0)) {
     _initPlayer();
   }
 
@@ -106,19 +114,12 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
         state = state.copyWith(position: pos);
       }
 
-      if (currentSeconds > 0 && (currentSeconds - _lastSavedSeconds).abs() >= 15) {
-        _lastSavedSeconds = currentSeconds;
-        _savePositionToDb();
-      }
-      
-      if (state.duration.inSeconds > 0) {
-        final progress = currentSeconds / state.duration.inSeconds;
-        if (progress >= 0.9 && !_isEpisodeMarkedWatched && state.animeId != null && state.videoPath != null) {
-          _isEpisodeMarkedWatched = true;
-          _repository.markEpisodeAsWatched(state.animeId!, state.videoPath!);
-          talker.info("Episode marked as watched: ${state.videoPath}");
-        } 
-      }
+      unawaited(_progress.onPosition(
+        animeId: state.animeId,
+        videoPath: state.videoPath,
+        position: state.position,
+        duration: state.duration,
+      ));
     }));
 
     _subscriptions.add(player.stream.duration.listen((dur) {
@@ -130,7 +131,11 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       if (playing) {
         _startUiHider();
       } else {
-        _savePositionToDb();
+        unawaited(_progress.saveNow(
+          animeId: state.animeId,
+          videoPath: state.videoPath,
+          position: state.position,
+        ));
       }
     }));
 
@@ -236,8 +241,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
       final subsMap = await _applyExternalMedia(path);
       final anime = await _repository.getAnimeById(animeId);
-      final entry = anime?.playbackPositions.where((e) => e.path == path).firstOrNull;
-      int savedSeconds = entry?.position ?? 0;
+      final savedSeconds = _progress.restore(anime, path);
       List<SkipInterval> skips = [];
 
        if (anime != null) {
@@ -293,8 +297,6 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       talker.info("ЗАГРУЖАЕМ ВИДЕО: Сохраненная позиция = $savedSeconds сек.");
 
       // Reset per-video state.
-      _isEpisodeMarkedWatched = false;
-      _lastSavedSeconds = savedSeconds;
       _lastStateSeconds = -1;
 
       state = state.copyWith(
@@ -391,7 +393,11 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   void togglePlay() {
     player.playOrPause();
-    _savePositionToDb();
+    unawaited(_progress.saveNow(
+      animeId: state.animeId,
+      videoPath: state.videoPath,
+      position: state.position,
+    ));
     _startUiHider();
 
     final isGoingToPlay = !state.isPlaying; 
@@ -448,16 +454,6 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     player.setSubtitleTrack(track);
   }
 
-  Future<void> _savePositionToDb() async {
-    if (state.animeId == null || state.videoPath == null) return;
-    
-    await _repository.savePlaybackPosition(
-      state.animeId!, 
-      state.videoPath!, 
-      state.position.inSeconds
-    );
-  }
-
   @override
   void dispose() {
     _uiTimer?.cancel();
@@ -476,11 +472,16 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     if (finalId != null && finalPath != null && finalSeconds > 5) {
       if (duration > 0 && (duration - finalSeconds) < 5) {
         talker.info("ВЫХОД: Сбрасываем позицию для $finalPath");
-        _repository.savePlaybackPosition(finalId, finalPath, 0);
       } else {
         talker.info("ВЫХОД: Сохраняем позицию $finalSeconds сек.");
-        _repository.savePlaybackPosition(finalId, finalPath, finalSeconds);
       }
+
+      unawaited(_progress.finalize(
+        animeId: finalId,
+        videoPath: finalPath,
+        position: Duration(seconds: finalSeconds),
+        duration: Duration(seconds: duration),
+      ));
     }
     
     if (state.isPiP) {

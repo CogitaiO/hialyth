@@ -1,8 +1,9 @@
 import 'package:isar/isar.dart';
 import '../../domain/anime.dart';
 import '../../core/logger.dart'; 
+import 'playback_progress_store.dart';
 
-class AnimeRepository {
+class AnimeRepository implements PlaybackProgressStore {
   final Isar db;
   AnimeRepository(this.db);
 
@@ -48,6 +49,7 @@ class AnimeRepository {
     }
   }
 
+  @override
   Future<void> markEpisodeAsWatched (Id id, String episodePath) async {
     try{
       await db.writeTxn(() async{
@@ -99,7 +101,8 @@ class AnimeRepository {
     return await db.animes.get(id);
   }
 
-   Future<void> savePlaybackPosition(int id, String path, int seconds) async {
+  @override
+  Future<void> savePlaybackPosition(int id, String path, int seconds) async {
     try {
       await db.writeTxn(() async {
         final anime = await db.animes.get(id);
