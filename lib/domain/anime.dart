@@ -37,19 +37,16 @@ class Anime {
   
 
 
-  //Геттер сортировки
   List<String> get sortedEpisodes {
     return List.from(episodePaths)..sort(compareNatural);
   }
 
-  //Геттер прогресса
   double get watchProgress {
     if(episodePaths.isEmpty) return 0.0;
     return watchedEpisodes.length / episodePaths.length;
     
   }
 
-  //Геттер для определения пути следующей серии
   String? get nextEpisodeToPlay {
     final sorted = sortedEpisodes;
     for (var ep in sorted) {
@@ -59,13 +56,11 @@ class Anime {
     }
     return null;
   }
-  //Геттер для процнета просмотра
   String get progressPercentage {
     if (episodePaths.isEmpty) return "0%";
     final percent = (watchProgress * 100).toInt();
     return "$percent%";
   }
-  //Количество серий 
   String get progressFraction {
     return "${watchedEpisodes.length} / ${episodePaths.length}";
   }
@@ -95,7 +90,7 @@ class EpisodeSkipData {
 
 @embedded
 class SkipIntervalDb {
-  String? type; // 'op' или 'ed'
+  String? type; // "op" or "ed".
   double? startTime;
   double? endTime;
 }

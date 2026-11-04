@@ -71,12 +71,12 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 flutter_icons:
-  android: false # Поставь true, если потом будешь делать под Андроид
+  android: false # Set to true if you target Android later.
   ios: false
   windows:
     generate: true
     image_path: "assets/icon/necaido_icon.png"
-    icon_size: 256 # Рекомендуемый максимальный размер для Windows
+    icon_size: 256 # Recommended maximum size for Windows.
   macos:
     generate: true
     image_path: "assets/icon/necaido_icon.png"

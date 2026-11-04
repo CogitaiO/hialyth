@@ -1,4 +1,4 @@
-/// Parses anime titles and episode numbers from common release filenames.
+/// Parses a title and episode number from common release filenames.
 class AnimeFilenameParser {
   static final _extensionRegex =
       RegExp(r'\.(mkv|mp4|avi)$', caseSensitive: false);
@@ -29,7 +29,7 @@ class AnimeFilenameParser {
     return title.trim();
   }
 
-  /// Returns a likely episode number, excluding common resolution tags/years.
+  /// Returns a likely episode number, ignoring resolution tags and years.
   static int? parseEpisodeNumber(String fileName) {
     for (final match in _episodeNumberRegex.allMatches(fileName)) {
       final value = int.tryParse(match.group(1)!);

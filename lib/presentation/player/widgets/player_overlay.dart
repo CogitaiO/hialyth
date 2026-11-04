@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/player/player_provider.dart';
-import '../../../../providers/library_provider.dart'; // Нужен для получения названия аниме
+import '../../../../providers/library_provider.dart';
 import '../../../../widgets/custom_title_bar.dart';
 import 'player_progress_bar.dart';
 import '../../../theme/app_theme_extension.dart';
@@ -16,7 +16,6 @@ class PlayerOverlay extends ConsumerWidget {
     final isVisible = ref.watch(playerProvider.select((s) => s.isUiVisible));
     final activeSkip = ref.watch(playerProvider.select((s) => s.activeSkip));
 
-    // Реактивно следим за текущим видео и плейлистом
     final videoPath =
         ref.watch(playerProvider.select((s) => s.videoPath)) ?? '';
     final animeId = ref.watch(playerProvider.select((s) => s.animeId));
@@ -24,20 +23,18 @@ class PlayerOverlay extends ConsumerWidget {
 
     final isOp = activeSkip?.type == 'op';
 
-    // === ГЕНЕРАЦИЯ КРАСИВОГО НАЗВАНИЯ ===
     String displayTitle = "Загрузка...";
 
     if (videoPath.isNotEmpty) {
-      // Запасной технический вариант (если аниме не найдено)
+      // Start with the file name as a fallback.
       displayTitle = videoPath.split(Platform.pathSeparator).last;
     }
 
     if (animeId != null) {
-      // Получаем аниме из базы данных
       final animeSync = ref.watch(animeDetailsProvider(animeId));
       if (animeSync.value != null) {
         final anime = animeSync.value!;
-        // Вычисляем номер серии (+1, так как индексы начинаются с нуля)
+        // Playlist indices are zero-based.
         final epIndex = playlist.indexOf(videoPath) + 1;
 
         if (epIndex > 0) {
@@ -50,7 +47,6 @@ class PlayerOverlay extends ConsumerWidget {
 
     return Stack(
       children: [
-        // Основной UI плеера с плавным появлением
         IgnorePointer(
           ignoring: !isVisible,
           child: AnimatedOpacity(
@@ -58,7 +54,6 @@ class PlayerOverlay extends ConsumerWidget {
             duration: const Duration(milliseconds: 300),
             child: Stack(
               children: [
-                // === ВЕРХНЯЯ ПАНЕЛЬ (Градиент) ===
                 Positioned(
                   top: 0,
                   left: 0,
@@ -94,7 +89,7 @@ class PlayerOverlay extends ConsumerWidget {
                               fontWeight: FontWeight.w500,
                             ),
                             waitDuration: const Duration(
-                                milliseconds: 500), // через сколько появится
+                                milliseconds: 500),
                             showDuration: const Duration(seconds: 2),
                             child: IconButton(
                               icon: Icon(
@@ -110,7 +105,7 @@ class PlayerOverlay extends ConsumerWidget {
                       ),
                       title: Expanded(
                         child: Text(
-                          displayTitle, // <--- ИСПОЛЬЗУЕМ КРАСИВОЕ НАЗВАНИЕ
+                          displayTitle,
                           style: TextStyle(
                             color: tokens.textPrimary,
                             fontSize: 16,
@@ -124,7 +119,6 @@ class PlayerOverlay extends ConsumerWidget {
                   ),
                 ),
 
-                // === НИЖНЯЯ ПАНЕЛЬ (Градиент) ===
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -149,7 +143,6 @@ class PlayerOverlay extends ConsumerWidget {
           ),
         ),
 
-        // === КНОПКА ПРОПУСКА ОПЕНИНГА/ЭНДИНГА ===
         Positioned(
           bottom: 120,
           right: 48,

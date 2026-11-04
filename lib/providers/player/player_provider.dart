@@ -17,8 +17,7 @@ import '../../data/services/discord_service.dart';
 
 final playerProvider = StateNotifierProvider.autoDispose<PlayerNotifier, AppPlayerState>((ref) {
   final repo = ref.watch(animeRepoProvider);
-  // Используем watch, но так как экземпляр SharedPreferences обычно не меняется,
-  // это безопасно и соответствует правилам Riverpod.
+  // SharedPreferences is stable, so watching it is safe.
   final prefs = ref.watch(sharedPrefsProvider);
   return PlayerNotifier(repo, prefs);
 });
@@ -32,11 +31,10 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   Timer? _uiTimer;
   Timer? _nextEpTimer;
 
-  // --- Новые флаги для оптимизации ---
   int _lastSavedSeconds = -1; 
-  int _lastStateSeconds = -1; // Для троттлинга обновления UI
-  bool _isEpisodeMarkedWatched = false; // Защита от спама в БД на 90%
-  bool _isLoading = false; // Защита от двойного нажатия "Следующая серия"
+  int _lastStateSeconds = -1; // Throttle UI updates to one per second.
+  bool _isEpisodeMarkedWatched = false; // Prevent duplicate writes at 90% progress.
+  bool _isLoading = false; // Guard against duplicate load requests.
   bool _isAutoSkipping = false;
   bool _wasFullScreen = false;
   bool _wasMaximized = false;
@@ -57,12 +55,10 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
     final dynamic engine = player.platform;
     
-    // Оптимизация субтитров
     engine.setProperty('sub-ass', 'yes');
     engine.setProperty('sub-ass-override', 'scale'); 
     engine.setProperty('sub-pos', '90'); 
     
-    // Языки
     final alang = playerSettings.getString('pref_alang') ?? 'jpn,jp,eng,en,rus,ru';
     final slang = playerSettings.getString('pref_slang') ?? 'rus,ru,eng,en';
     engine.setProperty('alang', alang);
@@ -93,7 +89,6 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
               _isAutoSkipping = false;
             });
           }
-          // ==============================
           break;
         }
       }
@@ -179,7 +174,6 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       } else if (event.level == 'info') {
         talker.info(msg);
       } else {
-        // Выводим debug/trace логи
         talker.debug(msg);
       }
     }));
@@ -198,10 +192,10 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   void toggleMute() {
     if (state.volume > 0) {
-      _lastVolume = state.volume; // Запоминаем текущую громкость
+      _lastVolume = state.volume;
       setVolume(0.0);
     } else {
-      // Возвращаем старую громкость (или 100, если вдруг она была 0)
+      // Restore the previous volume, or 100 if it was zero.
       setVolume(_lastVolume > 0 ? _lastVolume : 100.0);
     }
   }
@@ -258,16 +252,14 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
           talker.info('AniSkip: Таймкоды загружены из локальной БД (мгновенно)');
         } 
         else {
-          // Если нет в БД, проверяем, есть ли ID
+          // No cached timestamps: fetch them from AniSkip.
           if (anime.shikimoriId == null) {
             talker.warning('AniSkip: Пропуск невозможен. shikimoriId = null (Нажмите "Обновить данные из сети" на постере)');
           } else {
-            // Вытаскиваем только имя файла
             final fileName = path.split(Platform.pathSeparator).last;
             
             final epNumber = AnimeFilenameParser.parseEpisodeNumber(fileName);
 
-            // Проверяем, смогли ли найти номер
             if (epNumber != null) {
               talker.info('AniSkip: В БД пусто. Ищем таймкоды для серии $epNumber (MAL ID: ${anime.shikimoriId}) в сети...');
               skips = await AniSkipService().getSkipTimes(anime.shikimoriId!, epNumber);
@@ -300,7 +292,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
       talker.info("ЗАГРУЖАЕМ ВИДЕО: Сохраненная позиция = $savedSeconds сек.");
 
-      // Сбрасываем флаги для нового видео
+      // Reset per-video state.
       _isEpisodeMarkedWatched = false;
       _lastSavedSeconds = savedSeconds;
       _lastStateSeconds = -1;
@@ -320,7 +312,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       );
 
       
-      await player.open(Media(path), play: true); // Сразу запускаем
+      await player.open(Media(path), play: true);
       if (savedSeconds > 0) {
         await player.stream.duration.firstWhere((d) => d.inMilliseconds > 0);
         await player.seek(Duration(seconds: savedSeconds));
@@ -336,7 +328,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
         isPlaying: true,
        );
     } finally {
-      // Обязательно снимаем блокировку
+      // Always release the load lock.
       _isLoading = false;
     }
   }
@@ -397,7 +389,6 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     return subsMap;
   }
 
-  // Управление
   void togglePlay() {
     player.playOrPause();
     _savePositionToDb();
@@ -449,17 +440,14 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     });
   }
 
-  // Аудио дорожки
   void setAudioTrack(AudioTrack track) {
     player.setAudioTrack(track);
   }
 
-  // Сабы
   void setSubtitleTrack(SubtitleTrack track) {
     player.setSubtitleTrack(track);
   }
 
-  // Сохранение в бд
   Future<void> _savePositionToDb() async {
     if (state.animeId == null || state.videoPath == null) return;
     
@@ -480,12 +468,11 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     final finalId = state.animeId;
     final duration = state.duration.inSeconds;
 
-    // Сначала отменяем все подписки на события (чтобы плеер не пытался обновить UI)
+    // Cancel subscriptions before saving state.
     for (var sub in _subscriptions) {
       sub.cancel();
     }
 
-    // Сохраняем позицию в базу
     if (finalId != null && finalPath != null && finalSeconds > 5) {
       if (duration > 0 && (duration - finalSeconds) < 5) {
         talker.info("ВЫХОД: Сбрасываем позицию для $finalPath");
@@ -518,7 +505,6 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     showUi();
   }
 
-  // Перемотка
   void seekRelative(int seconds) {
     int newSeconds = state.position.inSeconds + seconds;
     if(newSeconds < 0 ) newSeconds = 0;
@@ -532,8 +518,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   Future<void> toggleFullscreen() async {
-    //[ИСПРАВЛЕНО 10]: windowManager работает только на десктопе. 
-    // На Android/iOS это вызвало бы краш.
+    // windowManager is desktop-only; calling it on mobile would crash.
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       final isFull = await windowManager.isFullScreen();
       await windowManager.setFullScreen(!isFull);
@@ -553,9 +538,9 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   Future<void> togglePiP() async {
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       if (state.isPiP) {
-        //Выход из Pip
+        // Exit PiP.
         await windowManager.setAlwaysOnTop(false);
-        //Запрещаем менять размер окна меньше дефолтного
+        // Restore the default minimum window size.
         await windowManager.setMinimumSize(const Size(800, 600)); 
 
         if (_wasFullScreen) {
@@ -569,7 +554,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
         state = state.copyWith(isPiP: false);
         talker.info('Выход из режима PiP');
       } else {
-        //Вход в pip
+        // Enter PiP.
         _wasFullScreen = await windowManager.isFullScreen();
         _wasMaximized = await windowManager.isMaximized();
         _previousSize = await windowManager.getSize();
@@ -579,11 +564,11 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
           await windowManager.setFullScreen(false);
         }
 
-        state = state.copyWith(isPiP: true); // Сначала обновляем UI, чтобы избежать краша RenderFlex
-        await Future.delayed(const Duration(milliseconds: 50)); // Даем UI перестроиться
+        state = state.copyWith(isPiP: true); // Update the UI before resizing to avoid RenderFlex errors.
+        await Future.delayed(const Duration(milliseconds: 50)); // Let the UI rebuild.
 
         await windowManager.setAlwaysOnTop(true);
-        // Разрешаем юзеру растягивать окно PiP, но не меньше 320x180
+        // Allow resizing the PiP window down to 320x180.
         await windowManager.setMinimumSize(const Size(320, 180)); 
         await windowManager.setSize(const Size(400, 225));
         await windowManager.setAlignment(Alignment.bottomRight);
