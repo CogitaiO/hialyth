@@ -9,6 +9,7 @@ import '../domain/anime.dart';
 import '../presentation/anime_details/anime_details_screen.dart';
 import '../../providers/repositories_provider.dart';
 import '../presentation/anime_details/dialogs/anime_dialogs.dart';
+import '../theme/app_icons.dart';
 import '../theme/app_theme_extension.dart';
 
 class AnimeCard extends ConsumerStatefulWidget {
@@ -135,7 +136,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                                   placeholder: (context, url) => const Center(
                                       child: CircularProgressIndicator()),
                                   errorWidget: (context, url, error) => Icon(
-                                    Icons.heart_broken_rounded,
+                                    AppIcons.imageBroken,
                                     color: context.appTheme.textDisabled,
                                     size: 40,
                                   ),
@@ -148,7 +149,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                         if (widget.anime.coverUrl == null)
                           Center(
                             child: Icon(
-                              Icons.image,
+                              AppIcons.image,
                               color: context.appTheme.textDisabled,
                               size: 40,
                             ),
@@ -287,7 +288,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                 labelText: "URL posters",
                 labelStyle: TextStyle(color: context.appTheme.destructive),
                 suffixIcon: IconButton(
-                  icon: Icon(Icons.folder_open,
+                  icon: Icon(AppIcons.folderOpen,
                       color: Theme.of(context).colorScheme.primary),
                   tooltip: "Select from computer",
                   onPressed: () async {

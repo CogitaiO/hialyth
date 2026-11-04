@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../domain/anime.dart';
 import '../../player/player_screen.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class RightInfoPanel extends StatelessWidget {
@@ -60,15 +61,15 @@ class RightInfoPanel extends StatelessWidget {
         // === БЕЙДЖИ ===
         Row(
           children: [
-            _buildInfoChip(context, Icons.video_library,
+            _buildInfoChip(context, AppIcons.videoLibrary,
                 "Серий: ${sortedEpisodes.length}"),
             const SizedBox(width: AppSpacing.sm),
-            _buildInfoChip(context, Icons.memory, fileExtension),
+            _buildInfoChip(context, AppIcons.fileFormat, fileExtension),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _buildInfoChip(
                 context,
-                Icons.folder,
+                AppIcons.folder,
                 anime.folderPath?.split(Platform.pathSeparator).last ??
                     "Неизвестно",
               ),
@@ -255,10 +256,10 @@ class _EpisodeTileState extends State<_EpisodeTile> {
                 duration: const Duration(milliseconds: 200),
                 child: Icon(
                   widget.isWatched
-                      ? Icons.check_circle
+                      ? AppIcons.checkCircle
                       : (isHovered
-                          ? Icons.play_circle_fill
-                          : Icons.play_circle_outline),
+                          ? AppIcons.playCircle
+                          : AppIcons.playCircleOutline),
                   color: widget.isWatched
                       ? tokens.success
                       : (isHovered ? widget.accentColor : tokens.textMuted),

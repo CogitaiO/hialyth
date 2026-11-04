@@ -5,6 +5,7 @@ import '../../providers/library_provider.dart';
 import '../../providers/color_provider.dart';
 import '../../widgets/escapable.dart';
 import '../../widgets/custom_title_bar.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_theme_extension.dart';
 import 'widgets/ambient_background.dart';
 import 'widgets/left_control_panel.dart';
@@ -59,7 +60,7 @@ class AnimeDetailsScreen extends ConsumerWidget {
                               padding: const EdgeInsets.all(AppSpacing.md),
                               child: IconButton(
                                 icon: Icon(
-                                  Icons.arrow_back,
+                                  AppIcons.back,
                                   color: context.appTheme.textPrimary,
                                   size: 28,
                                 ),

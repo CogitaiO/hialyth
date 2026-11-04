@@ -6,6 +6,7 @@ import '../../../../providers/player/player_provider.dart';
 import '../../../../domain/anime.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_palette.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class PlayerProgressBar extends ConsumerStatefulWidget {
@@ -116,7 +117,7 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
               IconButton(
                 iconSize: 32,
                 icon: Icon(
-                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                  isPlaying ? AppIcons.pause : AppIcons.play,
                   color: tokens.textPrimary,
                 ),
                 onPressed: () => notifier.togglePlay(),
@@ -125,7 +126,7 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
                 IconButton(
                   iconSize: 28,
                   icon:
-                      Icon(Icons.skip_next_rounded, color: tokens.textPrimary),
+                      Icon(AppIcons.next, color: tokens.textPrimary),
                   onPressed: () => notifier.playNext(),
                 ),
               const SizedBox(width: AppSpacing.xs),
@@ -138,8 +139,10 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
                     iconSize: 24,
                     icon: Icon(
                       volume == 0
-                          ? Icons.volume_off
-                          : (volume < 50 ? Icons.volume_down : Icons.volume_up),
+                          ? AppIcons.volumeOff
+                          : (volume < 50
+                              ? AppIcons.volumeDown
+                              : AppIcons.volumeUp),
                       color: tokens.textPrimary,
                     ),
                     onPressed: () => notifier.toggleMute(),
@@ -201,8 +204,8 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
                         children: [
                           Icon(
                             playbackSpeed == speed
-                                ? Icons.check_circle_rounded
-                                : Icons.circle_outlined,
+                                ? AppIcons.checkCircle
+                                : AppIcons.circleOutline,
                             color: playbackSpeed == speed
                                 ? Color(ref
                                     .watch(settingsProvider)
@@ -264,7 +267,7 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.subtitles_rounded, color: tokens.textPrimary),
+                icon: Icon(AppIcons.subtitles, color: tokens.textPrimary),
                 tooltip: "Dubs & Subs",
                 onPressed: () {
                   showDialog(
@@ -275,7 +278,7 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
               ),
               IconButton(
                 icon: Icon(
-                  Icons.picture_in_picture_alt_rounded,
+                  AppIcons.pip,
                   color: tokens.textPrimary,
                 ),
                 tooltip: "Picture in picture",
@@ -283,7 +286,7 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
               ),
               IconButton(
                 icon: Icon(
-                  Icons.format_list_bulleted_rounded,
+                  AppIcons.playlist,
                   color: tokens.textPrimary,
                 ),
                 tooltip: "Episodes and notes",
@@ -291,7 +294,7 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
               ),
               IconButton(
                 iconSize: 28,
-                icon: Icon(Icons.fullscreen_rounded, color: tokens.textPrimary),
+                icon: Icon(AppIcons.fullscreen, color: tokens.textPrimary),
                 onPressed: () => notifier.toggleFullscreen(),
               ),
             ],

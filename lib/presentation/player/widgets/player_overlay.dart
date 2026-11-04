@@ -5,6 +5,7 @@ import '../../../../providers/player/player_provider.dart';
 import '../../../../providers/library_provider.dart'; // Нужен для получения названия аниме
 import '../../../../widgets/custom_title_bar.dart';
 import 'player_progress_bar.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class PlayerOverlay extends ConsumerWidget {
@@ -98,7 +99,7 @@ class PlayerOverlay extends ConsumerWidget {
                             showDuration: const Duration(seconds: 2),
                             child: IconButton(
                               icon: Icon(
-                                Icons.arrow_back,
+                                AppIcons.back,
                                 color: tokens.textPrimary,
                                 size: 24,
                               ),
@@ -176,7 +177,7 @@ class PlayerOverlay extends ConsumerWidget {
                       ),
                       elevation: 10,
                     ),
-                    icon: const Icon(Icons.fast_forward_rounded, size: 24),
+                    icon: const Icon(AppIcons.skipForward, size: 24),
                     label: Text(
                       isOp ? "Пропустить опенинг" : "Пропустить эндинг",
                       style: const TextStyle(

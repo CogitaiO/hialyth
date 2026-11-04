@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../../../providers/player/player_provider.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 
 class PipOverlay extends ConsumerWidget {
@@ -37,8 +38,8 @@ class PipOverlay extends ConsumerWidget {
                   iconSize: 48,
                   icon: Icon(
                     isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_fill,
+                        ? AppIcons.pauseCircle
+                        : AppIcons.playCircle,
                     color: tokens.textPrimary,
                   ),
                   onPressed: () => notifier.togglePlay(),
@@ -55,10 +56,10 @@ class PipOverlay extends ConsumerWidget {
                       iconSize: 20,
                       icon: Icon(
                         volume == 0
-                            ? Icons.volume_off
+                            ? AppIcons.volumeOff
                             : (volume < 50
-                                ? Icons.volume_down
-                                : Icons.volume_up),
+                                ? AppIcons.volumeDown
+                                : AppIcons.volumeUp),
                         color: tokens.textPrimary,
                       ),
                       onPressed: () => notifier.toggleMute(),
@@ -66,7 +67,10 @@ class PipOverlay extends ConsumerWidget {
                     IconButton(
                       iconSize: 20,
                       tooltip: "Вернуться",
-                      icon: Icon(Icons.open_in_new, color: tokens.textPrimary),
+                      icon: Icon(
+                        AppIcons.openExternal,
+                        color: tokens.textPrimary,
+                      ),
                       onPressed: () => notifier.togglePiP(),
                     ),
                   ],
