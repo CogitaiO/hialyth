@@ -74,8 +74,7 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   final Color destructive;
   final Color windowCloseHover;
 
-  /// Black scrims are always derived from one colour so video overlays and
-  /// poster shading stay visually consistent.
+  /// Scrims share one base color so video overlays and poster shading stay consistent.
   Color scrim(double opacity) => Colors.black.withValues(alpha: opacity);
 
   @override
@@ -176,9 +175,8 @@ extension AppThemeExtensionContext on BuildContext {
       Theme.of(this).extension<AppThemeExtension>()!;
 }
 
-/// Shared spacing scale. Semantic aliases keep the original layout values,
-/// while the numeric aliases cover the remaining 2px steps already used by
-/// the UI.
+/// Shared spacing scale. Semantic aliases match the original layout values;
+/// numeric aliases cover the remaining 2px steps.
 abstract final class AppSpacing {
   static const double xxs = 4;
   static const double s6 = 6;

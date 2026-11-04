@@ -22,7 +22,6 @@ class AnimeCard extends ConsumerStatefulWidget {
 
 class _AnimeCardState extends ConsumerState<AnimeCard> {
   bool _isHovered = false;
-  //Метод вызова контекстного меню
   void _showContextMenu(
       BuildContext context, WidgetRef ref, Offset tapPosition) {
     final tokens = context.appTheme;

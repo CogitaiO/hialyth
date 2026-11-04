@@ -22,7 +22,7 @@ Future<void> initLogger() async {
 
     talker.configure(
       logger: TalkerLogger(
-        settings: TalkerLoggerSettings( // 
+        settings: TalkerLoggerSettings(
           enableColors: true, 
         ),
       )

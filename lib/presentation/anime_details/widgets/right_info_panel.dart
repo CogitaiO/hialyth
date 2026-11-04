@@ -44,7 +44,6 @@ class RightInfoPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // === ЗАГОЛОВОК ===
         Text(
           anime.title,
           style: TextStyle(
@@ -58,7 +57,6 @@ class RightInfoPanel extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // === БЕЙДЖИ ===
         Row(
           children: [
             _buildInfoChip(context, AppIcons.videoLibrary,
@@ -78,7 +76,6 @@ class RightInfoPanel extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
 
-        // === ОПИСАНИЕ ===
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -102,7 +99,6 @@ class RightInfoPanel extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xl),
 
-        // === СПИСОК ЭПИЗОДОВ ===
         Text(
           "Список эпизодов",
           style: TextStyle(

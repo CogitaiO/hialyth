@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Fixed colours for bespoke UI that sits outside the semantic dark theme:
-/// user-selectable accents, player-only markers and poster-derived effects.
+/// Fixed colors for UI outside the semantic dark theme: accent presets,
+/// player markers, and poster effects.
 abstract final class AppPalette {
-  /// Used when no accent or poster colour can be derived.
+  /// Fallback when no accent or poster color is available.
   static const Color fallbackAccent = Colors.redAccent;
 
   /// Accent presets shown in Settings.
@@ -43,12 +43,13 @@ abstract final class AppPalette {
   /// Timeline marker for opening/ending intervals.
   static const Color skipMarker = Color(0xCCFFFFFF);
 
-  /// Keeps text and icons readable on top of a dynamic accent.
+  /// Returns a readable foreground color for [accent].
   static Color onAccent(Color accent) =>
       accent.computeLuminance() > 0.5 ? Colors.black : Colors.white;
 
-  /// Poster-derived ambient glow and shadow.
+  /// Poster-derived ambient glow.
   static Color posterGlow(Color color) => color.withValues(alpha: 0.15);
 
+  /// Poster-derived ambient shadow.
   static Color posterShadow(Color color) => color.withValues(alpha: 0.2);
 }

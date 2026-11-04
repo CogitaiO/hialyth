@@ -44,7 +44,6 @@ class LeftControlPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
-    //Данные для постера
     ImageProvider? imageProvider;
     if (anime.coverUrl != null) {
       imageProvider = anime.coverUrl!.startsWith('http')
@@ -52,7 +51,6 @@ class LeftControlPanel extends ConsumerWidget {
           : FileImage(File(anime.coverUrl!));
     }
 
-    //Логика умной кнопки
     final sortedEpisodes = anime.sortedEpisodes;
     final nextEpisodePath = anime.nextEpisodeToPlay ??
         (sortedEpisodes.isNotEmpty ? sortedEpisodes.first : '');

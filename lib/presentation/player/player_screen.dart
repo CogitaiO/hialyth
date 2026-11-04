@@ -154,7 +154,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
             autofocus: true,
             child: Stack(
               children: [
-                // === СЛОЙ 1: ПЛЕЕР ===
                 Positioned.fill(
                   child: MouseRegion(
                     cursor: playerState.isUiVisible

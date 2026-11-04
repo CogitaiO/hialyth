@@ -53,7 +53,7 @@ void main() async {
 
     PlatformDispatcher.instance.onError = (error, stack) {
       talker.handle(error, stack, 'Unhandled asynchronous error');
-      return true; // предотвращает полное падение приложения
+      return true; // Keep the app alive after an unhandled async error.
     };
 
     runApp(
@@ -62,7 +62,7 @@ void main() async {
           animeRepoProvider.overrideWithValue(repository),
           sharedPrefsProvider.overrideWithValue(prefs),
         ],
-        child: const MyApp(), // Запускаем MyApp
+        child: const MyApp(),
       ),
     );
   } catch (e, st) {

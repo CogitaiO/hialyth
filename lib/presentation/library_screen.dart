@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:nekaido_pre/presentation/settings/settings_screen.dart'; // Проверьте правильность пути
+import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../core/debouncer.dart';
 import '../widgets/media_card.dart';
-import '../widgets/custom_title_bar.dart'; // <-- Исправлена опечатка с кавычкой
+import '../widgets/custom_title_bar.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_theme_extension.dart';
 
@@ -19,13 +19,10 @@ class LibraryScreen extends ConsumerWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          // 1. Кастомная шапка всегда на самом верху, во всю ширину
           const CustomTitleBar(),
 
-          // 2. Основной контент (Сайдбар + Сетка), растянутый на оставшееся место
           Expanded(
             child: Row(
-              // <-- ВАЖНО: Row, чтобы сайдбар был слева, а контент справа
               children: [
                 const _LeftSidebar(),
                 Expanded(
@@ -433,7 +430,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
       if (!mounted) return;
       await showDialog(
         context: context,
-        barrierDismissible: false, // Запрещаем закрывать кликом мимо
+        barrierDismissible: false, // Require an explicit dismissal.
         builder: (ctx) => AlertDialog(
           backgroundColor: context.appTheme.cardSurface,
           shape: RoundedRectangleBorder(

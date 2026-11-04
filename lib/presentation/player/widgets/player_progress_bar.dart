@@ -18,7 +18,7 @@ class PlayerProgressBar extends ConsumerStatefulWidget {
 class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
   bool _isDragging = false;
   double _dragValue = 0.0;
-  bool _isHoveringBar = false; // Отслеживаем наведение на прогресс-бар
+  bool _isHoveringBar = false;
 
   @override
   Widget build(BuildContext context) {
@@ -41,28 +41,27 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // === 1. УМНЫЙ ПРОГРЕСС-БАР (Edge-to-Edge) ===
         Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-          ), // Небольшой отступ от краев
+          ),
           child: MouseRegion(
             onEnter: (_) => setState(() => _isHoveringBar = true),
             onExit: (_) => setState(() => _isHoveringBar = false),
             cursor: SystemMouseCursors.click,
             child: SizedBox(
-              height: AppSpacing.s20, // Зона захвата мышки
+              height: AppSpacing.s20, // Larger hit area for the slider.
               child: SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  // Магия: толщина меняется при наведении
+                  // Thicken the track on hover or drag.
                   trackHeight: _isHoveringBar || _isDragging ? 4.0 : 2.0,
-                  // Кружок пропадает, когда мышка уходит
+                  // Hide the thumb when idle.
                   thumbShape: RoundSliderThumbShape(
                     enabledThumbRadius:
                         _isHoveringBar || _isDragging ? 6.0 : 0.0,
                   ),
                   overlayShape: SliderComponentShape
-                      .noOverlay, // Убираем родную тень Material
+                      .noOverlay, // Remove the Material overlay.
                   activeTrackColor: accentColor,
                   inactiveTrackColor: tokens.borderStrong,
                   thumbColor: accentColor,
@@ -108,12 +107,10 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
 
         const SizedBox(height: AppSpacing.xs),
 
-        // === 2. ПАНЕЛЬ КНОПОК ===
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Row(
             children: [
-              // ЛЕВАЯ ГРУППА: Плей, Некст, Громкость, Время
               IconButton(
                 iconSize: 32,
                 icon: Icon(
@@ -131,7 +128,6 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
                 ),
               const SizedBox(width: AppSpacing.xs),
 
-              // Блок звука
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -148,7 +144,7 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
                     onPressed: () => notifier.toggleMute(),
                   ),
                   SizedBox(
-                    width: 80, // Компактный ползунок звука
+                    width: 80,
                     child: SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         trackHeight: 2.0,
@@ -171,7 +167,6 @@ class _PlayerProgressBarState extends ConsumerState<PlayerProgressBar> {
               ),
               const SizedBox(width: AppSpacing.md),
 
-              // Время: 12:04 / 24:00
               Text(
                 '${_format(Duration(seconds: currentPosition.toInt()))} / ${_format(duration)}',
                 style: TextStyle(

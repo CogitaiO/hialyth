@@ -20,35 +20,28 @@ class SeekRippleOverlay extends StatefulWidget {
 
 class _SeekRippleOverlayState extends State<SeekRippleOverlay>
     with TickerProviderStateMixin {
-  // Контроллер для фона (Волны) и бегущих стрелочек (600мс)
   late final AnimationController _rippleController;
 
-  // Контроллер для упругого прыжка текста (300мс)
   late final AnimationController _textPulseController;
 
-  // --- Анимации Фона ---
   late final Animation<double> _rippleScale;
   late final Animation<double> _rippleOpacity;
 
-  // --- Анимации Стрелочек ---
   late final Animation<double> _arrow1;
   late final Animation<double> _arrow2;
   late final Animation<double> _arrow3;
 
-  // --- Анимация Текста ---
   late final Animation<double> _textScale;
 
   @override
   void initState() {
     super.initState();
 
-    // 1. Инициализация контроллеров
     _rippleController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
     _textPulseController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 300));
 
-    // 2. Ripple Layer (Фоновая рябь)
     _rippleScale = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _rippleController, curve: Curves.easeOutCubic),
     );
@@ -56,8 +49,7 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
       CurvedAnimation(parent: _rippleController, curve: Curves.easeOut),
     );
 
-    // 3. Icon Sequence (Группа индикаторов - бегущая волна)
-    // Функция-помощник: стрелка загорается, держится и гаснет
+    // Each arrow fades in, holds, then fades out.
     Animation<double> buildArrowAnimation(double startDelay) {
       return TweenSequence<double>([
         TweenSequenceItem(
@@ -77,7 +69,6 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
     _arrow2 = buildArrowAnimation(0.15);
     _arrow3 = buildArrowAnimation(0.30);
 
-    // 4. Label Layer (Текстовый аккумулятор)
     _textScale = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(parent: _textPulseController, curve: Curves.elasticOut),
     );
@@ -86,7 +77,7 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
   @override
   void didUpdateWidget(covariant SeekRippleOverlay oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // При каждом новом тапе перезапускаем обе анимации с нуля
+    // Restart both animations for each new seek.
     if (widget.seconds != oldWidget.seconds && widget.seconds != 0) {
       _rippleController.forward(from: 0.0);
       _textPulseController.forward(from: 0.0);
@@ -106,10 +97,8 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // === ЛЕВАЯ ВОЛНА ===
           if (widget.isLeft) _buildSide(isRight: false),
 
-          // === ПРАВАЯ ВОЛНА ===
           if (widget.isRight) _buildSide(isRight: true),
         ],
       ),
@@ -118,18 +107,17 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
 
   Widget _buildSide({required bool isRight}) {
     final tokens = context.appTheme;
-    // В зависимости от стороны, точка масштабирования будет слева или справа
+    // Scale from the edge being seeked.
     final align = isRight ? Alignment.centerRight : Alignment.centerLeft;
 
     return Align(
       alignment: align,
       child: FractionallySizedBox(
-        widthFactor: 0.35, // Волна занимает 35% ширины экрана
-        heightFactor: 1.0, // На всю высоту экрана
+        widthFactor: 0.35,
+        heightFactor: 1.0,
         child: Stack(
           alignment: align,
           children: [
-            // === 1. RIPPLE LAYER ===
             ScaleTransition(
               alignment: align,
               scale: _rippleScale,
@@ -138,7 +126,7 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
                 child: Container(
                   decoration: BoxDecoration(
                     color: tokens
-                        .textPrimary, // Прозрачность контролируется FadeTransition (максимум 0.25)
+                        .textPrimary, // Opacity is animated by FadeTransition (peak 0.25).
                     borderRadius: BorderRadius.only(
                       topLeft:
                           isRight ? const Radius.circular(1000) : Radius.zero,
@@ -154,7 +142,6 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
               ),
             ),
 
-            // === 2. CONTENT LAYER (Иконки и Текст) ===
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -171,9 +158,8 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
     );
   }
 
-  // === ICON SEQUENCE ===
   Widget _buildIconSequence({required bool isRight}) {
-    // Единичная стрелочка (отражаем по горизонтали, если мотаем назад)
+    // Mirror the arrow when seeking backward.
     Widget buildArrow(bool right) {
       return Transform.scale(
         scaleX: right ? 1.0 : -1.0,
@@ -185,9 +171,7 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
       );
     }
 
-    // Собираем массив стрелочек.
-    // Если вправо: ->(1) ->(2) ->(3)
-    // Если влево: <-(3) <-(2) <-(1) (первой загорается та, что ближе к центру)
+    // Reverse the sequence for backward seeks so the nearest arrow lights first.
     List<Widget> arrows = [
       FadeTransition(opacity: _arrow1, child: buildArrow(isRight)),
       FadeTransition(opacity: _arrow2, child: buildArrow(isRight)),
@@ -204,7 +188,6 @@ class _SeekRippleOverlayState extends State<SeekRippleOverlay>
     );
   }
 
-  // === LABEL LAYER ===
   Widget _buildLabelLayer() {
     return ScaleTransition(
       scale: _textScale,
