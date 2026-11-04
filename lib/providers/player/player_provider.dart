@@ -120,8 +120,8 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
     if (state.activeSkip != currentActiveSkip) {
       talker.debug(
-        'AniSkip UI Триггер: Кнопка изменилась на -> '
-        '${currentActiveSkip?.type ?? "Скрыта"}',
+        'AniSkip UI trigger: button changed to -> '
+        '${currentActiveSkip?.type ?? "Hidden"}',
       );
       state = state.copyWith(
         playback: state.playback.copyWith(
@@ -262,15 +262,15 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   Future<void> loadVideo(int animeId, String path) async {
     if (!_lifecycle.beginLoading()) {
-      talker.warning("loadVideo: Блокировка (уже идет загрузка)");
+      talker.warning('loadVideo: Blocked (already loading)');
       return;
     }
 
     try {
-      talker.info("loadVideo: СТАРТ ЗАГРУЗКИ: $path");
+      talker.info('loadVideo: START LOADING: $path');
       _lifecycle.cancelNextEpisode();
       if (!File(path).existsSync()) {
-        talker.error("loadVideo: Файл не найден!");
+        talker.error('loadVideo: File not found!');
         return;
       }
 
@@ -291,12 +291,12 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
                   endTime: i.endTime ?? 0.0))
               .toList();
           talker
-              .info('AniSkip: Таймкоды загружены из локальной БД (мгновенно)');
+              .info('AniSkip: Timestamps loaded from local DB (instant)');
         } else {
           // No cached timestamps: fetch them from AniSkip.
           if (anime.shikimoriId == null) {
             talker.warning(
-                'AniSkip: Пропуск невозможен. shikimoriId = null (Нажмите "Обновить данные из сети" на постере)');
+                'AniSkip: Skipping unavailable. shikimoriId = null (Use "Refresh data from network" on the poster)');
           } else {
             final fileName = path.split(Platform.pathSeparator).last;
 
@@ -304,7 +304,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
             if (epNumber != null) {
               talker.info(
-                  'AniSkip: В БД пусто. Ищем таймкоды для серии $epNumber (MAL ID: ${anime.shikimoriId}) в сети...');
+                  'AniSkip: DB is empty. Fetching timestamps for episode $epNumber (MAL ID: ${anime.shikimoriId}) from network...');
               skips = await AniSkipService()
                   .getSkipTimes(anime.shikimoriId!, epNumber);
 
@@ -320,24 +320,24 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
                 anime.skipData = [...anime.skipData, newSkipDb];
                 await _repository.saveAnime(anime);
-                talker.info('AniSkip: Таймкоды успешно сохранены в БД!');
+                talker.info('AniSkip: Timestamps saved to DB!');
               } else {
                 talker.info(
-                    'AniSkip: Сервер не нашел таймкодов для этой серии (или их еще никто не добавил).');
+                    'AniSkip: Server did not find timestamps for this episode (or no one has added them yet).');
               }
             } else {
               talker.warning(
-                  'AniSkip: Не удалось распознать номер серии из файла: $fileName');
+                  'AniSkip: Failed to parse episode number from file: $fileName');
             }
             for (var s in skips) {
               talker.info(
-                  '🎯 AniSkip: ${s.type} с ${s.startTime.toInt()} по ${s.endTime.toInt()} секунду');
+                  'AniSkip: ${s.type} from ${s.startTime.toInt()} to ${s.endTime.toInt()} seconds');
             }
           }
         }
       }
 
-      talker.info("ЗАГРУЖАЕМ ВИДЕО: Сохраненная позиция = $savedSeconds сек.");
+      talker.info('LOADING VIDEO: Saved position = $savedSeconds sec.');
 
       // Reset per-video state.
       _lastStateSeconds = -1;
@@ -367,8 +367,8 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       await _engine.play();
       _startUiHider();
       _discordService.updatePresence(
-        title: anime?.title ?? 'Аниме',
-        episode: 'Смотрит',
+        title: anime?.title ?? 'Anime',
+        episode: 'Watching',
         currentPositionSeconds: savedSeconds,
         durationSeconds:
             state.duration.inSeconds > 0 ? state.duration.inSeconds : null,
@@ -436,7 +436,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       }
       if (fontsDir != null) _engine.setProperty('sub-fonts-dir', fontsDir);
     } catch (e, st) {
-      talker.handle(e, st, "Ошибка автопоиска видео");
+      talker.handle(e, st, 'Failed to auto-detect external media');
     }
 
     return subsMap;
@@ -453,15 +453,15 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
     final isGoingToPlay = !state.isPlaying;
 
-    String epString = "Смотрит";
+    String epString = "Watching";
     if (state.videoPath != null) {
       final epIndex = state.playlist.indexOf(state.videoPath!) + 1;
-      if (epIndex > 0) epString = "Эпизод $epIndex";
+      if (epIndex > 0) epString = 'Episode $epIndex';
     }
 
     _discordService.updatePresence(
-      title: state.windowTitle ?? 'Аниме',
-      episode: isGoingToPlay ? epString : "На паузе",
+      title: state.windowTitle ?? 'Anime',
+      episode: isGoingToPlay ? epString : 'Paused',
       currentPositionSeconds: state.position.inSeconds,
       durationSeconds: state.duration.inSeconds,
       isPlaying: isGoingToPlay,
@@ -517,9 +517,9 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
     if (finalId != null && finalPath != null && finalSeconds > 5) {
       if (duration > 0 && (duration - finalSeconds) < 5) {
-        talker.info("ВЫХОД: Сбрасываем позицию для $finalPath");
+        talker.info('EXIT: Resetting position for $finalPath');
       } else {
-        talker.info("ВЫХОД: Сохраняем позицию $finalSeconds сек.");
+        talker.info('EXIT: Saving position $finalSeconds sec.');
       }
 
       unawaited(_progress.finalize(
@@ -602,7 +602,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
           await windowManager.setPosition(_previousPosition);
         }
         state = state.copyWith(ui: state.ui.copyWith(isPiP: false));
-        talker.info('Выход из режима PiP');
+        talker.info('Exiting PiP mode');
       } else {
         // Enter PiP.
         _wasFullScreen = await windowManager.isFullScreen();
@@ -627,7 +627,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
         await windowManager.setSize(const Size(400, 225));
         await windowManager.setAlignment(Alignment.bottomRight);
 
-        talker.info('Вход в режим PiP');
+        talker.info('Entering PiP mode');
       }
     }
   }

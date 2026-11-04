@@ -66,7 +66,7 @@ class PipOverlay extends ConsumerWidget {
                     ),
                     IconButton(
                       iconSize: 20,
-                      tooltip: "Вернуться",
+                      tooltip: "Return to player",
                       icon: Icon(
                         AppIcons.openExternal,
                         color: tokens.textPrimary,

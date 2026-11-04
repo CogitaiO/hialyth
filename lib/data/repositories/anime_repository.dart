@@ -29,7 +29,7 @@ class AnimeRepository implements PlaybackProgressStore {
         await db.animes.putAll(newAnimes);  
       });
     } catch (e,st) {
-      talker.handle(e,st,'Ошибка в добавлении сканированного аниме');
+      talker.handle(e,st,'Failed to add scanned anime');
     }
   }
 
@@ -41,11 +41,11 @@ class AnimeRepository implements PlaybackProgressStore {
         if (anime != null) {
           anime.status = newStasus;
           await db.animes.put(anime);
-          talker.info('Статус аниме обновлен');
+          talker.info('Anime status updated');
         }
       });
     } catch (e,st) {
-      talker.handle(e,st,"Ошибка обновления статуса");
+      talker.handle(e,st,'Failed to update anime status');
     }
   }
 
@@ -58,11 +58,11 @@ class AnimeRepository implements PlaybackProgressStore {
           final uniqueEpisodes = {...anime.watchedEpisodes, episodePath}.toList();
           anime.watchedEpisodes = uniqueEpisodes;
           await db.animes.put(anime);
-          talker.info('Эпизод просмотрен в "${anime.title}"');
+          talker.info('Episode marked as watched in "${anime.title}"');
         }
       });
     }catch(e,st) {
-      talker.handle(e,st,"Ошибка в пометке аниме просмотренным");
+      talker.handle(e,st,'Failed to mark anime as watched');
     }
   }
 
@@ -81,10 +81,10 @@ class AnimeRepository implements PlaybackProgressStore {
           ...unwatchedEpisodes,
         }.toList();
         await db.animes.put(anime);
-        talker.info('Все эпизоды просмотрены в "${anime.title}"');
+        talker.info('All episodes marked as watched in "${anime.title}"');
       });
     } catch (e, st) {
-      talker.handle(e, st, 'Ошибка при отметке всех эпизодов просмотренными');
+      talker.handle(e, st, 'Failed to mark all episodes as watched');
     }
   }
 
@@ -92,7 +92,7 @@ class AnimeRepository implements PlaybackProgressStore {
     try {
       return await db.animes.filter().titleEqualTo(title).findFirst();
     } catch (e,st) {
-      talker.handle(e,st,'Ошибка в получении аниме по названию');
+      talker.handle(e,st,'Failed to get anime by title');
       return null;
     }
   }
@@ -124,7 +124,7 @@ class AnimeRepository implements PlaybackProgressStore {
         }
       });
     } catch (e, st) {
-      talker.handle(e, st, "Ошибка сохранения позиции видео");
+      talker.handle(e, st, 'Failed to save video position');
     }
   }
 
@@ -153,10 +153,10 @@ class AnimeRepository implements PlaybackProgressStore {
 
         anime.notes = [...anime.notes, note];
         await db.animes.put(anime);
-        talker.info('Заметка добавлена к "${anime.title}" на $seconds с.');
+        talker.info('Note added to "${anime.title}" at $seconds s.');
       });
     } catch (e, st) {
-      talker.handle(e, st, 'Ошибка сохранения заметки');
+      talker.handle(e, st, 'Failed to save note');
     }
   }
   
@@ -170,16 +170,16 @@ class AnimeRepository implements PlaybackProgressStore {
 
         anime.notes = updateNotes;
         await db.animes.put(anime);
-        talker.info('Note is delete from "${anime.title}"');
+        talker.info('Note deleted from "${anime.title}"');
       });
     } catch (e, st) {
-      talker.handle(e, st, "Ошибка удаления ошибки");
+      talker.handle(e, st, 'Failed to delete note');
     }
   }
 
   Future<void> clearAll() async {
     await db.writeTxn(() => db.animes.clear());
-    talker.warning('БД БЫЛА ОЧИЩЕНА');
+    talker.warning('DATABASE WAS CLEARED');
   }
 
   Future<void> saveAnime(Anime anime) async{
@@ -194,7 +194,7 @@ class AnimeRepository implements PlaybackProgressStore {
         db.animes.delete(id);
       });
     }catch(e, st) {
-      talker.handle(e,st, "Ошибка удаления аниме по айди");
+      talker.handle(e,st, 'Failed to delete anime by ID');
     }
   }
 

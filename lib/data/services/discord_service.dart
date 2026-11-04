@@ -52,7 +52,7 @@ class DiscordService {
           largeImageKey: 'logo', 
           largeImageText: 'Nekaido', 
           smallImageKey: isPlaying ? 'play' : 'pause', 
-          smallImageText: isPlaying ? 'Смотрит' : 'На паузе', 
+          smallImageText: isPlaying ? 'Watching' : 'Paused',
           endTimeStamp: endTimestamp, 
         ),
       );
