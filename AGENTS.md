@@ -4,6 +4,8 @@
 
 Desktop Flutter media player for managing and watching anime. Built with Flutter, Isar (embedded database), MediaKit (libmpv playback), and Riverpod (state management).
 
+**Project name:** Hialyth (formerly Nekaido). Legacy identifiers such as `nekaido_pre`, `NekaidoLogs`, and the current in-app title may remain until a dedicated rename; do not rename them opportunistically.
+
 ## Essential Commands
 
 - **Dependencies**: `flutter pub get`
