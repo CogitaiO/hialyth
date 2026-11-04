@@ -24,7 +24,6 @@ final animeColorProvider =
 
     final resizedProvider = ResizeImage(provider, width: 100);
 
-    // 5. Генерируем палитру
     final palette = await PaletteGenerator.fromImageProvider(
       resizedProvider,
       maximumColorCount: 10,
@@ -35,6 +34,7 @@ final animeColorProvider =
         palette.darkVibrantColor?.color ??
         AppPalette.fallbackAccent;
 
+    // Cache the extracted color on the anime record.
     anime.ambientColorValue = calcColor.toARGB32();
     await ref.read(animeRepoProvider).saveAnime(anime);
 

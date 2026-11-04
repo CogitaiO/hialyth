@@ -3,7 +3,6 @@ import 'package:discord_rpc/discord_rpc.dart';
 import '../../core/logger.dart';
 
 class DiscordService {
-  // Вставь сюда свой Application ID из Discord Developer Portal
   static const String _clientId = '1499787664402939954'; 
   DiscordRPC? _rpc;
   bool _isInitialized = false;
@@ -21,7 +20,7 @@ class DiscordService {
       _isInitialized = true;
       talker.info('DiscordService: RPC Initialized');
     } catch (e) {
-      // Игнорируем ошибку (вероятно, Discord просто закрыт или не установлен)
+      // Discord may be closed or not installed.
       talker.debug('DiscordService: Failed to initialize. Error: $e');
       _isInitialized = false;
     }
@@ -37,11 +36,10 @@ class DiscordService {
     if (!_isInitialized || _rpc == null) return;
 
     try {
-      // Формируем красивый таймер
+      // Discord uses an end timestamp to render the timer.
       int? endTimestamp;
 
       if (isPlaying && currentPositionSeconds != null && durationSeconds != null && durationSeconds > 0) {
-        // Подсчитываем, когда закончится серия в реальном времени
         final now = DateTime.now().millisecondsSinceEpoch;
         final leftSeconds = durationSeconds - currentPositionSeconds;
         endTimestamp = now + (leftSeconds * 1000); 

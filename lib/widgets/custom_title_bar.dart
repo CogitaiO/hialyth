@@ -5,8 +5,8 @@ import '../theme/app_theme_extension.dart';
 
 class CustomTitleBar extends StatefulWidget {
   final Color? backgroundColor;
-  final Widget? leading; // Кастомная кнопка слева (например, Назад)
-  final Widget? title; // Кастомный текст/виджет по центру
+  final Widget? leading; // Optional leading widget, e.g. a back button.
+  final Widget? title; // Optional title widget.
 
   const CustomTitleBar({
     super.key,
@@ -21,7 +21,7 @@ class CustomTitleBar extends StatefulWidget {
 
 class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
   bool _isMaximized = false;
-  bool _isFullScreen = false; // Отслеживаем Fullscreen отдельно
+  bool _isFullScreen = false;
   bool _isPiP = false;
 
   @override
@@ -67,16 +67,15 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
     if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) {
       return const SizedBox.shrink();
     }
-    // В PiP шапка не нужна вообще
+    // The title bar is hidden in PiP.
     if (_isPiP) return const SizedBox.shrink();
     final tokens = context.appTheme;
 
     return Container(
-      height: AppSpacing.s40, // Сделали чуть выше для удобства хвата
+      height: AppSpacing.s40, // Taller drag target.
       color: widget.backgroundColor ?? tokens.titleBarSurface,
       child: Row(
         children: [
-          // === ЛЕВАЯ ЧАСТЬ (Логотип или кнопка Назад) ===
           if (widget.leading != null)
             widget.leading!
           else ...[
@@ -86,7 +85,6 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
             const SizedBox(width: AppSpacing.xs),
           ],
 
-          // === ТЕКСТ / НАЗВАНИЕ ===
           if (widget.title != null)
             widget.title!
           else
@@ -99,8 +97,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
                   letterSpacing: 1),
             ),
 
-          // === ЦЕНТР: Зона перетаскивания ===
-          // Если мы в FullScreen, перетаскивать нечего, но зону оставляем пустой
+          // Leave the drag area empty in fullscreen.
           Expanded(
             child: _isFullScreen
                 ? const SizedBox.shrink()
@@ -109,8 +106,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
                   ),
           ),
 
-          // === ПРАВАЯ ЧАСТЬ: Кнопки ОС ===
-          // В Fullscreen кнопки винды не нужны!
+          // Window controls are hidden in fullscreen.
           if (!_isFullScreen && (Platform.isWindows || Platform.isLinux)) ...[
             _WindowButton(
               icon: Icons.minimize,

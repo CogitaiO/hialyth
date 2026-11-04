@@ -20,7 +20,6 @@ class AnimeDialogs {
     }
   }
 
-  //Диалог статистики
   static void showAnimeStatsDialog(
       BuildContext context, Anime anime, Color accentColor) {
     int watchedCount = anime.watchedEpisodes.length;
@@ -80,7 +79,6 @@ class AnimeDialogs {
         });
   }
 
-  //Диалог редактирования
   static void showEditDialog(
       BuildContext context, WidgetRef ref, Anime anime, Color accentColor) {
     TextEditingController titleController =
@@ -173,8 +171,6 @@ class AnimeDialogs {
       },
     );
   }
-
-  //Диалог подборок
 
   static void showCollectionDialog(
       BuildContext context, WidgetRef ref, Anime anime, Color accentColor) {

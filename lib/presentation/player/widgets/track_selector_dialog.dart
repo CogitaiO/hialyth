@@ -64,7 +64,7 @@ class TrackSelectorDialog extends ConsumerWidget {
     required List<T> tracks,
     required T? currentTrack,
     required Function(T) onSelect,
-    required Map<String, List<String>> externalSubsMap, // Принимаем новую мапу
+    required Map<String, List<String>> externalSubsMap,
   }) {
     if (tracks.isEmpty) {
       return Center(
@@ -75,9 +75,9 @@ class TrackSelectorDialog extends ConsumerWidget {
       );
     }
 
-    // 1. ПРЕДВЫЧИСЛЯЕМ ИМЕНА (Защита от багов при скролле)
+    // Precompute names; list items are rebuilt while scrolling.
     final Map<T, String> trackNames = {};
-    final Map<String, int> fileCounters = {}; // Счетчик для одинаковых файлов
+    final Map<String, int> fileCounters = {}; // Disambiguate duplicate subtitle files.
 
     for (var track in tracks) {
       String name = "Неизвестно";
@@ -92,11 +92,11 @@ class TrackSelectorDialog extends ConsumerWidget {
             final studios = externalSubsMap[baseName]!;
             int count = fileCounters[baseName] ?? 0;
 
-            // Берем нужную студию из списка по очереди
+            // Use the next studio name for each duplicate file.
             if (count < studios.length) {
               name = "[${studios[count]}] $baseName";
               fileCounters[baseName] =
-                  count + 1; // Увеличиваем счетчик для этого файла
+                  count + 1;
             } else {
               name = baseName;
             }
@@ -108,7 +108,7 @@ class TrackSelectorDialog extends ConsumerWidget {
         }
       }
 
-      // Красивые имена для служебных дорожек
+      // Friendlier names for special tracks.
       if (track is AudioTrack && track.id == 'auto') name = "Автоматически";
       if (track is AudioTrack && track.id == 'no') name = "Отключить";
       if (track is SubtitleTrack && track.id == 'auto') name = "Автоматически";
@@ -117,13 +117,12 @@ class TrackSelectorDialog extends ConsumerWidget {
       trackNames[track] = name;
     }
 
-    // 2. СТРОИМ СПИСОК
     return ListView.builder(
       itemCount: tracks.length,
       itemBuilder: (context, index) {
         final track = tracks[index];
         final isSelected = currentTrack == track;
-        final trackName = trackNames[track]!; // Берем готовое вычисленное имя
+        final trackName = trackNames[track]!;
 
         return ListTile(
           contentPadding: const EdgeInsets.symmetric(

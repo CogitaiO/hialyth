@@ -29,10 +29,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Escapable(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        // Убрали AppBar! Теперь используем Column:
         body: Column(
           children: [
-            // НАШ КАСТОМНЫЙ ТАЙТЛ БАР
             CustomTitleBar(
               leading: IconButton(
                 icon: Icon(AppIcons.back, color: tokens.textPrimary),
@@ -43,7 +41,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       color: tokens.textPrimary, fontWeight: FontWeight.bold)),
             ),
 
-            // ОСНОВНОЙ КОНТЕНТ (обернут в Expanded, чтобы занять остаток экрана)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(

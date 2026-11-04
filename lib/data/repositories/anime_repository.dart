@@ -33,7 +33,6 @@ class AnimeRepository {
   }
 
   
-  //Метод для обновления статуса
   Future<void> updateStatus(Id id, AnimeStatus newStasus) async {
     try {
       await db.writeTxn(() async {
@@ -49,7 +48,6 @@ class AnimeRepository {
     }
   }
 
-  //Метод для фиксации просмотра серии
   Future<void> markEpisodeAsWatched (Id id, String episodePath) async {
     try{
       await db.writeTxn(() async{
@@ -107,10 +105,9 @@ class AnimeRepository {
         final anime = await db.animes.get(id);
         if (anime != null) {
           final updatedList = List<PlaybackEntry>.from(anime.playbackPositions);
-          // Создаем новую мапу на основе старой, чтобы Isar увидел изменения
+          // Isar detects list changes only when the list instance is replaced.
           final index = updatedList.indexWhere((e) => e.path == path);
           if (index != -1) {
-            // Если нашли — обновляем секунды
             updatedList[index].position = seconds;
           } else {
             updatedList.add(
@@ -132,14 +129,13 @@ class AnimeRepository {
     await db.writeTxn(() async {
       anime.title = newTitle;
       
-      // Если ссылка есть - сохраняем если юзер стер строку - делаем null
+      // An empty cover URL clears the stored value.
       anime.coverUrl = newCoverUrl.isNotEmpty ? newCoverUrl : null;
       
       await db.animes.put(anime);
     });
   }
 
-  //Сохранение заметок
   Future<void> addNote(Id id, String epPath, int seconds, String text) async {
     try {
       await db.writeTxn(() async {
@@ -178,20 +174,17 @@ class AnimeRepository {
     }
   }
 
-  // Удаление всей базы (для настроек)
   Future<void> clearAll() async {
     await db.writeTxn(() => db.animes.clear());
     talker.warning('БД БЫЛА ОЧИЩЕНА');
   }
 
-  //Сохранение аниме
   Future<void> saveAnime(Anime anime) async{
     await db.writeTxn(() async{
       await db.animes.put(anime);
     });
   }
 
-  //Удаление из бд
   Future<void> deleteAnime(Id id) async {
     try{
       await db.writeTxn(() async{
