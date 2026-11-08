@@ -3,12 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:nekaido_pre/data/repositories/anime_repository.dart';
+import 'package:nekaido_pre/data/services/file_discovery_service.dart';
 import 'package:nekaido_pre/domain/anime.dart';
 import 'package:nekaido_pre/l10n/app_localizations.dart';
 import 'package:nekaido_pre/presentation/library_screen.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import 'package:nekaido_pre/providers/library_provider.dart';
 import 'package:nekaido_pre/theme/app_theme.dart';
+
+class _UnusedRepository extends Fake implements AnimeRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -118,6 +122,7 @@ void main() {
       await tester.pumpWidget(ProviderScope(
         overrides: [
           sharedPrefsProvider.overrideWithValue(prefs),
+          scannerProvider.overrideWithValue(FileDiscoveryService(_UnusedRepository())),
           libraryProvider.overrideWith((ref) => Stream.value(library))
         ],
         child: MaterialApp(
@@ -130,6 +135,26 @@ void main() {
       expect(tester.takeException(), isNull);
       await expectLater(find.byType(Scaffold),
           matchesGoldenFile('goldens/library_$label.png'));
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      expect(
+          tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus,
+          isTrue);
+      await tester.tap(find.byTooltip('Sort library'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Watch progress'));
+      await tester.pumpAndSettle();
+      expect(prefs.getString('library_sort'), 'progress');
+      await tester.tap(find.byTooltip('List view'));
+      await tester.pumpAndSettle();
+      expect(prefs.getBool('library_list'), isTrue);
+      await tester.enterText(find.byType(TextField), 'Violet');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      expect(find.text('Violet Evergarden'), findsOneWidget);
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pumpAndSettle();
       if (size.width < 900) {
         await tester.tap(find.byTooltip('Library navigation'));
         await tester.pumpAndSettle();

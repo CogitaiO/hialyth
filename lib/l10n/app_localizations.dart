@@ -1533,6 +1533,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The media engine or local library could not be opened. Check the log for details and try again.'**
   String get startupFailedBody;
+
+  /// No description provided for @librarySort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort library'**
+  String get librarySort;
+
+  /// No description provided for @librarySortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title A–Z'**
+  String get librarySortTitle;
+
+  /// No description provided for @librarySortAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently added'**
+  String get librarySortAdded;
+
+  /// No description provided for @librarySortWatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Last watched'**
+  String get librarySortWatched;
+
+  /// No description provided for @librarySortProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch progress'**
+  String get librarySortProgress;
+
+  /// No description provided for @libraryGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid view'**
+  String get libraryGrid;
+
+  /// No description provided for @libraryList.
+  ///
+  /// In en, this message translates to:
+  /// **'List view'**
+  String get libraryList;
+
+  /// No description provided for @libraryContinueWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue watching'**
+  String get libraryContinueWatching;
 }
 
 class _AppLocalizationsDelegate

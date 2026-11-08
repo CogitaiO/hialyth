@@ -239,5 +239,13 @@
   "playerLoadFailed": "Unable to open this video",
   "playerLoadFailedBody": "Check that the file is available and can be decoded, then try again.",
   "startupFailed": "Unable to start the application",
-  "startupFailedBody": "The media engine or local library could not be opened. Check the log for details and try again."
+  "startupFailedBody": "The media engine or local library could not be opened. Check the log for details and try again.",
+  "librarySort": "Sort library",
+  "librarySortTitle": "Title A–Z",
+  "librarySortAdded": "Recently added",
+  "librarySortWatched": "Last watched",
+  "librarySortProgress": "Watch progress",
+  "libraryGrid": "Grid view",
+  "libraryList": "List view",
+  "libraryContinueWatching": "Continue watching"
 }

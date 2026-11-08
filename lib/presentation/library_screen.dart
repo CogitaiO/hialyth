@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../core/app_features.dart';
+import 'library/library_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
@@ -45,27 +48,37 @@ class LibraryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final compact = constraints.maxWidth < AppBreakpoints.compact;
-      return Scaffold(
-        drawer: compact
-            ? const Drawer(child: _LibraryNavigation(expanded: true))
-            : null,
-        body: Column(children: [
-          const CustomTitleBar(),
-          Expanded(
-              child: Row(children: [
-            if (!compact)
-              _LibraryNavigation(expanded: constraints.maxWidth >= 1200),
-            const Expanded(
-                child: Column(children: [
-              _TopBar(),
-              Expanded(child: _ContentGrid()),
-            ])),
-          ])),
-        ]),
-      );
-    });
+    return CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true): () =>
+              ref.read(librarySearchFocusProvider).requestFocus(),
+          const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () =>
+              ref.read(librarySearchFocusProvider).requestFocus(),
+        },
+        child: Focus(
+            autofocus: true,
+            child: LayoutBuilder(builder: (context, constraints) {
+              final compact = constraints.maxWidth < AppBreakpoints.compact;
+              return Scaffold(
+                drawer: compact
+                    ? const Drawer(child: _LibraryNavigation(expanded: true))
+                    : null,
+                body: Column(children: [
+                  const CustomTitleBar(),
+                  Expanded(
+                      child: Row(children: [
+                    if (!compact)
+                      _LibraryNavigation(
+                          expanded: constraints.maxWidth >= 1200),
+                    const Expanded(
+                        child: Column(children: [
+                      _TopBar(),
+                      Expanded(child: _ContentGrid()),
+                    ])),
+                  ])),
+                ]),
+              );
+            })));
   }
 }
 
@@ -172,6 +185,21 @@ class _LibraryNavigation extends ConsumerWidget {
                         ),
                       ),
                     ),
+                  if (expanded && selected == 5)
+                    for (final collection in ref.watch(allCollectionsProvider))
+                      ListTile(
+                        dense: true,
+                        leading: const Icon(AppIcons.folder, size: 18),
+                        title: Text(collection,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        selected:
+                            ref.watch(selectedCollectionProvider) == collection,
+                        onTap: () {
+                          ref.read(selectedCollectionProvider.notifier).state =
+                              collection;
+                          Scaffold.of(context).closeDrawer();
+                        },
+                      ),
                 ])),
             const Divider(indent: 16, endIndent: 16),
             Padding(
@@ -206,13 +234,11 @@ class _TopBar extends ConsumerStatefulWidget {
 class _TopBarState extends ConsumerState<_TopBar> {
   final _debouncer = Debouncer(milliseconds: 300);
   final _searchController = TextEditingController();
-  final _searchFocus = FocusNode();
 
   @override
   void dispose() {
     _debouncer.cancel();
     _searchController.dispose();
-    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -280,7 +306,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
             const SizedBox(height: 20),
             TextField(
               controller: _searchController,
-              focusNode: _searchFocus,
+              focusNode: ref.watch(librarySearchFocusProvider),
               onChanged: (value) {
                 setState(() {});
                 _debouncer.run(() {
@@ -306,11 +332,73 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       ),
               ),
             ),
+            const SizedBox(height: 12),
+            Row(children: [
+              Text(context.l10n.libraryBrowse,
+                  style: Theme.of(context).textTheme.bodySmall),
+              const Spacer(),
+              PopupMenuButton<LibrarySort>(
+                tooltip: context.l10n.librarySort,
+                initialValue: ref.watch(libraryViewProvider).sort,
+                onSelected: ref.read(libraryViewProvider.notifier).sortBy,
+                itemBuilder: (_) => [
+                  for (final sort in LibrarySort.values)
+                    PopupMenuItem(
+                        value: sort,
+                        child: Text(switch (sort) {
+                          LibrarySort.title => context.l10n.librarySortTitle,
+                          LibrarySort.dateAdded =>
+                            context.l10n.librarySortAdded,
+                          LibrarySort.lastWatched =>
+                            context.l10n.librarySortWatched,
+                          LibrarySort.progress =>
+                            context.l10n.librarySortProgress,
+                        })),
+                ],
+                icon: const Icon(AppIcons.sort),
+              ),
+              IconButton(
+                  isSelected: !ref.watch(libraryViewProvider).list,
+                  tooltip: context.l10n.libraryGrid,
+                  icon: const Icon(AppIcons.all),
+                  onPressed: () =>
+                      ref.read(libraryViewProvider.notifier).showList(false)),
+              IconButton(
+                  isSelected: ref.watch(libraryViewProvider).list,
+                  tooltip: context.l10n.libraryList,
+                  icon: const Icon(AppIcons.list),
+                  onPressed: () =>
+                      ref.read(libraryViewProvider.notifier).showList(true)),
+            ]),
+            if (!ref.watch(scanProvider).running &&
+                (ref.watch(scanProvider).errors.isNotEmpty ||
+                    ref.watch(scanProvider).warnings > 0))
+              Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Row(children: [
+                    Expanded(
+                        child: Text(
+                            ref.watch(scanProvider).errors.isNotEmpty
+                                ? context.l10n.libraryScanError
+                                : context.l10n.libraryMetadataWarning,
+                            style: Theme.of(context).textTheme.bodySmall)),
+                    if (ref.watch(scanProvider).errors.isNotEmpty)
+                      TextButton(
+                          onPressed: () => ref
+                              .read(scanProvider.notifier)
+                              .scan(ref.read(scanProvider).errors),
+                          child: Text(context.l10n.commonRetry)),
+                  ])),
             if (ref.watch(scanProvider).running) ...[
               const SizedBox(height: 12),
               const LinearProgressIndicator(),
               const SizedBox(height: 4),
-              Text(context.l10n.libraryScanningFolder),
+              Row(children: [
+                Expanded(child: Text(context.l10n.libraryScanningFolder)),
+                TextButton(
+                    onPressed: ref.read(scanProvider.notifier).cancel,
+                    child: Text(context.l10n.dialogCancel)),
+              ]),
             ],
           ]),
         ),
@@ -318,7 +406,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
           duration: MediaQuery.disableAnimationsOf(context)
               ? Duration.zero
               : const Duration(milliseconds: 300),
-          child: index == 5
+          child: index == 5 && MediaQuery.sizeOf(context).width < 1200
               ? Container(
                   height: AppSpacing.s50,
                   padding:
@@ -532,23 +620,59 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
                 )),
           ));
         }
+        final view = ref.watch(libraryViewProvider);
+        final resumable = allAnimes
+            .where((a) =>
+                a.episodePaths.isNotEmpty &&
+                a.watchProgress < 1 &&
+                (a.lastWatchedAt != null ||
+                    a.watchedEpisodes.isNotEmpty ||
+                    a.playbackPositions.any((p) => (p.position ?? 0) > 0)))
+            .toList()
+          ..sort((a, b) => (b.lastWatchedAt ?? DateTime(1970))
+              .compareTo(a.lastWatchedAt ?? DateTime(1970)));
+        final showResume = AppFeatures.designV2 &&
+            ref.watch(selectedSidebarIndexProvider) == 0 &&
+            ref.watch(searchQueryProvider).isEmpty &&
+            resumable.isNotEmpty;
         return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1440),
-                child: GridView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 240,
-                      childAspectRatio: 0.56,
-                      crossAxisSpacing: AppSpacing.s20,
-                      mainAxisSpacing: AppSpacing.s20,
-                    ),
-                    itemCount: filteredList.length,
-                    itemBuilder: (context, index) {
-                      return AnimeCard(anime: filteredList[index]);
-                    })));
+              constraints: const BoxConstraints(maxWidth: 1440),
+              child: CustomScrollView(slivers: [
+                if (showResume)
+                  SliverToBoxAdapter(
+                      child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                    child: ContinueWatchingCard(anime: resumable.first),
+                  )),
+                if (showResume)
+                  SliverToBoxAdapter(
+                      child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(context.l10n.libraryAllTitles,
+                        style: Theme.of(context).textTheme.titleLarge),
+                  )),
+                SliverPadding(
+                    padding: const EdgeInsets.all(24),
+                    sliver: view.list && AppFeatures.designV2
+                        ? SliverList.builder(
+                            itemCount: filteredList.length,
+                            itemBuilder: (context, index) =>
+                                AnimeListTile(anime: filteredList[index]))
+                        : SliverGrid.builder(
+                            gridDelegate:
+                                const SliverGridDelegateWithMaxCrossAxisExtent(
+                                    maxCrossAxisExtent: 240,
+                                    childAspectRatio: .56,
+                                    crossAxisSpacing: 20,
+                                    mainAxisSpacing: 20),
+                            itemCount: filteredList.length,
+                            itemBuilder: (context, index) =>
+                                AnimeCard(anime: filteredList[index]),
+                          )),
+              ]),
+            ));
       },
     );
   }

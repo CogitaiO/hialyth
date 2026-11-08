@@ -828,4 +828,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get startupFailedBody =>
       'The media engine or local library could not be opened. Check the log for details and try again.';
+
+  @override
+  String get librarySort => 'Sort library';
+
+  @override
+  String get librarySortTitle => 'Title A–Z';
+
+  @override
+  String get librarySortAdded => 'Recently added';
+
+  @override
+  String get librarySortWatched => 'Last watched';
+
+  @override
+  String get librarySortProgress => 'Watch progress';
+
+  @override
+  String get libraryGrid => 'Grid view';
+
+  @override
+  String get libraryList => 'List view';
+
+  @override
+  String get libraryContinueWatching => 'Continue watching';
 }
