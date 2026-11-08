@@ -1503,6 +1503,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to save. Check the title for duplicates and try again.'**
   String get commonSaveFailed;
+
+  /// No description provided for @commonRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get commonRetry;
+
+  /// No description provided for @playerLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open this video'**
+  String get playerLoadFailed;
+
+  /// No description provided for @playerLoadFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that the file is available and can be decoded, then try again.'**
+  String get playerLoadFailedBody;
+
+  /// No description provided for @startupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to start the application'**
+  String get startupFailed;
+
+  /// No description provided for @startupFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The media engine or local library could not be opened. Check the log for details and try again.'**
+  String get startupFailedBody;
 }
 
 class _AppLocalizationsDelegate

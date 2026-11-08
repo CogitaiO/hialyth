@@ -811,4 +811,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get commonSaveFailed =>
       'Unable to save. Check the title for duplicates and try again.';
+
+  @override
+  String get commonRetry => 'Try again';
+
+  @override
+  String get playerLoadFailed => 'Unable to open this video';
+
+  @override
+  String get playerLoadFailedBody =>
+      'Check that the file is available and can be decoded, then try again.';
+
+  @override
+  String get startupFailed => 'Unable to start the application';
+
+  @override
+  String get startupFailedBody =>
+      'The media engine or local library could not be opened. Check the log for details and try again.';
 }

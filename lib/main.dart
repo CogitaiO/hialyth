@@ -24,29 +24,29 @@ import 'theme/app_theme_extension.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MediaKit.ensureInitialized();
-  await windowManager.ensureInitialized();
-  await initLogger();
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    try {
-      DiscordRPC.initialize();
-    } catch (e) {
-      talker.debug('DiscordRPC initialization failed: $e');
-    }
-  }
-  WindowOptions windowOptions = const WindowOptions(
-    size: Size(1280, 720),
-    minimumSize: Size(840, 560),
-    center: true,
-    titleBarStyle: TitleBarStyle.hidden,
-  );
-
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
-
   try {
+    MediaKit.ensureInitialized();
+    await windowManager.ensureInitialized();
+    await initLogger();
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      try {
+        DiscordRPC.initialize();
+      } catch (e) {
+        talker.debug('DiscordRPC initialization failed: $e');
+      }
+    }
+    WindowOptions windowOptions = const WindowOptions(
+      size: Size(1280, 720),
+      minimumSize: Size(840, 560),
+      center: true,
+      titleBarStyle: TitleBarStyle.hidden,
+    );
+
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+
     final prefs = await SharedPreferences.getInstance();
     final dir = await getApplicationDocumentsDirectory();
     final isar = await Isar.open([AnimeSchema], directory: dir.path);
@@ -72,6 +72,7 @@ void main() async {
     );
   } catch (e, st) {
     talker.handle(e, st, 'Critical startup error');
+    runApp(_StartupErrorApp(onRetry: main));
   }
 }
 
@@ -134,4 +135,32 @@ ThemeData _legacyTheme(Color accentColor) {
     ),
     extensions: const [appTheme],
   );
+}
+
+class _StartupErrorApp extends StatelessWidget {
+  const _StartupErrorApp({required this.onRetry});
+  final VoidCallback onRetry;
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+        theme: AppTheme.dark(),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Builder(
+            builder: (context) => Scaffold(
+                    body: Center(
+                        child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text(AppLocalizations.of(context).startupFailed,
+                        style: Theme.of(context).textTheme.headlineMedium),
+                    const SizedBox(height: 16),
+                    Text(AppLocalizations.of(context).startupFailedBody,
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                        onPressed: onRetry,
+                        child: Text(AppLocalizations.of(context).commonRetry)),
+                  ]),
+                )))),
+      );
 }

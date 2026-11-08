@@ -15,6 +15,7 @@ import 'dart:async';
 import '../../../../providers/settings_provider.dart';
 import '../../theme/app_theme_extension.dart';
 import '../../core/localization/l10n.dart';
+import 'widgets/player_status_overlay.dart';
 
 class PlayerScreen extends ConsumerStatefulWidget {
   final int animeId;
@@ -89,6 +90,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           isPiP: s.isPiP,
           isUiVisible: s.isUiVisible,
           isVideoCompleted: s.isVideoCompleted,
+          isLoading: s.isLoading,
+          errorCode: s.errorCode,
         )));
     final tokens = context.appTheme;
 
@@ -238,6 +241,20 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                               ),
                             ),
                           ),
+                          if (playerState.isLoading ||
+                              playerState.errorCode != null)
+                            Positioned.fill(
+                                child: PlayerStatusOverlay(
+                              loading: playerState.isLoading,
+                              errorCode: playerState.errorCode,
+                              onBack: () => Navigator.pop(context),
+                              onRetry: () {
+                                final current = ref.read(playerProvider);
+                                notifier.loadVideo(
+                                    current.animeId ?? widget.animeId,
+                                    current.videoPath ?? widget.videoPath);
+                              },
+                            )),
                           if (!MediaQuery.disableAnimationsOf(context))
                             Positioned.fill(
                               child: SeekRippleOverlay(

@@ -236,12 +236,15 @@ class _PlayerTimeline extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final identity = ref.watch(playerProvider
+        .select((s) => (s.animeId, s.videoPath, s.playback.sessionId)));
     final duration = ref.watch(playerProvider.select((s) => s.duration));
     final playing = ref.watch(playerProvider.select((s) => s.isPlaying));
     final visible = ref.watch(playerProvider.select((s) => s.isUiVisible));
     final intervals = ref.watch(playerProvider.select((s) => s.skipIntervals));
     final notifier = ref.read(playerProvider.notifier);
     return StreamBuilder<Duration>(
+      key: ValueKey(identity),
       stream: visible ? notifier.player.stream.position : null,
       initialData: ref.read(playerProvider).position,
       builder: (context, snapshot) => PlaybackTimeline(

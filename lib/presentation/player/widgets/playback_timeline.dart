@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../../../domain/anime.dart';
 import '../../../theme/app_palette.dart';
 import '../../../theme/app_theme_extension.dart';
@@ -34,11 +35,21 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
   Timer? _seekTimeout;
   bool _hovering = false;
   bool _animate = false;
+  Duration? _lastSampleAt;
+  int _sampleIntervalMs = 200;
 
   @override
   void didUpdateWidget(PlaybackTimeline oldWidget) {
     super.didUpdateWidget(oldWidget);
     final delta = widget.position - oldWidget.position;
+    if (delta != Duration.zero) {
+      final now = SchedulerBinding.instance.currentFrameTimeStamp;
+      if (_lastSampleAt != null) {
+        final elapsed = (now - _lastSampleAt!).inMilliseconds;
+        if (elapsed > 0) _sampleIntervalMs = elapsed.clamp(16, 250);
+      }
+      _lastSampleAt = now;
+    }
     _animate = widget.playing &&
         delta > Duration.zero &&
         delta <= const Duration(seconds: 1) &&
@@ -95,7 +106,7 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
                       _dragValue == null &&
                       _pendingSeek == null &&
                       !MediaQuery.disableAnimationsOf(context)
-                  ? const Duration(milliseconds: 200)
+                  ? Duration(milliseconds: _sampleIntervalMs)
                   : Duration.zero,
               curve: Curves.linear,
               builder: (context, value, _) => Slider(

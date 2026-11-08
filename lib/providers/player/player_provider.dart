@@ -17,6 +17,7 @@ import 'player_lifecycle.dart';
 import 'player_state.dart';
 import '../../core/logger.dart';
 import '../library_provider.dart';
+import '../settings_provider.dart';
 import '../../data/services/discord_service.dart';
 
 final playerProvider =
@@ -24,16 +25,30 @@ final playerProvider =
   final repo = ref.watch(animeRepoProvider);
   // SharedPreferences is stable, so watching it is safe.
   final prefs = ref.watch(sharedPrefsProvider);
-  return PlayerNotifier(repo, prefs);
+  final notifier = PlayerNotifier(repo, prefs);
+  ref.listen(
+      settingsProvider
+          .select((s) => (s.audioLanguage, s.subLanguage, s.discordRpcEnabled)),
+      (_, next) {
+    notifier.applyPreferences(
+        audioLanguage: next.$1,
+        subtitleLanguage: next.$2,
+        discordEnabled: next.$3);
+  });
+  return notifier;
 });
 
 class PlayerNotifier extends StateNotifier<AppPlayerState> {
   final SharedPreferences _prefs;
   final AnimeRepository _repository;
   final PlaybackProgressTracker _progress;
-  final PlaybackEngine _engine;
+  final PlaybackBackend _engine;
   late final PlayerLifecycle _lifecycle;
-  final DiscordService _discordService = DiscordService();
+  final DiscordService _discordService;
+  late bool _rpcEnabled;
+  int _loadGeneration = 0;
+  Future<void> _loadQueue = Future.value();
+  bool _current(int generation) => mounted && generation == _loadGeneration;
 
   int _lastStateSeconds = -1; // Throttle UI updates to one per second.
   bool _isAutoSkipping = false;
@@ -49,12 +64,14 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     AnimeRepository repository,
     SharedPreferences prefs, {
     PlaybackProgressTracker? progress,
-    PlaybackEngine? engine,
+    PlaybackBackend? engine,
+    DiscordService? discordService,
   })  : _repository = repository,
         _prefs = prefs,
         _progress = progress ??
             PlaybackProgressTracker(PlaybackProgressService(repository)),
         _engine = engine ?? PlaybackEngine(),
+        _discordService = discordService ?? DiscordService(),
         super(AppPlayerState(
           tracks: PlayerTracksState(
             volume: prefs.getDouble('player_volume') ?? 100.0,
@@ -84,15 +101,17 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   void _initPlayer() {
+    _rpcEnabled = _prefs.getBool('pref_discord') ?? true;
     _engine.initialize(
       volume: _prefs.getDouble('player_volume') ?? 100.0,
       audioLanguages: _prefs.getString('pref_alang') ?? 'jpn,jp,eng,en,rus,ru',
-      subtitleLanguages: _prefs.getString('pref_slang') ?? 'rus,ru,eng,en',
+      subtitleLanguages: _prefs.getString('pref_slang') ?? 'eng,en,rus,ru',
     );
     _lifecycle.start();
   }
 
   void _handlePosition(Duration pos) {
+    if (state.isLoading || state.errorCode != null) return;
     final currentSeconds = pos.inSeconds;
     SkipInterval? currentActiveSkip;
     final currentPosInDouble = pos.inMilliseconds / 1000.0;
@@ -153,6 +172,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   void _handlePlaying(bool playing) {
+    if (state.isLoading) return;
     state = state.copyWith(
       playback: state.playback.copyWith(isPlaying: playing),
     );
@@ -192,6 +212,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   void _handleCompleted(bool completed) {
+    if (state.isLoading) return;
     if (!completed || !hasNextEpisode) return;
 
     state = state.copyWith(
@@ -260,127 +281,171 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     await loadVideo(state.animeId!, nextPath);
   }
 
-  Future<void> loadVideo(int animeId, String path) async {
-    if (!_lifecycle.beginLoading()) {
-      talker.warning('loadVideo: Blocked (already loading)');
-      return;
-    }
-
-    try {
-      talker.info('loadVideo: START LOADING: $path');
-      _lifecycle.cancelNextEpisode();
-      if (!File(path).existsSync()) {
-        talker.error('loadVideo: File not found!');
-        return;
-      }
-
-      final subsMap = await _applyExternalMedia(path);
-      final anime = await _repository.getAnimeById(animeId);
-      final savedSeconds = _progress.restore(anime, path);
-      List<SkipInterval> skips = [];
-
-      if (anime != null) {
-        final existingData =
-            anime.skipData.where((e) => e.episodePath == path).firstOrNull;
-
-        if (existingData != null) {
-          skips = existingData.intervals
-              .map((i) => SkipInterval(
-                  type: i.type ?? 'op',
-                  startTime: i.startTime ?? 0.0,
-                  endTime: i.endTime ?? 0.0))
-              .toList();
-          talker
-              .info('AniSkip: Timestamps loaded from local DB (instant)');
-        } else {
-          // No cached timestamps: fetch them from AniSkip.
-          if (anime.shikimoriId == null) {
-            talker.warning(
-                'AniSkip: Skipping unavailable. shikimoriId = null (Use "Refresh data from network" on the poster)');
-          } else {
-            final fileName = path.split(Platform.pathSeparator).last;
-
-            final epNumber = AnimeFilenameParser.parseEpisodeNumber(fileName);
-
-            if (epNumber != null) {
-              talker.info(
-                  'AniSkip: DB is empty. Fetching timestamps for episode $epNumber (MAL ID: ${anime.shikimoriId}) from network...');
-              skips = await AniSkipService()
-                  .getSkipTimes(anime.shikimoriId!, epNumber);
-
-              if (skips.isNotEmpty) {
-                final newSkipDb = EpisodeSkipData()
-                  ..episodePath = path
-                  ..intervals = skips
-                      .map((s) => SkipIntervalDb()
-                        ..type = s.type
-                        ..startTime = s.startTime
-                        ..endTime = s.endTime)
-                      .toList();
-
-                await _repository.cacheSkipData(anime.id, newSkipDb);
-                talker.info('AniSkip: Timestamps saved to DB!');
-              } else {
-                talker.info(
-                    'AniSkip: Server did not find timestamps for this episode (or no one has added them yet).');
-              }
-            } else {
-              talker.warning(
-                  'AniSkip: Failed to parse episode number from file: $fileName');
-            }
-            for (var s in skips) {
-              talker.info(
-                  'AniSkip: ${s.type} from ${s.startTime.toInt()} to ${s.endTime.toInt()} seconds');
-            }
-          }
-        }
-      }
-
-      talker.info('LOADING VIDEO: Saved position = $savedSeconds sec.');
-
-      // Reset per-video state.
-      _lastStateSeconds = -1;
-
-      state = state.copyWith(
+  Future<void> loadVideo(int animeId, String path) {
+    final previous = state;
+    final generation = ++_loadGeneration;
+    _lifecycle.cancelNextEpisode();
+    state = state.copyWith(
         playback: state.playback.copyWith(
+      isLoading: true,
+      clearError: true,
+      isVideoCompleted: false,
+    ));
+    final operation =
+        _loadQueue.then((_) => _loadVideo(generation, animeId, path, previous));
+    _loadQueue = operation;
+    return operation;
+  }
+
+  Future<void> _loadVideo(
+      int generation, int animeId, String path, AppPlayerState previous) async {
+    if (!_current(generation)) return;
+    try {
+      await _engine.pause();
+      if (!_current(generation)) return;
+      if (!previous.isLoading && previous.errorCode == null) {
+        await _progress.saveNow(
+            animeId: previous.animeId,
+            videoPath: previous.videoPath,
+            position: previous.position);
+      }
+      if (!_current(generation)) return;
+      if (!await File(path).exists()) {
+        throw const FileSystemException('File missing');
+      }
+      final anime = await _repository.getAnimeById(animeId);
+      if (!_current(generation)) return;
+      final savedSeconds = _progress.restore(anime, path);
+      final subsMap = await _applyExternalMedia(path, generation)
+          .timeout(const Duration(seconds: 5));
+      if (!_current(generation)) return;
+      final cached =
+          anime?.skipData.where((s) => s.episodePath == path).firstOrNull;
+      final skips = cached?.intervals
+              .map((s) => SkipInterval(
+                    type: s.type ?? 'op',
+                    startTime: s.startTime ?? 0,
+                    endTime: s.endTime ?? 0,
+                  ))
+              .toList() ??
+          <SkipInterval>[];
+      _lastStateSeconds = -1;
+      state = state.copyWith(
+        playback: PlayerPlaybackState(
+          sessionId: generation,
           animeId: animeId,
           videoPath: path,
           windowTitle: anime?.title,
-          isPlaying: false,
-          position: Duration.zero,
-          isVideoCompleted: false,
+          isLoading: true,
           playlist: anime?.sortedEpisodes ?? [],
           skipIntervals: skips,
-          activeSkip: null,
-          clearActiveSkip: true,
         ),
-        tracks: state.tracks.copyWith(externalSubsMap: subsMap),
+        tracks:
+            PlayerTracksState(volume: state.volume, externalSubsMap: subsMap),
       );
-
-      await _engine.open(path);
+      await _engine.open(path).timeout(const Duration(seconds: 10));
+      if (!_current(generation)) return;
       if (savedSeconds > 0) {
         await _engine.waitForDuration();
+        if (!_current(generation)) return;
         await _engine.seek(Duration(seconds: savedSeconds));
       }
-
+      if (!_current(generation)) return;
       await _engine.play();
+      if (!_current(generation)) return;
+      state = state.copyWith(
+          playback: state.playback.copyWith(
+        isLoading: false,
+        isPlaying: true,
+        position: Duration(seconds: savedSeconds),
+      ));
       _startUiHider();
-      _discordService.updatePresence(
+      _updatePresence(
         title: anime?.title ?? 'Anime',
         episode: 'Watching',
         currentPositionSeconds: savedSeconds,
-        durationSeconds:
-            state.duration.inSeconds > 0 ? state.duration.inSeconds : null,
-        isPlaying: true,
+        durationSeconds: state.duration.inSeconds,
       );
-    } finally {
-      // Always release the load lock.
-      _lifecycle.endLoading();
+      if (cached == null && anime?.shikimoriId != null) {
+        unawaited(_fetchSkipTimes(generation, anime!, path));
+      }
+    } catch (error, stack) {
+      if (!_current(generation)) return;
+      ++_loadGeneration; // Invalidate late external-media and metadata work.
+      talker.handle(error, stack, 'Video load failed');
+      state = state.copyWith(
+          playback: state.playback.copyWith(
+        animeId: animeId,
+        videoPath: path,
+        isLoading: false,
+        isPlaying: false,
+        errorCode: error is FileSystemException ? 'missing' : 'load',
+        position: Duration.zero,
+        duration: Duration.zero,
+      ));
+    }
+  }
+
+  Future<void> _fetchSkipTimes(int generation, Anime anime, String path) async {
+    final episode = AnimeFilenameParser.parseEpisodeNumber(
+        File(path).uri.pathSegments.last);
+    if (episode == null) return;
+    try {
+      final skips =
+          await AniSkipService().getSkipTimes(anime.shikimoriId!, episode);
+      if (!_current(generation) || skips.isEmpty) return;
+      await _repository.cacheSkipData(
+          anime.id,
+          EpisodeSkipData()
+            ..episodePath = path
+            ..intervals = skips
+                .map((s) => SkipIntervalDb()
+                  ..type = s.type
+                  ..startTime = s.startTime
+                  ..endTime = s.endTime)
+                .toList());
+      if (!_current(generation)) return;
+      state = state.copyWith(
+          playback: state.playback.copyWith(skipIntervals: skips));
+    } catch (error, stack) {
+      talker.handle(error, stack, 'Skip metadata unavailable');
+    }
+  }
+
+  void _updatePresence(
+      {required String title,
+      required String episode,
+      int? currentPositionSeconds,
+      int? durationSeconds,
+      bool isPlaying = true}) {
+    if (!_rpcEnabled) return;
+    _discordService.updatePresence(
+        title: title,
+        episode: episode,
+        currentPositionSeconds: currentPositionSeconds,
+        durationSeconds: durationSeconds,
+        isPlaying: isPlaying);
+  }
+
+  void applyPreferences(
+      {required String audioLanguage,
+      required String subtitleLanguage,
+      required bool discordEnabled}) {
+    _engine.setProperty('alang', audioLanguage);
+    _engine.setProperty('slang', subtitleLanguage);
+    _rpcEnabled = discordEnabled;
+    if (!discordEnabled) {
+      _discordService.dispose();
+    } else if (state.videoPath != null) {
+      _updatePresence(
+          title: state.windowTitle ?? 'Anime',
+          episode: 'Watching',
+          isPlaying: state.isPlaying);
     }
   }
 
   Future<Map<String, List<String>>> _applyExternalMedia(
-      String videoPath) async {
+      String videoPath, int generation) async {
     Map<String, List<String>> subsMap = {};
     try {
       final parentDir = File(videoPath).parent;
@@ -420,6 +485,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
         }
       }
 
+      if (!_current(generation)) return {};
       _engine.setProperty('sub-auto', 'fuzzy');
       _engine.setProperty('audio-file-auto', 'fuzzy');
       String sep = Platform.isWindows ? ';' : ':';
@@ -427,13 +493,9 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       final sortedAudioDirs = audioDirs.toList()..sort();
       final sortedSubDirs = subDirs.toList()..sort();
 
-      if (sortedAudioDirs.isNotEmpty) {
-        _engine.setProperty('audio-file-paths', sortedAudioDirs.join(sep));
-      }
-      if (sortedSubDirs.isNotEmpty) {
-        _engine.setProperty('sub-file-paths', sortedSubDirs.join(sep));
-      }
-      if (fontsDir != null) _engine.setProperty('sub-fonts-dir', fontsDir);
+      _engine.setProperty('audio-file-paths', sortedAudioDirs.join(sep));
+      _engine.setProperty('sub-file-paths', sortedSubDirs.join(sep));
+      _engine.setProperty('sub-fonts-dir', fontsDir ?? '');
     } catch (e, st) {
       talker.handle(e, st, 'Failed to auto-detect external media');
     }
@@ -458,7 +520,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       if (epIndex > 0) epString = 'Episode $epIndex';
     }
 
-    _discordService.updatePresence(
+    _updatePresence(
       title: state.windowTitle ?? 'Anime',
       episode: isGoingToPlay ? epString : 'Paused',
       currentPositionSeconds: state.position.inSeconds,
@@ -507,8 +569,9 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   @override
   void dispose() {
+    ++_loadGeneration;
     _lifecycle.dispose();
-    _discordService.clearPresence();
+    _discordService.dispose();
     final finalSeconds = state.position.inSeconds;
     final finalPath = state.videoPath;
     final finalId = state.animeId;
@@ -536,10 +599,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       windowManager.setPosition(_previousPosition);
     }
 
-    final engineToDispose = _engine;
-    Future.delayed(const Duration(milliseconds: 300), () {
-      engineToDispose.dispose();
-    });
+    unawaited(_loadQueue.whenComplete(() => _engine.dispose()));
 
     super.dispose();
   }

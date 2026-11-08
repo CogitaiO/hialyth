@@ -234,5 +234,10 @@
   "libraryBrowse": "Your local anime collection",
   "libraryScanError": "Unable to scan the folder. Check access and try again.",
   "libraryMetadataWarning": "Local files imported. Some online metadata could not be loaded.",
-  "commonSaveFailed": "Unable to save. Check the title for duplicates and try again."
+  "commonSaveFailed": "Unable to save. Check the title for duplicates and try again.",
+  "commonRetry": "Try again",
+  "playerLoadFailed": "Unable to open this video",
+  "playerLoadFailedBody": "Check that the file is available and can be decoded, then try again.",
+  "startupFailed": "Unable to start the application",
+  "startupFailedBody": "The media engine or local library could not be opened. Check the log for details and try again."
 }
