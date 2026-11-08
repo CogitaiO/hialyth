@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../domain/anime.dart';
+import '../../../../widgets/anime_artwork.dart';
 import '../../../../providers/repositories_provider.dart';
 import '../../player/player_screen.dart';
 import '../dialogs/anime_dialogs.dart';
@@ -16,12 +16,14 @@ class LeftControlPanel extends ConsumerWidget {
   final Anime anime;
   final Color accentColor;
   final String heroTag;
+  final bool showPoster;
 
   const LeftControlPanel({
     super.key,
     required this.anime,
     required this.accentColor,
     required this.heroTag,
+    this.showPoster = true,
   });
 
   void _playEpisode(BuildContext context, String path) {
@@ -45,13 +47,6 @@ class LeftControlPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
-    ImageProvider? imageProvider;
-    if (anime.coverUrl != null) {
-      imageProvider = anime.coverUrl!.startsWith('http')
-          ? CachedNetworkImageProvider(anime.coverUrl!) as ImageProvider
-          : FileImage(File(anime.coverUrl!));
-    }
-
     final sortedEpisodes = anime.sortedEpisodes;
     final nextEpisodePath = anime.nextEpisodeToPlay ??
         (sortedEpisodes.isNotEmpty ? sortedEpisodes.first : '');
@@ -63,39 +58,14 @@ class LeftControlPanel extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Hero(
-            tag: heroTag,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                height: 400,
-                decoration: BoxDecoration(
-                  color: tokens.surfaceOverlay,
-                  borderRadius: BorderRadius.circular(AppRadii.xl),
-                  image: imageProvider != null
-                      ? DecorationImage(image: imageProvider, fit: BoxFit.cover)
-                      : null,
-                  border: Border.all(color: tokens.surfaceHover),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.4),
-                      blurRadius: 40,
-                      offset: const Offset(0, 20),
-                    ),
-                  ],
-                ),
-                child: imageProvider == null
-                    ? Center(
-                        child: Icon(
-                          AppIcons.imageMissing,
-                          size: 60,
-                          color: tokens.textDisabled,
-                        ),
-                      )
-                    : null,
-              ),
-            )),
-        const SizedBox(height: AppSpacing.lg),
+        if (showPoster)
+          AspectRatio(
+              aspectRatio: 2 / 3,
+              child: Hero(
+                  tag: heroTag,
+                  child: AnimeArtwork(
+                      cover: anime.coverUrl, radius: 16, cacheWidth: 560))),
+        if (showPoster) const SizedBox(height: AppSpacing.lg),
         if (sortedEpisodes.isNotEmpty)
           ElevatedButton(
             onPressed: () => _playEpisode(context, nextEpisodePath),
@@ -103,12 +73,13 @@ class LeftControlPanel extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               backgroundColor:
                   isAllWatched ? tokens.surfaceDisabled : accentColor,
-              foregroundColor: tokens.textPrimary,
+              foregroundColor: isAllWatched
+                  ? tokens.textPrimary
+                  : Theme.of(context).colorScheme.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
-              elevation: 10,
-              shadowColor: accentColor.withValues(alpha: 0.5),
+              elevation: 0,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -216,6 +187,14 @@ class _StatusMenu extends ConsumerWidget {
             ),
           ),
         ),
+        MenuItemButton(
+          onPressed: () => ref
+              .read(animeRepoProvider)
+              .updateStatus(anime.id, AnimeStatus.dropped),
+          child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+              child: Text(context.l10n.statusDropped)),
+        ),
       ],
       builder: (context, controller, child) {
         return Material(
@@ -236,7 +215,8 @@ class _StatusMenu extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  Expanded(
+                      child: Text(
                     anime.status == AnimeStatus.planned
                         ? context.l10n.statusPlanned
                         : anime.status == AnimeStatus.watching
@@ -259,7 +239,7 @@ class _StatusMenu extends ConsumerWidget {
                                           .accentColorValue,
                                     ),
                     ),
-                  ),
+                  )),
                   Icon(AppIcons.dropdown, color: tokens.textMuted),
                 ],
               ),

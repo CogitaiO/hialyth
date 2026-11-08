@@ -1581,6 +1581,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue watching'**
   String get libraryContinueWatching;
+
+  /// No description provided for @detailsReadLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get detailsReadLess;
+
+  /// No description provided for @detailsSavedPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume at {time}'**
+  String detailsSavedPosition(Object time);
 }
 
 class _AppLocalizationsDelegate

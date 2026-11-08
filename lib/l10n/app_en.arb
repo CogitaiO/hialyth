@@ -247,5 +247,7 @@
   "librarySortProgress": "Watch progress",
   "libraryGrid": "Grid view",
   "libraryList": "List view",
-  "libraryContinueWatching": "Continue watching"
+  "libraryContinueWatching": "Continue watching",
+  "detailsReadLess": "Show less",
+  "detailsSavedPosition": "Resume at {time}"
 }

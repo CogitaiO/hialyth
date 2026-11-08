@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:nekaido_pre/presentation/anime_details/anime_details_screen.dart';
+import 'package:nekaido_pre/presentation/anime_details/widgets/right_info_panel.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -96,6 +99,74 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets(
+        'Details stays readable and scrollable at $label and 200 percent text',
+        (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = size;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final dir = Directory.systemTemp.createTempSync('hialyth-details-');
+      addTearDown(() => dir.delete(recursive: true));
+      final first = File('${dir.path}/Example - 01.mkv')..createSync();
+      final anime = Anime()
+        ..id = 1
+        ..title =
+            'Frieren: Beyond Journey’s End — A long title for the compact layout'
+        ..episodePaths = [first.path, '${dir.path}/missing-02.mkv']
+        ..descripion = List.filled(12,
+                'A journey through memories, friendships, and the passage of time.')
+            .join(' ');
+      final prefs = await SharedPreferences.getInstance();
+      Widget app(double scale) => ProviderScope(
+              overrides: [
+                sharedPrefsProvider.overrideWithValue(prefs),
+                animeDetailsProvider(1)
+                    .overrideWith((ref) => Stream.value(anime)),
+              ],
+              child: MaterialApp(
+                theme: AppTheme.dark(),
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                builder: (context, child) => MediaQuery(
+                    data: MediaQuery.of(context)
+                        .copyWith(textScaler: TextScaler.linear(scale)),
+                    child: child!),
+                home: const AnimeDetailsScreen(
+                    animeId: 1, heroTag: 'test-details'),
+              ));
+      await tester.pumpWidget(app(1));
+      await tester.pumpAndSettle();
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds:50)));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await expectLater(find.byType(Scaffold),
+          matchesGoldenFile('goldens/details_$label.png'));
+      final scroll = find
+          .descendant(
+              of: find.byType(RightInfoPanel),
+              matching: find.byType(Scrollable))
+          .first;
+      await tester.scrollUntilVisible(find.text('Read more'), 150,
+          scrollable: scroll);
+      if (find.text('Read more').hitTestable().evaluate().isEmpty) {
+        await tester.drag(scroll, const Offset(0,-180));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Read more'));
+      await tester.pumpAndSettle();
+      expect(find.text('Show less'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('missing-02.mkv'), 200,
+          scrollable: scroll);
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds:50)));
+      await tester.pumpAndSettle();
+      expect(find.text('File missing'), findsOneWidget);
+      await tester.pumpWidget(app(2));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     testWidgets('library navigation and cards at $label', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = size;
@@ -122,7 +193,8 @@ void main() {
       await tester.pumpWidget(ProviderScope(
         overrides: [
           sharedPrefsProvider.overrideWithValue(prefs),
-          scannerProvider.overrideWithValue(FileDiscoveryService(_UnusedRepository())),
+          scannerProvider
+              .overrideWithValue(FileDiscoveryService(_UnusedRepository())),
           libraryProvider.overrideWith((ref) => Stream.value(library))
         ],
         child: MaterialApp(

@@ -852,4 +852,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryContinueWatching => 'Continue watching';
+
+  @override
+  String get detailsReadLess => 'Show less';
+
+  @override
+  String detailsSavedPosition(Object time) {
+    return 'Resume at $time';
+  }
 }
