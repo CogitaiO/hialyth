@@ -1491,6 +1491,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to scan the folder. Check access and try again.'**
   String get libraryScanError;
+
+  /// No description provided for @libraryMetadataWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Local files imported. Some online metadata could not be loaded.'**
+  String get libraryMetadataWarning;
+
+  /// No description provided for @commonSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save. Check the title for duplicates and try again.'**
+  String get commonSaveFailed;
 }
 
 class _AppLocalizationsDelegate

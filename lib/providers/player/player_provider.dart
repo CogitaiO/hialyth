@@ -318,8 +318,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
                         ..endTime = s.endTime)
                       .toList();
 
-                anime.skipData = [...anime.skipData, newSkipDb];
-                await _repository.saveAnime(anime);
+                await _repository.cacheSkipData(anime.id, newSkipDb);
                 talker.info('AniSkip: Timestamps saved to DB!');
               } else {
                 talker.info(

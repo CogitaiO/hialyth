@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/scan_provider.dart';
 import '../../core/debouncer.dart';
 import '../../core/localization/l10n.dart';
 import '../widgets/media_card.dart';
@@ -13,19 +14,21 @@ import '../theme/app_breakpoints.dart';
 import '../domain/anime.dart';
 import '../theme/app_theme_extension.dart';
 
-final _isScanningProvider = StateProvider<bool>((ref) => false);
-
 Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
-  if (ref.read(_isScanningProvider)) return;
+  if (ref.read(scanProvider).running) return;
   final path = await FilePicker.getDirectoryPath();
   if (path == null || !context.mounted) return;
-  ref.read(_isScanningProvider.notifier).state = true;
   try {
     ref.read(savedFoldersProvider.notifier).addFolder(path);
-    await ref.read(scannerProvider).scanAndGroupFiles(path);
+    final result = await ref.read(scanProvider.notifier).scan([path]);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.libraryFolderAdded)),
+        SnackBar(
+            content: Text(result.errors.isNotEmpty
+                ? context.l10n.libraryScanError
+                : result.warnings > 0
+                    ? context.l10n.libraryMetadataWarning
+                    : context.l10n.libraryFolderAdded)),
       );
     }
   } catch (_) {
@@ -34,8 +37,6 @@ Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
         SnackBar(content: Text(context.l10n.libraryScanError)),
       );
     }
-  } finally {
-    ref.read(_isScanningProvider.notifier).state = false;
   }
 }
 
@@ -269,7 +270,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
                         style: Theme.of(context).textTheme.bodyMedium),
                   ])),
               FilledButton.icon(
-                onPressed: ref.watch(_isScanningProvider)
+                onPressed: ref.watch(scanProvider).running
                     ? null
                     : () => _addLibraryFolder(context, ref),
                 icon: const Icon(AppIcons.addFolder, size: 20),
@@ -305,7 +306,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       ),
               ),
             ),
-            if (ref.watch(_isScanningProvider)) ...[
+            if (ref.watch(scanProvider).running) ...[
               const SizedBox(height: 12),
               const LinearProgressIndicator(),
               const SizedBox(height: 4),
@@ -406,10 +407,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
   Future<void> _runAutoScan() async {
     final folders = ref.read(savedFoldersProvider);
     if (folders.isEmpty) return;
-    final scanner = ref.read(scannerProvider);
-    for (String folder in folders) {
-      await scanner.scanAndGroupFiles(folder);
-    }
+    await ref.read(scanProvider.notifier).scan(folders);
   }
 
   Future<void> _checkAndShowVpnWarning() async {
@@ -512,7 +510,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
                     const SizedBox(height: 24),
                     if (emptyLibrary)
                       FilledButton.icon(
-                        onPressed: ref.watch(_isScanningProvider)
+                        onPressed: ref.watch(scanProvider).running
                             ? null
                             : () => _addLibraryFolder(context, ref),
                         icon: const Icon(AppIcons.addFolder),

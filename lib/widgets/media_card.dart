@@ -366,12 +366,21 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
             style: ElevatedButton.styleFrom(
               backgroundColor: context.appTheme.destructive,
             ),
-            onPressed: () {
-              ref.read(animeRepoProvider).editAnimeDetails(
-                  widget.anime,
-                  titleController.text,
-                  coverController.text.isNotEmpty ? coverController.text : '');
-              Navigator.pop(ctx);
+            onPressed: () async {
+              try {
+                await ref.read(animeRepoProvider).editAnimeDetails(
+                    widget.anime,
+                    titleController.text,
+                    coverController.text.isNotEmpty
+                        ? coverController.text
+                        : '');
+                if (ctx.mounted) Navigator.pop(ctx);
+              } catch (_) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(content: Text(ctx.l10n.commonSaveFailed)));
+                }
+              }
             },
             child: Text(
               context.l10n.dialogSave,
@@ -393,11 +402,12 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
     final meta = await shikimori.fetchAnimeDetails(widget.anime.title);
 
     if (meta != null) {
-      widget.anime.coverUrl = meta['coverUrl'];
-      widget.anime.descripion = meta['description'];
-
-      widget.anime.shikimoriId = int.tryParse(meta['shikimoriId'] ?? '');
-      await ref.read(animeRepoProvider).saveAnime(widget.anime);
+      await ref.read(animeRepoProvider).updateMetadata(
+            widget.anime.id,
+            coverUrl: meta['coverUrl'],
+            description: meta['description'],
+            shikimoriId: int.tryParse(meta['shikimoriId'] ?? ''),
+          );
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -232,5 +232,7 @@
   "libraryResetFilters": "Reset filters",
   "libraryNavigation": "Library navigation",
   "libraryBrowse": "Your local anime collection",
-  "libraryScanError": "Unable to scan the folder. Check access and try again."
+  "libraryScanError": "Unable to scan the folder. Check access and try again.",
+  "libraryMetadataWarning": "Local files imported. Some online metadata could not be loaded.",
+  "commonSaveFailed": "Unable to save. Check the title for duplicates and try again."
 }

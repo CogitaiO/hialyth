@@ -9,7 +9,7 @@ class ShikimoriService {
     try {
       final searchUrl = Uri.parse('$_baseUrl/api/animes?search=${Uri.encodeComponent(title)}&limit=1');
 
-      final searchRes = await http.get(searchUrl);
+      final searchRes = await http.get(searchUrl).timeout(const Duration(seconds: 8));
       if (searchRes.statusCode != 200) return null;
 
       final searchData = jsonDecode(searchRes.body) as List;
@@ -18,7 +18,7 @@ class ShikimoriService {
       final animeId = searchData[0]['id'];
 
       final detailsUrl = Uri.parse('$_baseUrl/api/animes/$animeId');
-      final detailsRes = await http.get(detailsUrl);
+      final detailsRes = await http.get(detailsUrl).timeout(const Duration(seconds: 8));
       if (detailsRes.statusCode != 200) return null;
 
       final detailsData = jsonDecode(detailsRes.body);

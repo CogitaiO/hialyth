@@ -803,4 +803,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get libraryScanError =>
       'Unable to scan the folder. Check access and try again.';
+
+  @override
+  String get libraryMetadataWarning =>
+      'Local files imported. Some online metadata could not be loaded.';
+
+  @override
+  String get commonSaveFailed =>
+      'Unable to save. Check the title for duplicates and try again.';
 }

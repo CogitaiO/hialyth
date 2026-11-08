@@ -156,13 +156,20 @@ class AnimeDialogs {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: accentColor),
-              onPressed: () {
-                ref.read(animeRepoProvider).editAnimeDetails(
-                      anime,
-                      titleController.text.trim(),
-                      coverController.text.trim(),
-                    );
-                Navigator.pop(ctx);
+              onPressed: () async {
+                try {
+                  await ref.read(animeRepoProvider).editAnimeDetails(
+                        anime,
+                        titleController.text.trim(),
+                        coverController.text.trim(),
+                      );
+                  if (ctx.mounted) Navigator.pop(ctx);
+                } catch (_) {
+                  if (ctx.mounted) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                        SnackBar(content: Text(ctx.l10n.commonSaveFailed)));
+                  }
+                }
               },
               child: Text(
                 ctx.l10n.dialogSave,
@@ -261,11 +268,9 @@ class AnimeDialogs {
                       final text = controller.text.trim();
                       if (text.isNotEmpty) {
                         if (!anime.customCollections.contains(text)) {
-                          anime.customCollections = [
-                            ...anime.customCollections,
-                            text
-                          ];
-                          await ref.read(animeRepoProvider).saveAnime(anime);
+                          await ref
+                              .read(animeRepoProvider)
+                              .addToCollection(anime.id, text);
                         }
                         if (context.mounted) Navigator.pop(context);
                       }

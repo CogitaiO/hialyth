@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../widgets/escapable.dart';
 import '../../providers/settings_provider.dart';
-import '../../providers/library_provider.dart';
+import '../../providers/scan_provider.dart';
 import '../../providers/repositories_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../widgets/custom_title_bar.dart';
@@ -525,7 +525,7 @@ class _LibrarySettings extends ConsumerWidget {
                     ref
                         .read(savedFoldersProvider.notifier)
                         .addFolder(folderPath);
-                    ref.read(scannerProvider).scanAndGroupFiles(folderPath);
+                    ref.read(scanProvider.notifier).scan([folderPath]);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text(context.l10n.settingsFolderQueued),
@@ -560,19 +560,21 @@ class _LibrarySettings extends ConsumerWidget {
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadii.lg)),
           ),
-          onPressed: folders.isEmpty
+          onPressed: folders.isEmpty || ref.watch(scanProvider).running
               ? null
               : () async {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(context.l10n.settingsScanStarted),
                   ));
-                  final scanner = ref.read(scannerProvider);
-                  for (var folder in folders) {
-                    await scanner.scanAndGroupFiles(folder);
-                  }
+                  final result =
+                      await ref.read(scanProvider.notifier).scan(folders);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(context.l10n.settingsScanCompleted),
+                      content: Text(result.errors.isNotEmpty
+                          ? context.l10n.libraryScanError
+                          : result.warnings > 0
+                              ? context.l10n.libraryMetadataWarning
+                              : context.l10n.settingsScanCompleted),
                       backgroundColor: tokens.success,
                     ));
                   }

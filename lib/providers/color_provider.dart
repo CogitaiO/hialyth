@@ -8,7 +8,7 @@ import '../theme/app_palette.dart';
 import 'repositories_provider.dart';
 
 final animeColorProvider =
-    FutureProvider.family<Color, Anime>((ref, anime) async {
+    FutureProvider.autoDispose.family<Color, Anime>((ref, anime) async {
   if (anime.ambientColorValue != null) {
     return Color(anime.ambientColorValue!);
   }
@@ -35,8 +35,9 @@ final animeColorProvider =
         AppPalette.fallbackAccent;
 
     // Cache the extracted color on the anime record.
-    anime.ambientColorValue = calcColor.toARGB32();
-    await ref.read(animeRepoProvider).saveAnime(anime);
+    await ref
+        .read(animeRepoProvider)
+        .updateAmbientColor(anime.id, anime.coverUrl, calcColor.toARGB32());
 
     return calcColor;
   } catch (e) {
