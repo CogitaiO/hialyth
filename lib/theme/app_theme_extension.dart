@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_palette.dart';
+import 'app_surfaces.dart';
 
 @immutable
 class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
@@ -41,37 +42,38 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   /// Dark theme using design contract tokens.
   /// All values are compile-time constants.
   const AppThemeExtension.dark()
-      : pageSurface = const Color(0xFF0E0F11),           // AppSurfaces.base
-        titleBarSurface = const Color(0xFF15171A),      // AppSurfaces.raised
-        cardSurface = const Color(0xFF1B1E22),          // AppSurfaces.container
-        container = const Color(0xFF1B1E22),            // AppSurfaces.container
-        containerHigh = const Color(0xFF22262B),        // AppSurfaces.containerHigh
-        hover = const Color(0xFF262B31),                // AppSurfaces.hover
-        surfaceSubtle = const Color(0x0DFFFFFF),        // white 0.05
-        surfaceFaint = const Color(0x08FFFFFF),         // white 0.03
-        surfaceHover = const Color(0xFF262B31),         // AppSurfaces.hover
-        surfaceDisabled = const Color(0x33FFFFFF),      // white 0.2
-        surfaceTooltip = const Color(0xFF0E0F11),       // AppSurfaces.base
-        surfaceOverlay = const Color(0xE10A0B0D),       // AppSurfaces.overlay 0.88
-        glass = const Color(0x8C14161A),                // AppSurfaces.glass 0.55
-        videoSurface = Colors.black,                    // AppSurfaces.videoSurface
-        borderFaint = const Color(0x1AFFFFFF),          // white 0.1
-        borderSubtle = const Color(0xFF262B31),         // AppSurfaces.borderSubtle
-        borderStrong = const Color(0xFF343A42),         // AppSurfaces.borderStrong
-        textPrimary = const Color(0xFFF4F6F8),          // AppSurfaces.contentPrimary
-        textSecondary = const Color(0xFFB9C0C9),        // AppSurfaces.contentSecondary
-        textMuted = const Color(0xFF858D98),            // AppSurfaces.contentMuted
-        textSubtle = const Color(0x61FFFFFF),           // white 0.38
-        textDisabled = const Color(0x33FFFFFF),         // white 0.2
-        success = AppPalette.success,                   // 0xFF4ADE80
-        info = AppPalette.info,                         // 0xFF60A5FA
-        warning = AppPalette.warning,                   // 0xFFFBBF24
-        danger = AppPalette.danger,                     // 0xFFF87171
-        destructive = AppPalette.danger,                // alias
-        statusPlanned = AppPalette.statusPlanned,       // 0xFFC4B5FD
-        statusWatching = AppPalette.statusWatching,     // 0xFF7DB7FF
-        statusCompleted = AppPalette.statusCompleted,   // 0xFF6EE7B7
-        statusDropped = AppPalette.statusDropped,       // 0xFFFCA5A5
+      : pageSurface = AppSurfaces.base, // AppSurfaces.base
+        titleBarSurface = AppSurfaces.raised, // AppSurfaces.raised
+        cardSurface = AppSurfaces.container, // AppSurfaces.container
+        container = AppSurfaces.container, // AppSurfaces.container
+        containerHigh = AppSurfaces.containerHigh, // AppSurfaces.containerHigh
+        hover = AppSurfaces.borderSubtle, // AppSurfaces.hover
+        surfaceSubtle = const Color(0x0DFFFFFF), // white 0.05
+        surfaceFaint = const Color(0x08FFFFFF), // white 0.03
+        surfaceHover = AppSurfaces.borderSubtle, // AppSurfaces.hover
+        surfaceDisabled = const Color(0x33FFFFFF), // white 0.2
+        surfaceTooltip = AppSurfaces.base, // AppSurfaces.base
+        surfaceOverlay = AppSurfaces.overlay, // AppSurfaces.overlay 0.88
+        glass = AppSurfaces.glass, // AppSurfaces.glass 0.55
+        videoSurface = Colors.black, // AppSurfaces.videoSurface
+        borderFaint = AppSurfaces.borderFaint, // white 0.1
+        borderSubtle = AppSurfaces.borderSubtle, // AppSurfaces.borderSubtle
+        borderStrong = AppSurfaces.borderStrong, // AppSurfaces.borderStrong
+        textPrimary = AppSurfaces.contentPrimary, // AppSurfaces.contentPrimary
+        textSecondary =
+            AppSurfaces.contentSecondary, // AppSurfaces.contentSecondary
+        textMuted = AppSurfaces.contentMuted, // AppSurfaces.contentMuted
+        textSubtle = AppSurfaces.contentSecondary, // white 0.38
+        textDisabled = const Color(0x33FFFFFF), // white 0.2
+        success = AppPalette.success, // 0xFF4ADE80
+        info = AppPalette.info, // 0xFF60A5FA
+        warning = AppPalette.warning, // 0xFFFBBF24
+        danger = AppPalette.danger, // 0xFFF87171
+        destructive = AppPalette.danger, // alias
+        statusPlanned = AppPalette.statusPlanned, // 0xFFC4B5FD
+        statusWatching = AppPalette.statusWatching, // 0xFF7DB7FF
+        statusCompleted = AppPalette.statusCompleted, // 0xFF6EE7B7
+        statusDropped = AppPalette.statusDropped, // 0xFFFCA5A5
         windowCloseHover = AppPalette.windowCloseHover; // 0xFFE81123
 
   final Color pageSurface;
@@ -220,7 +222,8 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
       statusWatching: Color.lerp(statusWatching, other.statusWatching, t)!,
       statusCompleted: Color.lerp(statusCompleted, other.statusCompleted, t)!,
       statusDropped: Color.lerp(statusDropped, other.statusDropped, t)!,
-      windowCloseHover: Color.lerp(windowCloseHover, other.windowCloseHover, t)!,
+      windowCloseHover:
+          Color.lerp(windowCloseHover, other.windowCloseHover, t)!,
     );
   }
 }

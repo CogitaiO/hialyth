@@ -1,6 +1,7 @@
 abstract final class AppFeatures {
-  /// Enable the design-system theme during the gradual widget migration.
-  /// Override with `--dart-define=designV2=false` to use the legacy Material theme.
+  /// Optional presentation: theme, resume feature, ambient tint and glass.
+  /// `--dart-define=designV2=false` provides a simpler opaque presentation.
+  /// Functional fixes, accessibility and responsive layouts remain active.
   static const bool designV2 = bool.fromEnvironment(
     'designV2',
     defaultValue: true,

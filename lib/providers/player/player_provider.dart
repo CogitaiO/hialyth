@@ -104,8 +104,10 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     _rpcEnabled = _prefs.getBool('pref_discord') ?? true;
     _engine.initialize(
       volume: _prefs.getDouble('player_volume') ?? 100.0,
-      audioLanguages: _prefs.getString('pref_alang') ?? 'jpn,jp,eng,en,rus,ru',
-      subtitleLanguages: _prefs.getString('pref_slang') ?? 'eng,en,rus,ru',
+      audioLanguages:
+          _prefs.getString('pref_alang') ?? AppSettings.defaultAudioLanguage,
+      subtitleLanguages:
+          _prefs.getString('pref_slang') ?? AppSettings.defaultSubtitleLanguage,
     );
     _lifecycle.start();
   }
@@ -288,6 +290,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     state = state.copyWith(
         playback: state.playback.copyWith(
       isLoading: true,
+      isPlaying: false,
       clearError: true,
       isVideoCompleted: false,
     ));
@@ -504,6 +507,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   void togglePlay() {
+    if (state.isLoading || state.errorCode != null) return;
     _engine.playOrPause();
     unawaited(_progress.saveNow(
       animeId: state.animeId,

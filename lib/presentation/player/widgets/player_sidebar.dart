@@ -155,7 +155,7 @@ class PlayerSidebar extends ConsumerWidget {
                   vertical: AppSpacing.xxs,
                 ),
                 tileColor: isCurrent
-                    ? Color(ref.watch(settingsProvider).accentColorValue)
+                    ? Theme.of(context).colorScheme.primary
                         .withValues(alpha: 0.1)
                     : Colors.transparent,
                 leading: Icon(
@@ -165,14 +165,14 @@ class PlayerSidebar extends ConsumerWidget {
                           ? AppIcons.checkCircleOutline
                           : AppIcons.circleOutline),
                   color: isCurrent
-                      ? Color(ref.watch(settingsProvider).accentColorValue)
+                      ? Theme.of(context).colorScheme.primary
                       : (isWatched ? tokens.success : tokens.textSecondary),
                 ),
                 title: Text(
                   context.l10n.playerEpisodeNumber(index + 1),
                   style: TextStyle(
                       color: isCurrent
-                          ? Color(ref.watch(settingsProvider).accentColorValue)
+                          ? Theme.of(context).colorScheme.primary
                           : tokens.textPrimary,
                       fontWeight:
                           isCurrent ? FontWeight.bold : FontWeight.normal),
@@ -297,7 +297,7 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
               IconButton(
                 style: IconButton.styleFrom(
                     backgroundColor:
-                        Color(ref.watch(settingsProvider).accentColorValue)
+                        Theme.of(context).colorScheme.primary
                             .withValues(alpha: 0.2)),
                 icon: Icon(AppIcons.add,
                     color: Theme.of(context).colorScheme.primary),
@@ -369,16 +369,12 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
                                 vertical: AppSpacing.xxs,
                               ),
                               decoration: BoxDecoration(
-                                color: Color(ref
-                                        .watch(settingsProvider)
-                                        .accentColorValue)
+                                color: Theme.of(context).colorScheme.primary
                                     .withValues(alpha: 0.2),
                                 borderRadius:
                                     BorderRadius.circular(AppRadii.sm),
                                 border: Border.all(
-                                    color: Color(ref
-                                            .watch(settingsProvider)
-                                            .accentColorValue)
+                                    color: Theme.of(context).colorScheme.primary
                                         .withValues(alpha: 0.5)),
                               ),
                               child: Text(
@@ -410,8 +406,7 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
                                   .deleteNote(animeId, note.createdAt!);
                             }
                           },
-                          hoverColor: Color(
-                                  ref.watch(settingsProvider).accentColorValue)
+                          hoverColor: Theme.of(context).colorScheme.primary
                               .withValues(alpha: 0.2),
                         ),
                       );

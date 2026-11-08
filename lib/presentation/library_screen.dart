@@ -27,11 +27,13 @@ Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(result.errors.isNotEmpty
-                ? context.l10n.libraryScanError
-                : result.warnings > 0
-                    ? context.l10n.libraryMetadataWarning
-                    : context.l10n.libraryFolderAdded)),
+            content: Text(result.cancelled
+                ? context.l10n.libraryScanCancelled
+                : result.errors.isNotEmpty
+                    ? context.l10n.libraryScanError
+                    : result.warnings > 0
+                        ? context.l10n.libraryMetadataWarning
+                        : context.l10n.libraryFolderAdded)),
       );
     }
   } catch (_) {
@@ -432,23 +434,19 @@ class _TopBarState extends ConsumerState<_TopBar> {
                               child: ChoiceChip(
                                 label: Text(collectionName),
                                 selected: isSelected,
-                                selectedColor: Color(ref
-                                        .watch(settingsProvider)
-                                        .accentColorValue)
+                                selectedColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary
                                     .withValues(alpha: 0.3),
                                 backgroundColor: tokens.surfaceSubtle,
                                 labelStyle: TextStyle(
                                   color: isSelected
-                                      ? Color(ref
-                                          .watch(settingsProvider)
-                                          .accentColorValue)
+                                      ? Theme.of(context).colorScheme.primary
                                       : tokens.textSecondary,
                                 ),
                                 side: BorderSide(
                                     color: isSelected
-                                        ? Color(ref
-                                            .watch(settingsProvider)
-                                            .accentColorValue)
+                                        ? Theme.of(context).colorScheme.primary
                                         : Colors.transparent),
                                 onSelected: (selected) {
                                   if (selected) {
@@ -516,7 +514,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
             children: [
               Icon(
                 AppIcons.shield,
-                color: context.appTheme.destructive,
+                color: context.appTheme.warning,
                 size: 28,
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -534,8 +532,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
           actions: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Color(ref.watch(settingsProvider).accentColorValue)),
+                  backgroundColor: Theme.of(context).colorScheme.primary),
               onPressed: () {
                 prefs.setBool('has_seen_vpn_warning', true);
                 Navigator.pop(ctx);
@@ -655,7 +652,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
                   )),
                 SliverPadding(
                     padding: const EdgeInsets.all(24),
-                    sliver: view.list && AppFeatures.designV2
+                    sliver: view.list
                         ? SliverList.builder(
                             itemCount: filteredList.length,
                             itemBuilder: (context, index) =>

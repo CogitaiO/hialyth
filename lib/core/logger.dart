@@ -59,11 +59,11 @@ Future<void> initLogger() async {
 void _cleanupOldLogs(Directory logsDir) {
   try {
     final files = logsDir.listSync().whereType<File>().toList();
-    if (files.length > 10) {
+    if (files.length >= 10) {
       files
           .sort((a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()));
 
-      final toDelete = files.length - 10;
+      final toDelete = files.length - 9;
 
       for (int i = 0; i < toDelete; i++) {
         files[i].deleteSync();

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,6 +30,16 @@ class SavedFoldersNotifier extends StateNotifier<List<String>> {
 }
 
 class AppSettings {
+  static const defaultAudioLanguage = 'jpn,jp,eng,en,rus,ru';
+  static const defaultSubtitleLanguage = 'eng,en,rus,ru';
+  static String decoderForPlatform(String? mode) {
+    if (!{'auto', 'auto-safe', 'no', 'd3d11va'}.contains(mode)) {
+      return 'auto-safe';
+    }
+    if (mode == 'd3d11va' && !Platform.isWindows) return 'auto-safe';
+    return mode!;
+  }
+
   final String audioLanguage;
   final String subLanguage;
   final String hwdec;
@@ -82,10 +93,11 @@ class AppSettingsNotifier extends StateNotifier<AppSettings> {
 
   AppSettingsNotifier(this._prefs)
       : super(AppSettings(
-          audioLanguage:
-              _prefs.getString('pref_alang') ?? 'jpn,jp,eng,en,rus,ru',
-          subLanguage: _prefs.getString('pref_slang') ?? 'eng,en,rus,ru',
-          hwdec: _prefs.getString('pref_hwdec') ?? 'auto-safe',
+          audioLanguage: _prefs.getString('pref_alang') ??
+              AppSettings.defaultAudioLanguage,
+          subLanguage: _prefs.getString('pref_slang') ??
+              AppSettings.defaultSubtitleLanguage,
+          hwdec: AppSettings.decoderForPlatform(_prefs.getString('pref_hwdec')),
           discordRpcEnabled: _prefs.getBool('pref_discord') ?? true,
           autoSkipEnabled: _prefs.getBool('pref_autoskip') ?? false,
           reduceMotion: _prefs.getBool('pref_reduce_motion') ?? false,

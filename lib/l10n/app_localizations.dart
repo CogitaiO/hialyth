@@ -1051,7 +1051,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsHardwareAccelerationDescription.
   ///
   /// In en, this message translates to:
-  /// **'Change this if video is lagging or shows a black screen'**
+  /// **'Decoder changes apply when the player is reopened.'**
   String get settingsHardwareAccelerationDescription;
 
   /// No description provided for @settingsDecoderAuto.
@@ -1593,6 +1593,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resume at {time}'**
   String detailsSavedPosition(Object time);
+
+  /// No description provided for @settingsClearConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm'**
+  String get settingsClearConfirmation;
+
+  /// No description provided for @settingsViewLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'View application logs'**
+  String get settingsViewLogs;
+
+  /// No description provided for @commonOperationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The operation could not be completed. Try again.'**
+  String get commonOperationFailed;
+
+  /// No description provided for @libraryScanCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan cancelled. Already imported files are kept.'**
+  String get libraryScanCancelled;
 }
 
 class _AppLocalizationsDelegate

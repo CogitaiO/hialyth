@@ -24,7 +24,7 @@ class AnimeDialogs {
 
   static void showAnimeStatsDialog(
       BuildContext context, Anime anime, Color accentColor) {
-    int watchedCount = anime.watchedEpisodes.length;
+    int watchedCount = anime.episodePaths.toSet().intersection(anime.watchedEpisodes.toSet()).length;
     double totalHours = (watchedCount * 24) / 60;
     String dateAdded =
         "${anime.dateAdded.day.toString().padLeft(2, '0')}.${anime.dateAdded.month.toString().padLeft(2, '0')}.${anime.dateAdded.year}";

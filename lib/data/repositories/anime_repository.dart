@@ -140,7 +140,8 @@ class AnimeRepository implements PlaybackProgressStore {
   static String normalizeRoot(String path) {
     final normalized =
         Directory(path).absolute.uri.normalizePath().toFilePath();
-    return normalized == Platform.pathSeparator
+    return normalized == Platform.pathSeparator ||
+            RegExp(r'^[A-Za-z]:[/\\]$').hasMatch(normalized)
         ? normalized
         : normalized.replaceFirst(RegExp(r'[/\\]+$'), '');
   }

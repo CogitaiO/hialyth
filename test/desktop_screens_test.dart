@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nekaido_pre/data/repositories/anime_repository.dart';
+import 'package:nekaido_pre/providers/repositories_provider.dart';
 import 'package:nekaido_pre/data/services/file_discovery_service.dart';
 import 'package:nekaido_pre/domain/anime.dart';
 import 'package:nekaido_pre/l10n/app_localizations.dart';
@@ -15,7 +16,13 @@ import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import 'package:nekaido_pre/providers/library_provider.dart';
 import 'package:nekaido_pre/theme/app_theme.dart';
 
-class _UnusedRepository extends Fake implements AnimeRepository {}
+class _UnusedRepository extends Fake implements AnimeRepository {
+  int cleared = 0;
+  @override
+  Future<void> clearAll() async {
+    cleared++;
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -100,6 +107,54 @@ void main() {
     });
 
     testWidgets(
+        'Integrations persist and destructive actions require exact confirmation at $label',
+        (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = size;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final prefs = await SharedPreferences.getInstance();
+      final repo = _UnusedRepository();
+      await tester.pumpWidget(ProviderScope(
+          overrides: [
+            sharedPrefsProvider.overrideWithValue(prefs),
+            animeRepoProvider.overrideWithValue(repo),
+          ],
+          child: MaterialApp(
+              theme: AppTheme.dark(),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const SettingsScreen())));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Integrations'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('discord-rpc')));
+      await tester.pumpAndSettle();
+      expect(prefs.getBool('pref_discord'), isFalse);
+      await tester.tap(find.text('Advanced'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('clear-library-action')));
+      await tester.pumpAndSettle();
+      final submit = find.byKey(const ValueKey('clear-library-submit'));
+      final field = find.byKey(const ValueKey('clear-library-confirm'));
+      expect(tester.widget<FilledButton>(submit).onPressed, isNull);
+      await tester.enterText(field, 'delete');
+      await tester.pump();
+      expect(tester.widget<FilledButton>(submit).onPressed, isNull);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(repo.cleared, 0);
+      await tester.tap(find.byKey(const ValueKey('clear-library-action')));
+      await tester.pumpAndSettle();
+      await tester.enterText(field, 'DELETE');
+      await tester.pump();
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+      expect(repo.cleared, 1);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
         'Details stays readable and scrollable at $label and 200 percent text',
         (tester) async {
       tester.view.devicePixelRatio = 1;
@@ -137,7 +192,8 @@ void main() {
               ));
       await tester.pumpWidget(app(1));
       await tester.pumpAndSettle();
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds:50)));
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await expectLater(find.byType(Scaffold),
@@ -150,7 +206,7 @@ void main() {
       await tester.scrollUntilVisible(find.text('Read more'), 150,
           scrollable: scroll);
       if (find.text('Read more').hitTestable().evaluate().isEmpty) {
-        await tester.drag(scroll, const Offset(0,-180));
+        await tester.drag(scroll, const Offset(0, -180));
         await tester.pumpAndSettle();
       }
       await tester.tap(find.text('Read more'));
@@ -158,7 +214,8 @@ void main() {
       expect(find.text('Show less'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('missing-02.mkv'), 200,
           scrollable: scroll);
-      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds:50)));
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)));
       await tester.pumpAndSettle();
       expect(find.text('File missing'), findsOneWidget);
       await tester.pumpWidget(app(2));

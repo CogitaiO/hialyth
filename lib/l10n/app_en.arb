@@ -159,7 +159,7 @@
   "settingsLanguageEnglish": "English",
   "settingsLanguageRussian": "Russian",
   "settingsVideoDecoder": "Video Decoder",
-  "settingsHardwareAccelerationDescription": "Change this if video is lagging or shows a black screen",
+  "settingsHardwareAccelerationDescription": "Decoder changes apply when the player is reopened.",
   "settingsDecoderAuto": "Auto",
   "settingsDecoderAutoSafe": "Auto (Safe)",
   "settingsDecoderWindowsD3d11va": "Windows (d3d11va)",
@@ -249,5 +249,9 @@
   "libraryList": "List view",
   "libraryContinueWatching": "Continue watching",
   "detailsReadLess": "Show less",
-  "detailsSavedPosition": "Resume at {time}"
+  "detailsSavedPosition": "Resume at {time}",
+  "settingsClearConfirmation": "Type DELETE to confirm",
+  "settingsViewLogs": "View application logs",
+  "commonOperationFailed": "The operation could not be completed. Try again.",
+  "libraryScanCancelled": "Scan cancelled. Already imported files are kept."
 }

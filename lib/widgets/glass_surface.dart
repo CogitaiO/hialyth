@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import '../theme/app_surfaces.dart';
+import '../core/app_features.dart';
 
 /// A bounded frosted surface for controls placed over video.
 ///
@@ -24,16 +25,17 @@ class GlassSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
+    final opaque = reduceTransparency || !AppFeatures.designV2;
     final borderColor = AppSurfaces.resolveGlassBorder(
       brightness: brightness,
-      reduceTransparency: reduceTransparency,
+      reduceTransparency: opaque,
     );
 
     final surface = DecoratedBox(
       decoration: BoxDecoration(
         // Compose the scrim into the tint once. Keep text readable even over
         // white video frames without stacking another translucent widget.
-        color: reduceTransparency
+        color: opaque
             ? AppSurfaces.overlayFor(brightness)
             : Color.alphaBlend(
                     AppSurfaces.scrim, AppSurfaces.glassFor(brightness))
@@ -48,7 +50,7 @@ class GlassSurface extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: borderRadius,
-      child: reduceTransparency
+      child: opaque
           ? surface
           : BackdropFilter(
               // Opacity creates a saveLayer; srcOver would blend the captured

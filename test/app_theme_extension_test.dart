@@ -31,7 +31,7 @@ void main() {
       expect(theme.textPrimary, const Color(0xFFF4F6F8));
       expect(theme.textSecondary, const Color(0xFFB9C0C9));
       expect(theme.textMuted, const Color(0xFF858D98));
-      expect(theme.textSubtle, const Color(0x61FFFFFF));
+      expect(theme.textSubtle, const Color(0xFFB9C0C9));
       expect(theme.textDisabled, const Color(0x33FFFFFF));
 
       // Semantic colors

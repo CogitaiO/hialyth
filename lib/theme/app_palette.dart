@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_surfaces.dart';
 
 /// Fixed colors for UI outside the semantic dark theme: accent presets,
 /// player markers, and poster effects.
@@ -60,16 +61,16 @@ abstract final class AppPalette {
   }
 
   /// Status colors — semantic, not accent.
-  static const Color statusPlanned = Color(0xFFC4B5FD);
-  static const Color statusWatching = Color(0xFF7DB7FF);
-  static const Color statusCompleted = Color(0xFF6EE7B7);
-  static const Color statusDropped = Color(0xFFFCA5A5);
+  static const Color statusPlanned = AppSurfaces.statusPlanned;
+  static const Color statusWatching = AppSurfaces.statusWatching;
+  static const Color statusCompleted = AppSurfaces.statusCompleted;
+  static const Color statusDropped = AppSurfaces.statusDropped;
 
   /// Semantic UI colors.
-  static const Color success = Color(0xFF4ADE80);
-  static const Color warning = Color(0xFFFBBF24);
-  static const Color danger = Color(0xFFF87171);
-  static const Color info = Color(0xFF60A5FA);
+  static const Color success = AppSurfaces.success;
+  static const Color warning = AppSurfaces.warning;
+  static const Color danger = AppSurfaces.danger;
+  static const Color info = AppSurfaces.info;
 
   /// Poster-derived ambient glow — 15% opacity.
   static Color posterGlow(Color color) => color.withValues(alpha: 0.15);

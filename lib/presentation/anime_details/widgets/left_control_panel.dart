@@ -7,7 +7,6 @@ import '../../../../widgets/anime_artwork.dart';
 import '../../../../providers/repositories_provider.dart';
 import '../../player/player_screen.dart';
 import '../dialogs/anime_dialogs.dart';
-import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
@@ -233,11 +232,7 @@ class _StatusMenu extends ConsumerWidget {
                               ? tokens.info
                               : anime.status == AnimeStatus.completed
                                   ? tokens.success
-                                  : Color(
-                                      ref
-                                          .watch(settingsProvider)
-                                          .accentColorValue,
-                                    ),
+                                  : Theme.of(context).colorScheme.primary,
                     ),
                   )),
                   Icon(AppIcons.dropdown, color: tokens.textMuted),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nekaido_pre/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:flutter/services.dart';
@@ -9,10 +10,8 @@ import 'widgets/seek_ripple_overlay.dart';
 import 'widgets/player_overlay.dart';
 import '../player/widgets/intents.dart';
 import '../player/widgets/pip_overlay.dart';
-import '../../../providers/library_provider.dart';
 import '../../core/logger.dart';
 import 'dart:async';
-import '../../../../providers/settings_provider.dart';
 import '../../theme/app_theme_extension.dart';
 import '../../core/localization/l10n.dart';
 import 'widgets/player_status_overlay.dart';
@@ -42,9 +41,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     super.initState();
     talker.info('PlayerScreen: Initializing screen');
     final playerNotifier = ref.read(playerProvider.notifier);
-    final prefs = ref.read(sharedPrefsProvider);
-
-    final hwdecMode = prefs.getString('pref_hwdec') ?? 'auto-safe';
+    final hwdecMode = ref.read(settingsProvider).hwdec;
     final isHardwareDisabled = (hwdecMode == 'no');
 
     talker.debug(
@@ -325,8 +322,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       children: [
                         CircularProgressIndicator(
                           value: value,
-                          color: Color(
-                              ref.watch(settingsProvider).accentColorValue),
+                          color: Theme.of(context).colorScheme.primary,
                           backgroundColor: tokens.borderSubtle,
                           strokeWidth: 8,
                         ),
@@ -365,8 +361,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 ElevatedButton(
                   onPressed: () => notifier.playNext(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Color(ref.watch(settingsProvider).accentColorValue),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.md,

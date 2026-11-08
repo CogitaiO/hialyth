@@ -178,7 +178,7 @@ abstract final class AppTheme {
           : AppSurfaces.contentPrimary,
       inversePrimary: accent,
       error: AppPalette.danger,
-      onError: Colors.white,
+      onError: AppPalette.onAccent(AppPalette.danger),
       errorContainer: AppPalette.danger.withValues(alpha: 0.16),
       onErrorContainer: AppPalette.danger,
     );

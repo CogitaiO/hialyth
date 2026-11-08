@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -11,6 +12,8 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_theme_extension.dart';
 import '../../core/localization/l10n.dart';
+import '../../core/logger.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -24,7 +27,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = Color(ref.watch(settingsProvider).accentColorValue);
+    final accentColor = Theme.of(context).colorScheme.primary;
     final tokens = context.appTheme;
 
     return Escapable(
@@ -48,6 +51,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   (context.l10n.settingsAppearance, AppIcons.appearance),
                   (context.l10n.settingsPlayback, AppIcons.playback),
                   (context.l10n.settingsLibrary, AppIcons.library),
+                  (context.l10n.settingsIntegrations, AppIcons.settings),
                   (context.l10n.settingsAdvanced, AppIcons.advancedSettings),
                 ];
                 final content = AnimatedSwitcher(
@@ -128,8 +132,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return _LibrarySettings(
             key: const ValueKey(2), accentColor: accentColor);
       case 3:
+        return const _IntegrationsSettings(key: ValueKey(3));
+      case 4:
         return _AdvancedSettings(
-            key: const ValueKey(3), accentColor: accentColor);
+            key: const ValueKey(4), accentColor: accentColor);
       default:
         return const SizedBox.shrink();
     }
@@ -207,7 +213,7 @@ class _AppearanceSettings extends ConsumerWidget {
                         ),
                         child: isSelected
                             ? Icon(AppIcons.selected,
-                                color: tokens.textPrimary, size: 20)
+                                color: AppPalette.onAccent(c), size: 20)
                             : null,
                       ),
                     );
@@ -236,18 +242,6 @@ class _AppearanceSettings extends ConsumerWidget {
         ),
       ),
       const SizedBox(height: AppSpacing.lg),
-      _SectionHeader(title: context.l10n.settingsIntegrations),
-      _SettingsCard(
-        child: SwitchListTile(
-          activeThumbColor: accentColor,
-          title: Text(context.l10n.settingsDiscordRpc,
-              style: TextStyle(color: tokens.textPrimary)),
-          subtitle: Text(context.l10n.settingsDiscordRpcDescription,
-              style: TextStyle(color: tokens.textSubtle)),
-          value: settings.discordRpcEnabled,
-          onChanged: (val) => notifier.toggleDiscordRpc(val),
-        ),
-      ),
     ]);
   }
 
@@ -296,6 +290,22 @@ class _AppearanceSettings extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _IntegrationsSettings extends ConsumerWidget {
+  const _IntegrationsSettings({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => ListView(children: [
+        _SectionHeader(title: context.l10n.settingsIntegrations),
+        _SettingsCard(
+            child: SwitchListTile(
+          key: const ValueKey('discord-rpc'),
+          title: Text(context.l10n.settingsDiscordRpc),
+          subtitle: Text(context.l10n.settingsDiscordRpcDescription),
+          value: ref.watch(settingsProvider).discordRpcEnabled,
+          onChanged: ref.read(settingsProvider.notifier).toggleDiscordRpc,
+        )),
+      ]);
 }
 
 class _PlayerSettings extends ConsumerWidget {
@@ -403,10 +413,11 @@ class _PlayerSettings extends ConsumerWidget {
                     value: 'auto-safe',
                     child: Text(context.l10n.settingsDecoderAutoSafe,
                         style: TextStyle(color: tokens.textPrimary))),
-                DropdownMenuItem(
-                    value: 'd3d11va',
-                    child: Text(context.l10n.settingsDecoderWindowsD3d11va,
-                        style: TextStyle(color: tokens.textPrimary))),
+                if (Platform.isWindows)
+                  DropdownMenuItem(
+                      value: 'd3d11va',
+                      child: Text(context.l10n.settingsDecoderWindowsD3d11va,
+                          style: TextStyle(color: tokens.textPrimary))),
                 DropdownMenuItem(
                     value: 'no',
                     child: Text(context.l10n.settingsDecoderDisabledCpu,
@@ -518,22 +529,24 @@ class _LibrarySettings extends ConsumerWidget {
                 ),
               Divider(color: tokens.borderSubtle, height: 1),
               InkWell(
-                onTap: () async {
-                  final String? folderPath =
-                      await FilePicker.getDirectoryPath();
-                  if (folderPath != null) {
-                    ref
-                        .read(savedFoldersProvider.notifier)
-                        .addFolder(folderPath);
-                    ref.read(scanProvider.notifier).scan([folderPath]);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(context.l10n.settingsFolderQueued),
-                        backgroundColor: tokens.success,
-                      ));
-                    }
-                  }
-                },
+                onTap: ref.watch(scanProvider).running
+                    ? null
+                    : () async {
+                        final String? folderPath =
+                            await FilePicker.getDirectoryPath();
+                        if (folderPath != null) {
+                          ref
+                              .read(savedFoldersProvider.notifier)
+                              .addFolder(folderPath);
+                          ref.read(scanProvider.notifier).scan([folderPath]);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(context.l10n.settingsFolderQueued),
+                              backgroundColor: tokens.success,
+                            ));
+                          }
+                        }
+                      },
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Row(
@@ -602,43 +615,90 @@ class _AdvancedSettings extends ConsumerWidget {
             iconColor: Theme.of(context).colorScheme.error,
             textColor: Theme.of(context).colorScheme.error,
             leading: Icon(AppIcons.delete),
+            key: const ValueKey('clear-library-action'),
             title: Text(context.l10n.settingsClearDatabase,
                 style: TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(context.l10n.settingsClearDatabaseDescription,
                 style: TextStyle(color: tokens.textSubtle)),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: Text(context.l10n.settingsClearDatabaseConfirmTitle,
-                      style: TextStyle(color: tokens.textPrimary)),
-                  content: Text(context.l10n.settingsClearDatabaseConfirmBody,
-                      style: TextStyle(color: tokens.textSecondary)),
-                  backgroundColor: tokens.cardSurface,
-                  actions: [
-                    TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: Text(context.l10n.dialogCancel,
-                            style: TextStyle(color: tokens.textMuted))),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: tokens.destructive),
-                      onPressed: () async {
-                        await ref.read(animeRepoProvider).clearAll();
-                        if (ctx.mounted) Navigator.pop(ctx);
-                      },
-                      child: Text(context.l10n.dialogDelete,
-                          style: TextStyle(color: tokens.textPrimary)),
-                    ),
-                  ],
-                ),
-              );
-            },
+            onTap: ref.watch(scanProvider).running
+                ? null
+                : () => _confirmClear(context, ref),
           ),
         ),
+        const SizedBox(height: 24),
+        _SettingsCard(
+            child: ListTile(
+          leading: const Icon(AppIcons.notes),
+          title: Text(context.l10n.settingsViewLogs),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => TalkerScreen(talker: talker))),
+        )),
       ],
     );
   }
+}
+
+Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
+  try {
+    final confirmed = await showDialog<bool>(
+        context: context, builder: (_) => const _ClearLibraryDialog());
+    if (confirmed != true || !context.mounted) return;
+    if (ref.read(scanProvider).running) {
+      throw StateError('A scan is in progress');
+    }
+    await ref.read(animeRepoProvider).clearAll();
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.commonOperationFailed)));
+    }
+  }
+}
+
+class _ClearLibraryDialog extends StatefulWidget {
+  const _ClearLibraryDialog();
+  @override
+  State<_ClearLibraryDialog> createState() => _ClearLibraryDialogState();
+}
+
+class _ClearLibraryDialogState extends State<_ClearLibraryDialog> {
+  final controller = TextEditingController();
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(context.l10n.settingsClearDatabaseConfirmTitle),
+        content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(context.l10n.settingsClearDatabaseConfirmBody),
+          const SizedBox(height: 16),
+          TextField(
+              key: const ValueKey('clear-library-confirm'),
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                  labelText: context.l10n.settingsClearConfirmation),
+              onChanged: (_) => setState(() {})),
+        ])),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(context.l10n.dialogCancel)),
+          FilledButton(
+              key: const ValueKey('clear-library-submit'),
+              style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError),
+              onPressed: controller.text == 'DELETE'
+                  ? () => Navigator.pop(context, true)
+                  : null,
+              child: Text(context.l10n.dialogDelete)),
+        ],
+      );
 }
 
 class _SectionHeader extends StatelessWidget {

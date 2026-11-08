@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:discord_rpc/discord_rpc.dart';
 import 'dart:io';
 import 'core/logger.dart';
+import 'core/frame_metrics.dart';
 import 'domain/anime.dart';
 import 'data/repositories/anime_repository.dart';
 import 'providers/repositories_provider.dart';
@@ -28,6 +29,7 @@ void main() async {
     MediaKit.ensureInitialized();
     await windowManager.ensureInitialized();
     await initLogger();
+    startFrameMetrics();
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       try {
         DiscordRPC.initialize();

@@ -105,7 +105,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
           context,
           ref,
           widget.anime,
-          context.appTheme.destructive,
+          Theme.of(context).colorScheme.primary,
         );
       } else if (value == 'sync_api') {
         _syncWithApi(context, ref);
@@ -250,8 +250,12 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                       ?.copyWith(color: tokens.textPrimary)),
               const SizedBox(height: 8),
               Text(
-                  context.l10n.detailsWatched(widget.anime.episodePaths.length,
-                      widget.anime.watchedEpisodes.length),
+                  context.l10n.detailsWatched(
+                      widget.anime.episodePaths.length,
+                      widget.anime.episodePaths
+                          .toSet()
+                          .intersection(widget.anime.watchedEpisodes.toSet())
+                          .length),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall),
@@ -337,7 +341,8 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
               style: TextStyle(color: context.appTheme.textPrimary),
               decoration: InputDecoration(
                 labelText: context.l10n.detailsPosterUrl,
-                labelStyle: TextStyle(color: context.appTheme.destructive),
+                labelStyle:
+                    TextStyle(color: Theme.of(context).colorScheme.primary),
                 suffixIcon: IconButton(
                   icon: Icon(AppIcons.folderOpen,
                       color: Theme.of(context).colorScheme.primary),
@@ -364,7 +369,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: context.appTheme.destructive,
+              backgroundColor: Theme.of(context).colorScheme.primary,
             ),
             onPressed: () async {
               try {
@@ -384,7 +389,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
             },
             child: Text(
               context.l10n.dialogSave,
-              style: TextStyle(color: context.appTheme.textPrimary),
+              style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
             ),
           ),
         ],

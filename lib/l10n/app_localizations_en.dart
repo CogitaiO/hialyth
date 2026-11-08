@@ -543,7 +543,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHardwareAccelerationDescription =>
-      'Change this if video is lagging or shows a black screen';
+      'Decoder changes apply when the player is reopened.';
 
   @override
   String get settingsDecoderAuto => 'Auto';
@@ -860,4 +860,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String detailsSavedPosition(Object time) {
     return 'Resume at $time';
   }
+
+  @override
+  String get settingsClearConfirmation => 'Type DELETE to confirm';
+
+  @override
+  String get settingsViewLogs => 'View application logs';
+
+  @override
+  String get commonOperationFailed =>
+      'The operation could not be completed. Try again.';
+
+  @override
+  String get libraryScanCancelled =>
+      'Scan cancelled. Already imported files are kept.';
 }
