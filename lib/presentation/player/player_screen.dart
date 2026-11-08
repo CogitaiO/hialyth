@@ -14,6 +14,7 @@ import '../../core/logger.dart';
 import 'dart:async';
 import '../../../../providers/settings_provider.dart';
 import '../../theme/app_theme_extension.dart';
+import '../../core/localization/l10n.dart';
 
 class PlayerScreen extends ConsumerStatefulWidget {
   final int animeId;
@@ -83,7 +84,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final notifier = ref.read(playerProvider.notifier);
-    final playerState = ref.watch(playerProvider);
+    final playerState = ref.watch(playerProvider.select((s) => (
+          isSidebarOpen: s.isSidebarOpen,
+          isPiP: s.isPiP,
+          isUiVisible: s.isUiVisible,
+          isVideoCompleted: s.isVideoCompleted,
+        )));
     final tokens = context.appTheme;
 
     return Scaffold(
@@ -232,19 +238,22 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                               ),
                             ),
                           ),
-                          Positioned.fill(
-                            child: SeekRippleOverlay(
-                              isLeft: _showLeftRipple,
-                              isRight: _showRightRipple,
-                              seconds: _seekAccumulator,
+                          if (!MediaQuery.disableAnimationsOf(context))
+                            Positioned.fill(
+                              child: SeekRippleOverlay(
+                                isLeft: _showLeftRipple,
+                                isRight: _showRightRipple,
+                                seconds: _seekAccumulator,
+                              ),
                             ),
-                          ),
                           if (playerState.isPiP)
                             const PipOverlay()
                           else
                             const PlayerOverlay(),
                           AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 500),
+                            duration: MediaQuery.disableAnimationsOf(context)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 500),
                             switchInCurve: Curves.easeOut,
                             switchOutCurve: Curves.easeIn,
                             child: playerState.isVideoCompleted
@@ -256,7 +265,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     ),
                   ),
                 ),
-
                 if (!playerState.isPiP)
                   PlayerSidebar(playerFocusNode: _playerFocusNode),
               ],
@@ -277,7 +285,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Next episode starts in...",
+              context.l10n.playerNextEpisodePrompt,
               style: TextStyle(
                 color: tokens.textPrimary,
                 fontSize: 24,
@@ -333,7 +341,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       vertical: AppSpacing.md,
                     ),
                   ),
-                  child: const Text("Cancel", style: TextStyle(fontSize: 16)),
+                  child: Text(context.l10n.playerCancel,
+                      style: const TextStyle(fontSize: 16)),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 ElevatedButton(
@@ -347,7 +356,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     ),
                   ),
                   child: Text(
-                    "",
+                    context.l10n.playerWatchNow,
                     style: TextStyle(color: tokens.textPrimary, fontSize: 16),
                   ),
                 ),

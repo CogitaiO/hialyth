@@ -7,6 +7,7 @@ import '../../widgets/escapable.dart';
 import '../../widgets/custom_title_bar.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_theme_extension.dart';
+import '../../core/localization/l10n.dart';
 import 'widgets/ambient_background.dart';
 import 'widgets/left_control_panel.dart';
 import 'widgets/right_info_panel.dart';
@@ -36,13 +37,14 @@ class AnimeDetailsScreen extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, _) => Center(
                   child: Text(
-                    "Error: $err",
+                    context.l10n.detailsError(err.toString()),
                     style: TextStyle(color: context.appTheme.textPrimary),
                   ),
                 ),
                 data: (anime) {
                   if (anime == null) {
-                    return const Center(child: Text("Title not found"));
+                    return Center(
+                        child: Text(context.l10n.detailsTitleNotFound));
                   }
 
                   final accentColor =

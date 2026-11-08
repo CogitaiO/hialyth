@@ -4,6 +4,7 @@ import 'package:media_kit/media_kit.dart';
 import '../../../../providers/player/player_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../core/localization/l10n.dart';
 
 class TrackSelectorDialog extends ConsumerWidget {
   const TrackSelectorDialog({super.key});
@@ -28,9 +29,13 @@ class TrackSelectorDialog extends ConsumerWidget {
             children: [
               TabBar(
                 unselectedLabelColor: tokens.textMuted,
-                tabs: const [
-                  Tab(icon: Icon(AppIcons.audio), text: "Audio"),
-                  Tab(icon: Icon(AppIcons.subtitles), text: "Subtitles"),
+                tabs: [
+                  Tab(
+                      icon: Icon(AppIcons.audio),
+                      text: context.l10n.playerAudioTracks),
+                  Tab(
+                      icon: Icon(AppIcons.subtitles),
+                      text: context.l10n.playerSubtitleTracks),
                 ],
               ),
               Expanded(
@@ -70,7 +75,7 @@ class TrackSelectorDialog extends ConsumerWidget {
     if (tracks.isEmpty) {
       return Center(
         child: Text(
-          "No tracks available",
+          context.l10n.playerNoTracks,
           style: TextStyle(color: context.appTheme.textMuted),
         ),
       );
@@ -78,10 +83,11 @@ class TrackSelectorDialog extends ConsumerWidget {
 
     // Precompute names; list items are rebuilt while scrolling.
     final Map<T, String> trackNames = {};
-    final Map<String, int> fileCounters = {}; // Disambiguate duplicate subtitle files.
+    final Map<String, int> fileCounters =
+        {}; // Disambiguate duplicate subtitle files.
 
     for (var track in tracks) {
-      String name = "Unknown";
+      String name = context.l10n.commonUnknown;
 
       if (track is AudioTrack) {
         name = track.title ?? track.language ?? track.id;
@@ -96,8 +102,7 @@ class TrackSelectorDialog extends ConsumerWidget {
             // Use the next studio name for each duplicate file.
             if (count < studios.length) {
               name = "[${studios[count]}] $baseName";
-              fileCounters[baseName] =
-                  count + 1;
+              fileCounters[baseName] = count + 1;
             } else {
               name = baseName;
             }
@@ -110,10 +115,18 @@ class TrackSelectorDialog extends ConsumerWidget {
       }
 
       // Friendlier names for special tracks.
-      if (track is AudioTrack && track.id == 'auto') name = "Auto";
-      if (track is AudioTrack && track.id == 'no') name = "Off";
-      if (track is SubtitleTrack && track.id == 'auto') name = "Auto";
-      if (track is SubtitleTrack && track.id == 'no') name = "Off";
+      if (track is AudioTrack && track.id == 'auto') {
+        name = context.l10n.playerTrackAuto;
+      }
+      if (track is AudioTrack && track.id == 'no') {
+        name = context.l10n.playerTrackOff;
+      }
+      if (track is SubtitleTrack && track.id == 'auto') {
+        name = context.l10n.playerTrackAuto;
+      }
+      if (track is SubtitleTrack && track.id == 'no') {
+        name = context.l10n.playerTrackOff;
+      }
 
       trackNames[track] = name;
     }

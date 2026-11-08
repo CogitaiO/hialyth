@@ -1,28 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:nekaido_pre/theme/app_palette.dart';
 import 'package:nekaido_pre/theme/app_theme_extension.dart';
 
 void main() {
   group('AppThemeExtension', () {
-    test('provides the existing dark palette and shared size scales', () {
+    test('provides the updated dark palette and shared size scales', () {
       const theme = AppThemeExtension.dark();
 
-      expect(theme.pageSurface, const Color(0xFF0F0F0F));
-      expect(theme.titleBarSurface, const Color(0xFF151515));
-      expect(theme.cardSurface, const Color(0xFF1A1A1A));
+      // Surfaces
+      expect(theme.pageSurface, const Color(0xFF0E0F11));
+      expect(theme.titleBarSurface, const Color(0xFF15171A));
+      expect(theme.cardSurface, const Color(0xFF1B1E22));
+      expect(theme.container, const Color(0xFF1B1E22));
+      expect(theme.containerHigh, const Color(0xFF22262B));
+      expect(theme.hover, const Color(0xFF262B31));
       expect(theme.surfaceSubtle, const Color(0x0DFFFFFF));
       expect(theme.surfaceFaint, const Color(0x08FFFFFF));
-      expect(theme.surfaceOverlay, Colors.black26);
-      expect(theme.surfaceDisabled, Colors.white24);
+      expect(theme.surfaceHover, const Color(0xFF262B31));
+      expect(theme.surfaceDisabled, const Color(0x33FFFFFF));
+      expect(theme.surfaceTooltip, const Color(0xFF0E0F11));
+      expect(theme.surfaceOverlay, const Color(0xE10A0B0D));
+      expect(theme.glass, const Color(0x8C14161A));
       expect(theme.videoSurface, Colors.black);
-      expect(theme.textPrimary, Colors.white);
-      expect(theme.textSubtle, Colors.white38);
-      expect(theme.textDisabled, Colors.white24);
-      expect(theme.success, Colors.green);
-      expect(theme.info, Colors.blueAccent);
-      expect(theme.destructive, Colors.redAccent);
-      expect(theme.windowCloseHover, const Color(0xFFE81123));
+      expect(theme.borderFaint, const Color(0x1AFFFFFF));
+      expect(theme.borderSubtle, const Color(0xFF262B31));
+      expect(theme.borderStrong, const Color(0xFF343A42));
+
+      // Content
+      expect(theme.textPrimary, const Color(0xFFF4F6F8));
+      expect(theme.textSecondary, const Color(0xFFB9C0C9));
+      expect(theme.textMuted, const Color(0xFF858D98));
+      expect(theme.textSubtle, const Color(0x61FFFFFF));
+      expect(theme.textDisabled, const Color(0x33FFFFFF));
+
+      // Semantic colors
+      expect(theme.success, AppPalette.success);
+      expect(theme.info, AppPalette.info);
+      expect(theme.warning, AppPalette.warning);
+      expect(theme.danger, AppPalette.danger);
+      expect(theme.destructive, AppPalette.danger);
+      expect(theme.statusPlanned, AppPalette.statusPlanned);
+      expect(theme.statusWatching, AppPalette.statusWatching);
+      expect(theme.statusCompleted, AppPalette.statusCompleted);
+      expect(theme.statusDropped, AppPalette.statusDropped);
+
+      // Window
+      expect(theme.windowCloseHover, AppPalette.windowCloseHover);
       expect(theme.scrim(0.5), Colors.black.withValues(alpha: 0.5));
+
+      // Spacing
       expect(AppSpacing.xxs, 4);
       expect(AppSpacing.s6, 6);
       expect(AppSpacing.xs, 8);
@@ -37,10 +64,13 @@ void main() {
       expect(AppSpacing.s48, 48);
       expect(AppSpacing.s50, 50);
       expect(AppSpacing.s64, 64);
+
+      // Radii
       expect(AppRadii.sm, 6);
       expect(AppRadii.md, 8);
       expect(AppRadii.lg, 12);
       expect(AppRadii.xl, 16);
+      expect(AppRadii.xxl, 24);
       expect(AppRadii.pill, 999);
     });
 

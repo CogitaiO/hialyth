@@ -10,6 +10,7 @@ import '../dialogs/anime_dialogs.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../core/localization/l10n.dart';
 
 class LeftControlPanel extends ConsumerWidget {
   final Anime anime;
@@ -27,7 +28,7 @@ class LeftControlPanel extends ConsumerWidget {
     if (!File(path).existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Video file not found."),
+          content: Text(context.l10n.detailsMissingFile),
           backgroundColor: context.appTheme.destructive,
         ),
       );
@@ -116,7 +117,9 @@ class LeftControlPanel extends ConsumerWidget {
                 Transform.translate(
                   offset: const Offset(0, -1.5),
                   child: Text(
-                    isAllWatched ? "Replay" : "Episode $nextEpisodeIndex",
+                    isAllWatched
+                        ? context.l10n.detailsReplay
+                        : context.l10n.detailsEpisodeNumber(nextEpisodeIndex),
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold, height: 1.1),
                   ),
@@ -136,7 +139,7 @@ class LeftControlPanel extends ConsumerWidget {
                 flex: 1,
                 child: _HoverButton(
                   icon: AppIcons.collectionAdd,
-                  tooltip: "Collection",
+                  tooltip: context.l10n.detailsCollection,
                   accentColor: accentColor,
                   onTap: () => AnimeDialogs.showCollectionDialog(
                       context, ref, anime, accentColor),
@@ -180,7 +183,7 @@ class _StatusMenu extends ConsumerWidget {
               horizontal: AppSpacing.md,
             ),
             child: Text(
-              "Planned",
+              context.l10n.statusPlanned,
               style: TextStyle(color: tokens.textPrimary),
             ),
           ),
@@ -194,7 +197,8 @@ class _StatusMenu extends ConsumerWidget {
               vertical: AppSpacing.xs,
               horizontal: AppSpacing.md,
             ),
-            child: Text("Watching", style: TextStyle(color: tokens.info)),
+            child: Text(context.l10n.statusWatching,
+                style: TextStyle(color: tokens.info)),
           ),
         ),
         MenuItemButton(
@@ -207,7 +211,7 @@ class _StatusMenu extends ConsumerWidget {
               horizontal: AppSpacing.md,
             ),
             child: Text(
-              "Completed",
+              context.l10n.statusCompleted,
               style: TextStyle(color: tokens.success),
             ),
           ),
@@ -234,12 +238,12 @@ class _StatusMenu extends ConsumerWidget {
                 children: [
                   Text(
                     anime.status == AnimeStatus.planned
-                        ? "Planned"
+                        ? context.l10n.statusPlanned
                         : anime.status == AnimeStatus.watching
-                            ? "Watching"
+                            ? context.l10n.statusWatching
                             : anime.status == AnimeStatus.completed
-                                ? "Completed"
-                                : "Dropped",
+                                ? context.l10n.statusCompleted
+                                : context.l10n.statusDropped,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -303,24 +307,26 @@ class _MoreMenu extends ConsumerWidget {
         ),
       ),
       child: PopupMenuButton<String>(
-        tooltip: "More options",
+        tooltip: context.l10n.detailsMoreOptions,
         offset: const Offset(0, 50),
         itemBuilder: (context) => [
-          _menuItem(tokens, 'stats', AppIcons.stats, "Statistics"),
+          _menuItem(
+              tokens, 'stats', AppIcons.stats, context.l10n.detailsStatistics),
           _menuItem(
             tokens,
             'mark_all',
             AppIcons.doneAll,
-            "Mark all as watched",
+            context.l10n.detailsMarkAllWatched,
           ),
           _menuItem(
             tokens,
             'folder',
             AppIcons.folderOpen,
-            "Open folder in file manager",
+            context.l10n.detailsOpenFolderInManager,
           ),
           const PopupMenuDivider(),
-          _menuItem(tokens, 'edit', AppIcons.edit, "Edit poster"),
+          _menuItem(
+              tokens, 'edit', AppIcons.edit, context.l10n.detailsEditPoster),
         ],
         onSelected: (value) async {
           if (value == 'folder') {
@@ -337,7 +343,9 @@ class _MoreMenu extends ConsumerWidget {
           }
         },
         child: _HoverButton(
-            icon: AppIcons.more, tooltip: "Options", accentColor: accentColor),
+            icon: AppIcons.more,
+            tooltip: context.l10n.detailsOptions,
+            accentColor: accentColor),
       ),
     );
   }
@@ -374,7 +382,9 @@ class _HoverButtonState extends State<_HoverButton> {
         child: GestureDetector(
           onTap: widget.onTap,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 200),
             height: AppSpacing.s48,
             decoration: BoxDecoration(
               color: isHovered ? widget.accentColor : tokens.surfaceSubtle,

@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../providers/player/player_provider.dart';
 import '../../../../providers/library_provider.dart';
+import '../../../../providers/settings_provider.dart';
 import '../../../../widgets/custom_title_bar.dart';
 import 'player_progress_bar.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../core/localization/l10n.dart';
+import '../../../../widgets/glass_surface.dart';
 
 class PlayerOverlay extends ConsumerWidget {
   const PlayerOverlay({super.key});
@@ -16,15 +19,20 @@ class PlayerOverlay extends ConsumerWidget {
     final tokens = context.appTheme;
     final isVisible = ref.watch(playerProvider.select((s) => s.isUiVisible));
     final activeSkip = ref.watch(playerProvider.select((s) => s.activeSkip));
+    final reduceTransparency =
+        ref.watch(settingsProvider.select((s) => s.reduceTransparency));
 
     final videoPath =
         ref.watch(playerProvider.select((s) => s.videoPath)) ?? '';
     final animeId = ref.watch(playerProvider.select((s) => s.animeId));
     final playlist = ref.watch(playerProvider.select((s) => s.playlist));
 
+    final sidebarOpen =
+        ref.watch(playerProvider.select((s) => s.isSidebarOpen));
+
     final isOp = activeSkip?.type == 'op';
 
-    String displayTitle = "Loading...";
+    String displayTitle = context.l10n.playerLoading;
 
     if (videoPath.isNotEmpty) {
       // Start with the file name as a fallback.
@@ -39,7 +47,8 @@ class PlayerOverlay extends ConsumerWidget {
         final epIndex = playlist.indexOf(videoPath) + 1;
 
         if (epIndex > 0) {
-          displayTitle = '${anime.title} · Episode $epIndex';
+          displayTitle =
+              '${anime.title} · ${context.l10n.playerEpisodeNumber(epIndex)}';
         } else {
           displayTitle = anime.title;
         }
@@ -52,7 +61,10 @@ class PlayerOverlay extends ConsumerWidget {
           ignoring: !isVisible,
           child: AnimatedOpacity(
             opacity: isVisible ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 300),
             child: Stack(
               children: [
                 Positioned(
@@ -75,7 +87,7 @@ class PlayerOverlay extends ConsumerWidget {
                         children: [
                           const SizedBox(width: AppSpacing.xxs),
                           Tooltip(
-                            message: "Back",
+                            message: context.l10n.playerBack,
                             padding: const EdgeInsets.all(AppSpacing.sm),
                             margin: const EdgeInsets.only(top: AppSpacing.s10),
                             decoration: BoxDecoration(
@@ -89,8 +101,7 @@ class PlayerOverlay extends ConsumerWidget {
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
-                            waitDuration: const Duration(
-                                milliseconds: 500),
+                            waitDuration: const Duration(milliseconds: 500),
                             showDuration: const Duration(seconds: 2),
                             child: IconButton(
                               icon: Icon(
@@ -119,7 +130,6 @@ class PlayerOverlay extends ConsumerWidget {
                     ),
                   ),
                 ),
-
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -136,50 +146,59 @@ class PlayerOverlay extends ConsumerWidget {
                         colors: [tokens.scrim(0.9), Colors.transparent],
                       ),
                     ),
-                    child: const PlayerProgressBar(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: GlassSurface(
+                        reduceTransparency: reduceTransparency || sidebarOpen,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: const PlayerProgressBar(),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
-
         Positioned(
           bottom: 120,
           right: 48,
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeOutBack,
-            switchOutCurve: Curves.easeInBack,
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
             transitionBuilder: (child, animation) {
-              return ScaleTransition(scale: animation, child: child);
+              return FadeTransition(opacity: animation, child: child);
             },
             child: activeSkip == null
                 ? const SizedBox.shrink(key: ValueKey('empty_skip'))
-                : ElevatedButton.icon(
+                : GlassSurface(
                     key: const ValueKey('skip_button'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: tokens.textPrimary,
-                      foregroundColor: tokens.videoSurface,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
-                        vertical: AppSpacing.md,
+                    reduceTransparency: reduceTransparency || sidebarOpen,
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: tokens.textPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.md,
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadii.md),
+                      icon: const Icon(AppIcons.skipForward, size: 24),
+                      label: Text(
+                        isOp
+                            ? context.l10n.playerSkipOpening
+                            : context.l10n.playerSkipEnding,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      elevation: 10,
+                      onPressed: () {
+                        ref.read(playerProvider.notifier).seek(Duration(
+                            milliseconds: (activeSkip.endTime * 1000).toInt()));
+                      },
                     ),
-                    icon: const Icon(AppIcons.skipForward, size: 24),
-                    label: Text(
-                      isOp ? "Skip opening" : "Skip ending",
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: () {
-                      ref.read(playerProvider.notifier).seek(Duration(
-                          milliseconds: (activeSkip.endTime * 1000).toInt()));
-                    },
                   ),
           ),
         ),

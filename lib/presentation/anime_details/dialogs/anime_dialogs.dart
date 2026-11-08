@@ -8,6 +8,7 @@ import '../../../../domain/anime.dart';
 import '../../../../providers/repositories_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../core/localization/l10n.dart';
 
 class AnimeDialogs {
   static void openFolderInOs(String? path) {
@@ -42,7 +43,7 @@ class AnimeDialogs {
                 Icon(AppIcons.stats, color: accentColor),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
-                  "Information",
+                  context.l10n.detailsInformation,
                   style: TextStyle(color: tokens.textPrimary),
                 ),
               ],
@@ -50,31 +51,33 @@ class AnimeDialogs {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildStatRow(context, "Added:", dateAdded),
+                _buildStatRow(context, context.l10n.detailsAdded, dateAdded),
                 const SizedBox(height: AppSpacing.sm),
                 _buildStatRow(
                   context,
-                  "Watched:",
-                  "$watchedCount of ${anime.sortedEpisodes.length}",
+                  context.l10n.detailsWatchedLabel,
+                  context.l10n.detailsWatched(
+                      anime.sortedEpisodes.length, watchedCount),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _buildStatRow(
                   context,
-                  "Watch time:",
-                  "~${totalHours.toStringAsFixed(1)} hours",
+                  context.l10n.detailsWatchTime,
+                  context.l10n.detailsHours(totalHours.toStringAsFixed(1)),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _buildStatRow(
                   context,
-                  "Folder:",
-                  anime.folderPath ?? "Unknown",
+                  context.l10n.detailsFolderLabel,
+                  anime.folderPath ?? context.l10n.commonUnknown,
                 ),
               ],
             ),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Close", style: TextStyle(color: accentColor)))
+                  child: Text(context.l10n.dialogClose,
+                      style: TextStyle(color: accentColor)))
             ],
           );
         });
@@ -101,7 +104,7 @@ class AnimeDialogs {
               Icon(AppIcons.edit, color: accentColor),
               const SizedBox(width: AppSpacing.xs),
               Text(
-                "Edit",
+                context.l10n.dialogEdit,
                 style: TextStyle(color: tokens.textPrimary),
               ),
             ],
@@ -115,7 +118,7 @@ class AnimeDialogs {
                   controller: titleController,
                   style: TextStyle(color: tokens.textPrimary),
                   decoration: InputDecoration(
-                    hintText: "Title",
+                    hintText: ctx.l10n.detailsTitleField,
                     focusedBorder: UnderlineInputBorder(
                       borderSide: BorderSide(color: accentColor),
                     ),
@@ -126,12 +129,11 @@ class AnimeDialogs {
                     controller: coverController,
                     style: TextStyle(color: tokens.textPrimary),
                     decoration: InputDecoration(
-                      hintText: "Poster URL",
+                      hintText: ctx.l10n.detailsPosterUrl,
                       focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(color: accentColor)),
                       suffixIcon: IconButton(
-                        icon: Icon(AppIcons.imageSearch,
-                            color: accentColor),
+                        icon: Icon(AppIcons.imageSearch, color: accentColor),
                         onPressed: () async {
                           FilePickerResult? result =
                               await FilePicker.pickFiles(type: FileType.image);
@@ -148,7 +150,7 @@ class AnimeDialogs {
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(
-                "Cancel",
+                ctx.l10n.dialogCancel,
                 style: TextStyle(color: tokens.textMuted),
               ),
             ),
@@ -163,7 +165,7 @@ class AnimeDialogs {
                 Navigator.pop(ctx);
               },
               child: Text(
-                "Save",
+                ctx.l10n.dialogSave,
                 style: TextStyle(color: tokens.textPrimary),
               ),
             ),
@@ -194,7 +196,7 @@ class AnimeDialogs {
                   borderRadius: BorderRadius.circular(AppRadii.xl),
                 ),
                 title: Text(
-                  "Collections",
+                  context.l10n.detailsCollection,
                   style: TextStyle(color: tokens.textPrimary),
                 ),
                 content: SizedBox(
@@ -208,7 +210,7 @@ class AnimeDialogs {
                         style: TextStyle(color: tokens.textPrimary),
                         autofocus: true,
                         decoration: InputDecoration(
-                          hintText: "New collection",
+                          hintText: context.l10n.detailsNewCollection,
                           focusedBorder: UnderlineInputBorder(
                             borderSide: BorderSide(color: accentColor),
                           ),
@@ -218,7 +220,7 @@ class AnimeDialogs {
                       if (availableCollections.isNotEmpty) ...[
                         const SizedBox(height: AppSpacing.md),
                         Text(
-                          "Or choose an existing collection",
+                          context.l10n.detailsChooseCollection,
                           style:
                               TextStyle(color: tokens.textMuted, fontSize: 12),
                         ),
@@ -248,7 +250,7 @@ class AnimeDialogs {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
-                      "Cancel",
+                      context.l10n.dialogCancel,
                       style: TextStyle(color: tokens.textMuted),
                     ),
                   ),
@@ -269,7 +271,7 @@ class AnimeDialogs {
                       }
                     },
                     child: Text(
-                      "Add",
+                      context.l10n.dialogAdd,
                       style: TextStyle(color: tokens.textPrimary),
                     ),
                   ),

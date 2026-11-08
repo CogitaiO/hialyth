@@ -34,6 +34,8 @@ class AppSettings {
   final String hwdec;
   final bool discordRpcEnabled;
   final bool autoSkipEnabled;
+  final bool reduceTransparency;
+  final bool reduceMotion;
   final int accentColorValue;
 
   AppSettings({
@@ -42,6 +44,8 @@ class AppSettings {
     required this.hwdec,
     required this.discordRpcEnabled,
     required this.autoSkipEnabled,
+    required this.reduceTransparency,
+    this.reduceMotion = false,
     required this.accentColorValue,
   });
 
@@ -51,6 +55,8 @@ class AppSettings {
     String? hwdec,
     bool? discordRpcEnabled,
     bool? autoSkipEnabled,
+    bool? reduceTransparency,
+    bool? reduceMotion,
     int? accentColorValue,
   }) {
     return AppSettings(
@@ -59,6 +65,8 @@ class AppSettings {
         hwdec: hwdec ?? this.hwdec,
         discordRpcEnabled: discordRpcEnabled ?? this.discordRpcEnabled,
         autoSkipEnabled: autoSkipEnabled ?? this.autoSkipEnabled,
+        reduceTransparency: reduceTransparency ?? this.reduceTransparency,
+        reduceMotion: reduceMotion ?? this.reduceMotion,
         accentColorValue: accentColorValue ?? this.accentColorValue);
   }
 }
@@ -80,6 +88,9 @@ class AppSettingsNotifier extends StateNotifier<AppSettings> {
           hwdec: _prefs.getString('pref_hwdec') ?? 'auto-safe',
           discordRpcEnabled: _prefs.getBool('pref_discord') ?? true,
           autoSkipEnabled: _prefs.getBool('pref_autoskip') ?? false,
+          reduceMotion: _prefs.getBool('pref_reduce_motion') ?? false,
+          reduceTransparency:
+              _prefs.getBool('pref_reduce_transparency') ?? false,
           accentColorValue: _prefs.getInt('pref_color') ??
               AppPalette.fallbackAccent.toARGB32(),
         ));
@@ -107,6 +118,16 @@ class AppSettingsNotifier extends StateNotifier<AppSettings> {
   void toggleAutoSkip(bool value) {
     state = state.copyWith(autoSkipEnabled: value);
     _prefs.setBool('pref_autoskip', value);
+  }
+
+  void toggleReduceTransparency(bool value) {
+    state = state.copyWith(reduceTransparency: value);
+    _prefs.setBool('pref_reduce_transparency', value);
+  }
+
+  void toggleReduceMotion(bool value) {
+    state = state.copyWith(reduceMotion: value);
+    _prefs.setBool('pref_reduce_motion', value);
   }
 
   void updateAccentColor(Color color) {

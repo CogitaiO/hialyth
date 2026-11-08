@@ -4,6 +4,7 @@ import '../../../../domain/anime.dart';
 import '../../player/player_screen.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../core/localization/l10n.dart';
 
 class RightInfoPanel extends StatelessWidget {
   final Anime anime;
@@ -19,7 +20,7 @@ class RightInfoPanel extends StatelessWidget {
     if (!File(path).existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("File not found."),
+          content: Text(context.l10n.detailsMissingFile),
           backgroundColor: context.appTheme.destructive,
         ),
       );
@@ -38,7 +39,7 @@ class RightInfoPanel extends StatelessWidget {
     final sortedEpisodes = anime.sortedEpisodes;
     final fileExtension = sortedEpisodes.isNotEmpty
         ? sortedEpisodes.first.split('.').last.toUpperCase()
-        : "UNKNOWN";
+        : context.l10n.commonUnknown;
     final tokens = context.appTheme;
 
     return Column(
@@ -56,11 +57,10 @@ class RightInfoPanel extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: AppSpacing.sm),
-
         Row(
           children: [
             _buildInfoChip(context, AppIcons.videoLibrary,
-                "Episodes: ${sortedEpisodes.length}"),
+                context.l10n.detailsEpisodes(sortedEpisodes.length)),
             const SizedBox(width: AppSpacing.sm),
             _buildInfoChip(context, AppIcons.fileFormat, fileExtension),
             const SizedBox(width: AppSpacing.sm),
@@ -69,13 +69,12 @@ class RightInfoPanel extends StatelessWidget {
                 context,
                 AppIcons.folder,
                 anime.folderPath?.split(Platform.pathSeparator).last ??
-                    "Unknown",
+                    context.l10n.commonUnknown,
               ),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
-
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -84,8 +83,7 @@ class RightInfoPanel extends StatelessWidget {
             border: Border.all(color: tokens.surfaceSubtle),
           ),
           child: Text(
-            anime.descripion ??
-                "No description yet. Refresh data from the network.",
+            anime.descripion ?? context.l10n.detailsNoDescription,
             style: TextStyle(
               color: anime.descripion == null
                   ? tokens.textSubtle
@@ -98,9 +96,8 @@ class RightInfoPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
-
         Text(
-          "Episodes",
+          context.l10n.detailsEpisodesLabel,
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -108,7 +105,6 @@ class RightInfoPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -205,7 +201,9 @@ class _EpisodeTileState extends State<_EpisodeTile> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.md,
@@ -235,7 +233,7 @@ class _EpisodeTileState extends State<_EpisodeTile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Episode ${widget.index}",
+                      context.l10n.detailsEpisodeNumber(widget.index),
                       style: TextStyle(
                         color: widget.isWatched
                             ? tokens.textSubtle
@@ -249,7 +247,9 @@ class _EpisodeTileState extends State<_EpisodeTile> {
               ),
               AnimatedScale(
                 scale: isHovered ? 1.2 : 1.0,
-                duration: const Duration(milliseconds: 200),
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 200),
                 child: Icon(
                   widget.isWatched
                       ? AppIcons.checkCircle

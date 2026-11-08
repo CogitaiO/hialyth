@@ -7,6 +7,8 @@ import '../../../../providers/library_provider.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../core/localization/l10n.dart';
+import '../../../../widgets/glass_surface.dart';
 
 class PlayerSidebar extends ConsumerWidget {
   final FocusNode playerFocusNode;
@@ -16,80 +18,94 @@ class PlayerSidebar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
     final isOpen = ref.watch(playerProvider.select((s) => s.isSidebarOpen));
+    final reduceTransparency =
+        ref.watch(settingsProvider.select((s) => s.reduceTransparency));
 
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
+    return Positioned(
       top: 0,
       bottom: 0,
-      right: isOpen ? 0 : -350,
-      width: 350,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            color: tokens.titleBarSurface.withValues(alpha: 0.95),
-            border: Border(left: BorderSide(color: tokens.surfaceHover)),
-            boxShadow: [
-              BoxShadow(
-                color: tokens.scrim(0.5),
-                blurRadius: AppSpacing.s20,
-                offset: const Offset(-5, 0),
-              ),
-            ],
-          ),
-          child: DefaultTabController(
-            length: 2,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(
-                    top: AppSpacing.md,
-                    left: AppSpacing.md,
-                    bottom: AppSpacing.xs,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Menu",
-                        style: TextStyle(
-                          color: tokens.textMuted,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+      right: 0,
+      width: 360,
+      child: IgnorePointer(
+        ignoring: !isOpen,
+        child: AnimatedSlide(
+          offset: isOpen ? Offset.zero : const Offset(1, 0),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {},
+            child: GlassSurface(
+              reduceTransparency: reduceTransparency,
+              borderRadius: BorderRadius.zero,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(left: BorderSide(color: tokens.surfaceHover)),
+                ),
+                child: ColoredBox(
+                  color: Colors.transparent,
+                  child: DefaultTabController(
+                    length: 2,
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: AppSpacing.md,
+                            left: AppSpacing.md,
+                            bottom: AppSpacing.xs,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.l10n.playerMenu,
+                                style: TextStyle(
+                                  color: tokens.textSecondary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(AppIcons.close,
+                                    color: tokens.textSecondary),
+                                onPressed: () => {
+                                  FocusManager.instance.primaryFocus?.unfocus(),
+                                  ref
+                                      .read(playerProvider.notifier)
+                                      .toggleSideBar(),
+                                  playerFocusNode.requestFocus(),
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(AppIcons.close, color: tokens.textMuted),
-                        onPressed: () => {
-                          FocusManager.instance.primaryFocus?.unfocus(),
-                          ref.read(playerProvider.notifier).toggleSideBar(),
-                          playerFocusNode.requestFocus(),
-                        },
-                      ),
-                    ],
+                        TabBar(
+                          unselectedLabelColor: tokens.textSecondary,
+                          dividerColor: tokens.borderSubtle,
+                          tabs: [
+                            Tab(
+                                icon: Icon(AppIcons.videoLibrary),
+                                text: context.l10n.playerEpisodes),
+                            Tab(
+                                icon: Icon(AppIcons.notes),
+                                text: context.l10n.playerNotes),
+                          ],
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              _buildEpisodeList(context, ref),
+                              const _EpisodeNoteTab(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                TabBar(
-                  unselectedLabelColor: tokens.textMuted,
-                  dividerColor: tokens.borderSubtle,
-                  tabs: const [
-                    Tab(
-                        icon: Icon(AppIcons.videoLibrary),
-                        text: "Episodes"),
-                    Tab(icon: Icon(AppIcons.notes), text: "Notes"),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _buildEpisodeList(context, ref),
-                      const _EpisodeNoteTab(),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -106,8 +122,8 @@ class PlayerSidebar extends ConsumerWidget {
     if (animeId == null || playlist.isEmpty) {
       return Center(
         child: Text(
-          "Playlist is empty",
-          style: TextStyle(color: tokens.textMuted),
+          context.l10n.playerPlaylistEmpty,
+          style: TextStyle(color: tokens.textSecondary),
         ),
       );
     }
@@ -118,8 +134,8 @@ class PlayerSidebar extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => Center(
               child: Text(
-                "Loading error",
-                style: TextStyle(color: tokens.textMuted),
+                context.l10n.playerLoadingError,
+                style: TextStyle(color: tokens.textSecondary),
               ),
             ),
         data: (anime) {
@@ -150,10 +166,10 @@ class PlayerSidebar extends ConsumerWidget {
                           : AppIcons.circleOutline),
                   color: isCurrent
                       ? Color(ref.watch(settingsProvider).accentColorValue)
-                      : (isWatched ? tokens.success : tokens.textSubtle),
+                      : (isWatched ? tokens.success : tokens.textSecondary),
                 ),
                 title: Text(
-                  "Episode ${index + 1}",
+                  context.l10n.playerEpisodeNumber(index + 1),
                   style: TextStyle(
                       color: isCurrent
                           ? Color(ref.watch(settingsProvider).accentColorValue)
@@ -163,7 +179,7 @@ class PlayerSidebar extends ConsumerWidget {
                 ),
                 subtitle: Text(
                   fileName,
-                  style: TextStyle(color: tokens.textSubtle, fontSize: 11),
+                  style: TextStyle(color: tokens.textSecondary, fontSize: 11),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -242,8 +258,8 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
     if (animeId == null || currentPath == null) {
       return Center(
         child: Text(
-          "Turn on video for notes",
-          style: TextStyle(color: tokens.textMuted),
+          context.l10n.playerVideoRequiredForNotes,
+          style: TextStyle(color: tokens.textSecondary),
         ),
       );
     }
@@ -261,8 +277,8 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
                   focusNode: _focusNode,
                   style: TextStyle(color: tokens.textPrimary, fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: "Add a note to the current frame...",
-                    hintStyle: TextStyle(color: tokens.textSubtle),
+                    hintText: context.l10n.playerAddNoteHint,
+                    hintStyle: TextStyle(color: tokens.textSecondary),
                     filled: true,
                     fillColor: tokens.surfaceSubtle,
                     border: OutlineInputBorder(
@@ -295,7 +311,7 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
             child: animeAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(
-                    child: Text("Error: $e",
+                    child: Text(context.l10n.playerErrorDetail(e.toString()),
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.error))),
                 data: (anime) {
@@ -317,8 +333,8 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
                           ),
                           const SizedBox(height: AppSpacing.md),
                           Text(
-                            "There are no notes for this series",
-                            style: TextStyle(color: tokens.textMuted),
+                            context.l10n.playerNoNotes,
+                            style: TextStyle(color: tokens.textSecondary),
                           ),
                         ],
                       ),
@@ -384,7 +400,7 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
                         trailing: IconButton(
                           icon: Icon(
                             AppIcons.delete,
-                            color: tokens.textSubtle,
+                            color: tokens.textSecondary,
                             size: 20,
                           ),
                           onPressed: () {

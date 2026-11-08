@@ -14,7 +14,9 @@ class AmbientBackground extends StatelessWidget {
           top: -200,
           left: -200,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 800),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 800),
             curve: Curves.easeInOut,
             width: 800,
             height: 800,

@@ -15,6 +15,10 @@ import 'providers/repositories_provider.dart';
 import 'presentation/library_screen.dart';
 import 'providers/library_provider.dart';
 import 'providers/settings_provider.dart';
+import 'theme/app_theme.dart';
+import 'l10n/app_localizations.dart';
+import 'presentation/debug/design_system_gallery.dart';
+import 'core/app_features.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme_extension.dart';
 
@@ -32,6 +36,7 @@ void main() async {
   }
   WindowOptions windowOptions = const WindowOptions(
     size: Size(1280, 720),
+    minimumSize: Size(840, 560),
     center: true,
     titleBarStyle: TitleBarStyle.hidden,
   );
@@ -53,7 +58,7 @@ void main() async {
 
     PlatformDispatcher.instance.onError = (error, stack) {
       talker.handle(error, stack, 'Unhandled asynchronous error');
-      return true; // Keep the app alive after an unhandled async error.
+      return true;
     };
 
     runApp(
@@ -75,36 +80,58 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const appTheme = AppThemeExtension.dark();
-    final accentColorValue = ref.watch(settingsProvider).accentColorValue;
+    final settings = ref.watch(settingsProvider);
+    final accentColorValue = settings.accentColorValue;
     final accentColor = Color(accentColorValue);
-    final onAccentColor = AppPalette.onAccent(accentColor);
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: accentColor,
-      brightness: Brightness.dark,
-    ).copyWith(
-      primary: accentColor,
-      onPrimary: onAccentColor,
-      secondary: accentColor,
-      onSecondary: onAccentColor,
-      surface: appTheme.pageSurface,
-    );
+
     return MaterialApp(
       title: 'Nekaido',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        useMaterial3: true,
-        scaffoldBackgroundColor: appTheme.pageSurface,
-        colorScheme: colorScheme,
-        textSelectionTheme: TextSelectionThemeData(
-          cursorColor: accentColor,
-          selectionColor: accentColor.withValues(alpha: 0.3),
-          selectionHandleColor: accentColor,
+      theme: AppFeatures.designV2
+          ? AppTheme.dark(accent: accentColor)
+          : _legacyTheme(accentColor),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      routes: {
+        if (kDebugMode) '/_design': (_) => const DesignSystemGallery(),
+      },
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          disableAnimations:
+              settings.reduceMotion || MediaQuery.disableAnimationsOf(context),
         ),
-        extensions: const [appTheme],
+        child: HeroMode(
+          enabled: !(settings.reduceMotion ||
+              MediaQuery.disableAnimationsOf(context)),
+          child: child!,
+        ),
       ),
       home: const LibraryScreen(),
     );
   }
+}
+
+ThemeData _legacyTheme(Color accentColor) {
+  const appTheme = AppThemeExtension.dark();
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: accentColor,
+    brightness: Brightness.dark,
+  ).copyWith(
+    primary: accentColor,
+    onPrimary: AppPalette.onAccent(accentColor),
+    secondary: accentColor,
+    onSecondary: AppPalette.onAccent(accentColor),
+    surface: appTheme.pageSurface,
+  );
+
+  return ThemeData.dark(useMaterial3: true).copyWith(
+    scaffoldBackgroundColor: appTheme.pageSurface,
+    colorScheme: colorScheme,
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: accentColor,
+      selectionColor: accentColor.withValues(alpha: 0.3),
+      selectionHandleColor: accentColor,
+    ),
+    extensions: const [appTheme],
+  );
 }

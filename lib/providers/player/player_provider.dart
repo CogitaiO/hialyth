@@ -532,7 +532,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
     if (state.isPiP) {
       windowManager.setAlwaysOnTop(false);
-      windowManager.setMinimumSize(const Size(800, 600));
+      windowManager.setMinimumSize(const Size(840, 560));
       windowManager.setSize(_previousSize);
       windowManager.setPosition(_previousPosition);
     }
@@ -591,7 +591,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
         // Exit PiP.
         await windowManager.setAlwaysOnTop(false);
         // Restore the default minimum window size.
-        await windowManager.setMinimumSize(const Size(800, 600));
+        await windowManager.setMinimumSize(const Size(840, 560));
 
         if (_wasFullScreen) {
           await windowManager.setFullScreen(true);
