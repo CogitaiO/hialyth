@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nekaido_pre/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:flutter/services.dart';
@@ -9,11 +10,12 @@ import 'widgets/seek_ripple_overlay.dart';
 import 'widgets/player_overlay.dart';
 import '../player/widgets/intents.dart';
 import '../player/widgets/pip_overlay.dart';
-import '../../../providers/library_provider.dart';
 import '../../core/logger.dart';
 import 'dart:async';
-import '../../../../providers/settings_provider.dart';
+import 'dart:io';
 import '../../theme/app_theme_extension.dart';
+import '../../core/localization/l10n.dart';
+import 'widgets/player_status_overlay.dart';
 
 class PlayerScreen extends ConsumerStatefulWidget {
   final int animeId;
@@ -40,9 +42,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     super.initState();
     talker.info('PlayerScreen: Initializing screen');
     final playerNotifier = ref.read(playerProvider.notifier);
-    final prefs = ref.read(sharedPrefsProvider);
-
-    final hwdecMode = prefs.getString('pref_hwdec') ?? 'auto-safe';
+    final hwdecMode = ref.read(settingsProvider).hwdec;
     final isHardwareDisabled = (hwdecMode == 'no');
 
     talker.debug(
@@ -83,7 +83,14 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final notifier = ref.read(playerProvider.notifier);
-    final playerState = ref.watch(playerProvider);
+    final playerState = ref.watch(playerProvider.select((s) => (
+          isSidebarOpen: s.isSidebarOpen,
+          isPiP: s.isPiP,
+          isUiVisible: s.isUiVisible,
+          isVideoCompleted: s.isVideoCompleted,
+          isLoading: s.isLoading,
+          errorCode: s.errorCode,
+        )));
     final tokens = context.appTheme;
 
     return Scaffold(
@@ -138,8 +145,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   return null;
                 }
 
-                bool isFull = await windowManager.isFullScreen();
-                if (isFull) {
+                final isDesktop = Platform.isWindows ||
+                    Platform.isLinux ||
+                    Platform.isMacOS;
+                if (isDesktop && await windowManager.isFullScreen()) {
                   await windowManager.setFullScreen(false);
                 } else {
                   if (!context.mounted) return null;
@@ -232,19 +241,36 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                               ),
                             ),
                           ),
-                          Positioned.fill(
-                            child: SeekRippleOverlay(
-                              isLeft: _showLeftRipple,
-                              isRight: _showRightRipple,
-                              seconds: _seekAccumulator,
+                          if (playerState.isLoading ||
+                              playerState.errorCode != null)
+                            Positioned.fill(
+                                child: PlayerStatusOverlay(
+                              loading: playerState.isLoading,
+                              errorCode: playerState.errorCode,
+                              onBack: () => Navigator.pop(context),
+                              onRetry: () {
+                                final current = ref.read(playerProvider);
+                                notifier.loadVideo(
+                                    current.animeId ?? widget.animeId,
+                                    current.videoPath ?? widget.videoPath);
+                              },
+                            )),
+                          if (!MediaQuery.disableAnimationsOf(context))
+                            Positioned.fill(
+                              child: SeekRippleOverlay(
+                                isLeft: _showLeftRipple,
+                                isRight: _showRightRipple,
+                                seconds: _seekAccumulator,
+                              ),
                             ),
-                          ),
                           if (playerState.isPiP)
                             const PipOverlay()
                           else
                             const PlayerOverlay(),
                           AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 500),
+                            duration: MediaQuery.disableAnimationsOf(context)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 500),
                             switchInCurve: Curves.easeOut,
                             switchOutCurve: Curves.easeIn,
                             child: playerState.isVideoCompleted
@@ -256,7 +282,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     ),
                   ),
                 ),
-
                 if (!playerState.isPiP)
                   PlayerSidebar(playerFocusNode: _playerFocusNode),
               ],
@@ -277,7 +302,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Next episode starts in...",
+              context.l10n.playerNextEpisodePrompt,
               style: TextStyle(
                 color: tokens.textPrimary,
                 fontSize: 24,
@@ -300,8 +325,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       children: [
                         CircularProgressIndicator(
                           value: value,
-                          color: Color(
-                              ref.watch(settingsProvider).accentColorValue),
+                          color: Theme.of(context).colorScheme.primary,
                           backgroundColor: tokens.borderSubtle,
                           strokeWidth: 8,
                         ),
@@ -333,21 +357,21 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       vertical: AppSpacing.md,
                     ),
                   ),
-                  child: const Text("Cancel", style: TextStyle(fontSize: 16)),
+                  child: Text(context.l10n.playerCancel,
+                      style: const TextStyle(fontSize: 16)),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 ElevatedButton(
                   onPressed: () => notifier.playNext(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Color(ref.watch(settingsProvider).accentColorValue),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.md,
                     ),
                   ),
                   child: Text(
-                    "",
+                    context.l10n.playerWatchNow,
                     style: TextStyle(color: tokens.textPrimary, fontSize: 16),
                   ),
                 ),

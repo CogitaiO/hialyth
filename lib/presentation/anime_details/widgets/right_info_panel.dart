@@ -1,271 +1,217 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/anime.dart';
+import '../../../../providers/repositories_provider.dart';
+import '../../../../utils/os_utils.dart';
 import '../../player/player_screen.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../core/localization/l10n.dart';
 
-class RightInfoPanel extends StatelessWidget {
+class RightInfoPanel extends StatefulWidget {
+  const RightInfoPanel(
+      {super.key,
+      required this.anime,
+      required this.accentColor,
+      this.header,
+      this.showTitle = true});
   final Anime anime;
   final Color accentColor;
+  final Widget? header;
+  final bool showTitle;
+  @override
+  State<RightInfoPanel> createState() => _RightInfoPanelState();
+}
 
-  const RightInfoPanel({
-    super.key,
-    required this.anime,
-    required this.accentColor,
-  });
+class _RightInfoPanelState extends State<RightInfoPanel> {
+  bool expanded = false;
+  @override
+  Widget build(BuildContext context) {
+    final anime = widget.anime;
+    final paths = anime.sortedEpisodes;
+    return CustomScrollView(slivers: [
+      if (widget.header != null) SliverToBoxAdapter(child: widget.header),
+      SliverToBoxAdapter(
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        if (widget.showTitle) ...[
+          Text(anime.title,
+              style: Theme.of(context).textTheme.displayLarge,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 16),
+        ],
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          Chip(
+              avatar: const Icon(AppIcons.videoLibrary, size: 16),
+              label: Text(context.l10n.detailsEpisodes(paths.length))),
+          Chip(
+              avatar: const Icon(AppIcons.checkCircle, size: 16),
+              label: Text(anime.progressPercentage)),
+          if (anime.folderPath != null)
+            ActionChip(
+                avatar: const Icon(AppIcons.folder, size: 16),
+                label: Text(context.l10n.detailsOpenFolder),
+                onPressed: () => OSUtils.openFolder(anime.folderPath)),
+        ]),
+        const SizedBox(height: 24),
+        Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+                color: context.appTheme.cardSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.appTheme.borderSubtle)),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(context.l10n.detailsDescription,
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Text(anime.descripion ?? context.l10n.detailsNoDescription,
+                  maxLines: expanded ? null : 4,
+                  overflow:
+                      expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyLarge),
+              if (anime.descripion != null)
+                TextButton(
+                    onPressed: () => setState(() => expanded = !expanded),
+                    child: Text(expanded
+                        ? context.l10n.detailsReadLess
+                        : context.l10n.detailsReadMore)),
+            ])),
+        const SizedBox(height: 24),
+        Text(context.l10n.detailsEpisodesLabel,
+            style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        if (paths.isEmpty)
+          Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(context.l10n.detailsNoEpisodes)),
+      ])),
+      SliverList.builder(
+          itemCount: paths.length,
+          itemBuilder: (context, index) => EpisodeRow(
+              key: ValueKey(paths[index]),
+              anime: anime,
+              path: paths[index],
+              number: index + 1)),
+      const SliverToBoxAdapter(child: SizedBox(height: 24)),
+    ]);
+  }
+}
 
-  void _playEpisode(BuildContext context, String path) {
-    if (!File(path).existsSync()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("File not found."),
-          backgroundColor: context.appTheme.destructive,
-        ),
-      );
+class EpisodeRow extends ConsumerStatefulWidget {
+  const EpisodeRow(
+      {super.key,
+      required this.anime,
+      required this.path,
+      required this.number});
+  final Anime anime;
+  final String path;
+  final int number;
+  @override
+  ConsumerState<EpisodeRow> createState() => _EpisodeRowState();
+}
+
+class _EpisodeRowState extends ConsumerState<EpisodeRow> {
+  late Future<bool> exists;
+  @override
+  void initState() {
+    super.initState();
+    exists = File(widget.path).exists();
+  }
+
+  @override
+  void didUpdateWidget(EpisodeRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) exists = File(widget.path).exists();
+  }
+
+  Future<void> play() async {
+    if (!await File(widget.path).exists()) {
+      if (mounted) setState(() => exists = Future.value(false));
       return;
     }
+    if (!mounted) return;
     Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) =>
-              PlayerScreen(animeId: anime.id, videoPath: path)),
-    );
+        context,
+        MaterialPageRoute(
+            builder: (_) => PlayerScreen(
+                animeId: widget.anime.id, videoPath: widget.path)));
   }
 
   @override
-  Widget build(BuildContext context) {
-    final sortedEpisodes = anime.sortedEpisodes;
-    final fileExtension = sortedEpisodes.isNotEmpty
-        ? sortedEpisodes.first.split('.').last.toUpperCase()
-        : "UNKNOWN";
-    final tokens = context.appTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          anime.title,
-          style: TextStyle(
-            fontSize: 42,
-            fontWeight: FontWeight.w900,
-            color: tokens.textPrimary,
-            letterSpacing: 1.2,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-
-        Row(
-          children: [
-            _buildInfoChip(context, AppIcons.videoLibrary,
-                "Episodes: ${sortedEpisodes.length}"),
-            const SizedBox(width: AppSpacing.sm),
-            _buildInfoChip(context, AppIcons.fileFormat, fileExtension),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: _buildInfoChip(
-                context,
-                AppIcons.folder,
-                anime.folderPath?.split(Platform.pathSeparator).last ??
-                    "Unknown",
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: tokens.scrim(0.2),
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-            border: Border.all(color: tokens.surfaceSubtle),
-          ),
-          child: Text(
-            anime.descripion ??
-                "No description yet. Refresh data from the network.",
-            style: TextStyle(
-              color: anime.descripion == null
-                  ? tokens.textSubtle
-                  : tokens.textSecondary,
-              fontSize: 14,
-              height: 1.5,
-            ),
-            maxLines: 4,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-
-        Text(
-          "Episodes",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: tokens.textPrimary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: tokens.surfaceFaint,
-              borderRadius: BorderRadius.circular(AppRadii.xl),
-              border: Border.all(color: tokens.surfaceSubtle),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadii.xl),
-              child: ListView.separated(
-                padding: EdgeInsets.zero,
-                itemCount: sortedEpisodes.length,
-                separatorBuilder: (context, index) => Divider(
-                  color: tokens.borderSubtle,
-                  height: 1,
-                  indent: AppSpacing.s20,
-                  endIndent: AppSpacing.s20,
-                ),
-                itemBuilder: (context, index) {
-                  final episodePath = sortedEpisodes[index];
-                  final isWatched = anime.watchedEpisodes.contains(episodePath);
-
-                  return _EpisodeTile(
-                    index: index + 1,
-                    isWatched: isWatched,
-                    accentColor: accentColor,
-                    onTap: () => _playEpisode(context, episodePath),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoChip(BuildContext context, IconData icon, String text) {
-    final tokens = context.appTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.s6,
-      ),
-      decoration: BoxDecoration(
-        color: tokens.surfaceSubtle,
-        borderRadius: BorderRadius.circular(AppRadii.md),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: tokens.textSecondary),
-          const SizedBox(width: AppSpacing.s6),
-          Text(
-            text,
-            style: TextStyle(
-              color: tokens.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _EpisodeTile extends StatefulWidget {
-  final int index;
-  final bool isWatched;
-  final Color accentColor;
-  final VoidCallback onTap;
-
-  const _EpisodeTile(
-      {required this.index,
-      required this.isWatched,
-      required this.accentColor,
-      required this.onTap});
-
-  @override
-  State<_EpisodeTile> createState() => _EpisodeTileState();
-}
-
-class _EpisodeTileState extends State<_EpisodeTile> {
-  bool isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.appTheme;
-    return MouseRegion(
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            color: isHovered ? tokens.surfaceSubtle : Colors.transparent,
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: AppSpacing.s40,
-                child: Text(
-                  "${widget.index}",
-                  style: TextStyle(
-                    color: widget.isWatched
-                        ? tokens.textSubtle
-                        : (isHovered
-                            ? tokens.textPrimary
-                            : tokens.textSecondary),
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Episode ${widget.index}",
-                      style: TextStyle(
-                        color: widget.isWatched
-                            ? tokens.textSubtle
-                            : tokens.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+  Widget build(BuildContext context) => FutureBuilder<bool>(
+      future: exists,
+      builder: (context, snapshot) {
+        final missing = snapshot.hasData && !snapshot.data!;
+        final watched = widget.anime.watchedEpisodes.contains(widget.path);
+        final saved = widget.anime.playbackPositions
+                .where((p) => p.path == widget.path)
+                .firstOrNull
+                ?.position ??
+            0;
+        final time =
+            '${saved ~/ 60}:${(saved % 60).toString().padLeft(2, '0')}';
+        return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Material(
+              color: context.appTheme.cardSurface,
+              borderRadius: BorderRadius.circular(12),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: Icon(
+                    missing
+                        ? AppIcons.imageBroken
+                        : watched
+                            ? AppIcons.checkCircle
+                            : AppIcons.playCircleOutline,
+                    color: missing
+                        ? context.appTheme.warning
+                        : watched
+                            ? context.appTheme.success
+                            : Theme.of(context).colorScheme.primary),
+                title: Text(context.l10n.detailsEpisodeNumber(widget.number)),
+                subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(File(widget.path).uri.pathSegments.last,
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                      if (missing)
+                        Text(context.l10n.detailsMissingFile,
+                            style: TextStyle(color: context.appTheme.warning)),
+                      if (saved > 0 && !missing)
+                        Text(context.l10n.detailsSavedPosition(time)),
+                    ]),
+                onTap: missing ? null : play,
+                trailing: PopupMenuButton<String>(
+              icon: const Icon(AppIcons.more),
+                  tooltip: context.l10n.detailsMoreOptions,
+                  onSelected: (value) {
+                    final repo = ref.read(animeRepoProvider);
+                    if (value == 'folder') {
+                      OSUtils.openFolder(File(widget.path).parent.path);
+                    } else if (watched) {
+                      repo.markEpisodeUnwatched(widget.anime.id, widget.path);
+                    } else {
+                      repo.markEpisodeAsWatched(widget.anime.id, widget.path);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                        value: 'watched',
+                        child: Text(watched
+                            ? context.l10n.detailsMarkUnwatched
+                            : context.l10n.detailsMarkWatched)),
+                    PopupMenuItem(
+                        value: 'folder',
+                        child: Text(context.l10n.detailsOpenFileLocation)),
                   ],
                 ),
               ),
-              AnimatedScale(
-                scale: isHovered ? 1.2 : 1.0,
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  widget.isWatched
-                      ? AppIcons.checkCircle
-                      : (isHovered
-                          ? AppIcons.playCircle
-                          : AppIcons.playCircleOutline),
-                  color: widget.isWatched
-                      ? tokens.success
-                      : (isHovered ? widget.accentColor : tokens.textMuted),
-                  size: 28,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+            ));
+      });
 }

@@ -3,13 +3,11 @@ import 'package:discord_rpc/discord_rpc.dart';
 import '../../core/logger.dart';
 
 class DiscordService {
-  static const String _clientId = '1499787664402939954'; 
+  static const String _clientId = '1499787664402939954';
   DiscordRPC? _rpc;
   bool _isInitialized = false;
 
-  DiscordService() {
-    _init();
-  }
+  DiscordService();
 
   void _init() {
     if (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS) return;
@@ -33,27 +31,31 @@ class DiscordService {
     int? durationSeconds,
     bool isPlaying = true,
   }) {
+    if (!_isInitialized) _init();
     if (!_isInitialized || _rpc == null) return;
 
     try {
       // Discord uses an end timestamp to render the timer.
       int? endTimestamp;
 
-      if (isPlaying && currentPositionSeconds != null && durationSeconds != null && durationSeconds > 0) {
+      if (isPlaying &&
+          currentPositionSeconds != null &&
+          durationSeconds != null &&
+          durationSeconds > 0) {
         final now = DateTime.now().millisecondsSinceEpoch;
         final leftSeconds = durationSeconds - currentPositionSeconds;
-        endTimestamp = now + (leftSeconds * 1000); 
+        endTimestamp = now + (leftSeconds * 1000);
       }
 
       _rpc!.updatePresence(
         DiscordPresence(
-          state: episode, 
-          details: title, 
-          largeImageKey: 'logo', 
-          largeImageText: 'Nekaido', 
-          smallImageKey: isPlaying ? 'play' : 'pause', 
+          state: episode,
+          details: title,
+          largeImageKey: 'logo',
+          largeImageText: 'Nekaido',
+          smallImageKey: isPlaying ? 'play' : 'pause',
           smallImageText: isPlaying ? 'Watching' : 'Paused',
-          endTimeStamp: endTimestamp, 
+          endTimeStamp: endTimestamp,
         ),
       );
     } catch (e) {
@@ -73,5 +75,7 @@ class DiscordService {
   void dispose() {
     clearPresence();
     _rpc?.shutDown();
+    _rpc = null;
+    _isInitialized = false;
   }
 }

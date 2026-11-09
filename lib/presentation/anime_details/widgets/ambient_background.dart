@@ -1,42 +1,27 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../../theme/app_palette.dart';
+import '../../../core/app_features.dart';
+import '../../../theme/app_theme_extension.dart';
 
+/// Artwork tint is painted directly; no full-screen backdrop sampling or shadow blur.
 class AmbientBackground extends StatelessWidget {
-  final Color color;
   const AmbientBackground({super.key, required this.color});
-
+  final Color color;
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          top: -200,
-          left: -200,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOut,
-            width: 800,
-            height: 800,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppPalette.posterGlow(color),
-              boxShadow: [
-                BoxShadow(
-                  color: AppPalette.posterShadow(color),
-                  blurRadius: 200,
-                ),
-              ],
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-            child: const SizedBox.expand(),
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => AnimatedContainer(
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+            gradient: RadialGradient(
+          center: Alignment.topLeft,
+          radius: 1.3,
+          colors: [
+            AppFeatures.designV2
+                ? Color.alphaBlend(
+                    color.withValues(alpha: .16), context.appTheme.pageSurface)
+                : context.appTheme.pageSurface,
+            context.appTheme.pageSurface
+          ],
+        )),
+      );
 }

@@ -4,7 +4,8 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   discord_rpc
-  isar_flutter_libs
+  isar_community_flutter_libs
+  media_kit_libs_windows_video
   media_kit_video
   screen_retriever_windows
   share_plus

@@ -1,246 +1,278 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../core/app_features.dart';
+import 'library/library_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/scan_provider.dart';
 import '../../core/debouncer.dart';
+import '../../core/localization/l10n.dart';
 import '../widgets/media_card.dart';
 import '../widgets/custom_title_bar.dart';
 import '../theme/app_icons.dart';
+import '../theme/app_breakpoints.dart';
+import '../domain/anime.dart';
 import '../theme/app_theme_extension.dart';
+
+Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
+  if (ref.read(scanProvider).running) return;
+  final path = await FilePicker.getDirectoryPath();
+  if (path == null || !context.mounted) return;
+  try {
+    ref.read(savedFoldersProvider.notifier).addFolder(path);
+    final result = await ref.read(scanProvider.notifier).scan([path]);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.cancelled
+                ? context.l10n.libraryScanCancelled
+                : result.errors.isNotEmpty
+                ? context.l10n.libraryScanError
+                : result.warnings > 0
+                ? context.l10n.libraryMetadataWarning
+                : context.l10n.libraryFolderAdded,
+          ),
+        ),
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.libraryScanError)));
+    }
+  }
+}
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Column(
-        children: [
-          const CustomTitleBar(),
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () =>
+            ref.read(librarySearchFocusProvider).requestFocus(),
+        const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () =>
+            ref.read(librarySearchFocusProvider).requestFocus(),
+      },
+      child: Focus(
+        autofocus: true,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < AppBreakpoints.compact;
+            return Scaffold(
+              drawer: compact
+                  ? const Drawer(child: _LibraryNavigation(expanded: true))
+                  : null,
+              body: Column(
+                children: [
+                  CustomTitleBar(
+                                      ),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        if (!compact)
+                          _LibraryNavigation(
+                            expanded: constraints.maxWidth >= 1200,
+                          ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _TopBar(),
+                              Expanded(child: _ContentGrid()),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
 
-          Expanded(
-            child: Row(
-              children: [
-                const _LeftSidebar(),
-                Expanded(
-                  child: Column(
-                    children: const [
-                      _TopBar(),
+class _LibraryNavigation extends ConsumerWidget {
+  final bool expanded;
+  const _LibraryNavigation({required this.expanded});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final selected = ref.watch(selectedSidebarIndexProvider);
+    final titles = ref.watch(libraryProvider).valueOrNull ?? <Anime>[];
+    final destinations = [
+      (context.l10n.libraryAllTitles, AppIcons.all),
+      (context.l10n.libraryWatching, AppIcons.watching),
+      (context.l10n.libraryPlanned, AppIcons.planned),
+      (context.l10n.libraryCompleted, AppIcons.completed),
+      (context.l10n.libraryDropped, AppIcons.dropped),
+      (context.l10n.libraryCollections, AppIcons.collections),
+    ];
+    final counts = [
+      titles.length,
+      for (final status in [
+        AnimeStatus.watching,
+        AnimeStatus.planned,
+        AnimeStatus.completed,
+        AnimeStatus.dropped,
+      ])
+        titles.where((title) => title.status == status).length,
+      ref.watch(allCollectionsProvider).length,
+    ];
+    return Container(
+      width: expanded
+          ? (MediaQuery.sizeOf(context).width >= 1600 ? 240 : 220)
+          : 72,
+      decoration: BoxDecoration(
+        color: colors.titleBarSurface,
+        border: Border(right: BorderSide(color: colors.borderSubtle)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 28,
+                  horizontal: 16,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(AppIcons.appLogo, color: scheme.primary, size: 28),
+                    if (expanded) ...[
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: _ContentGrid(),
+                        child: Text(
+                          context.l10n.appTitle,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
                       ),
                     ],
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  children: [
+                    for (var i = 0; i < destinations.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Tooltip(
+                          message: expanded ? '' : destinations[i].$1,
+                          child: Material(
+                            color: selected == i
+                                ? scheme.primary.withValues(alpha: 0.13)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            child: ListTile(
+                              selected: selected == i,
+                              selectedColor: scheme.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: expanded ? 12 : 10,
+                              ),
+                              leading: Icon(destinations[i].$2, size: 24),
+                              title: expanded ? Text(destinations[i].$1) : null,
+                              trailing: expanded
+                                  ? Text(
+                                      '${counts[i]}',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.labelMedium,
+                                    )
+                                  : null,
+                              onTap: () {
+                                ref
+                                        .read(
+                                          selectedSidebarIndexProvider.notifier,
+                                        )
+                                        .state =
+                                    i;
+                                if (i == 5 &&
+                                    ref.read(selectedCollectionProvider) ==
+                                        null) {
+                                  final collections = ref.read(
+                                    allCollectionsProvider,
+                                  );
+                                  if (collections.isNotEmpty) {
+                                    ref
+                                        .read(
+                                          selectedCollectionProvider.notifier,
+                                        )
+                                        .state = collections
+                                        .first;
+                                  }
+                                }
+                                Scaffold.of(context).closeDrawer();
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (expanded && selected == 5)
+                      for (final collection in ref.watch(
+                        allCollectionsProvider,
+                      ))
+                        ListTile(
+                          dense: true,
+                          leading: const Icon(AppIcons.folder, size: 18),
+                          title: Text(
+                            collection,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          selected:
+                              ref.watch(selectedCollectionProvider) ==
+                              collection,
+                          onTap: () {
+                            ref
+                                    .read(selectedCollectionProvider.notifier)
+                                    .state =
+                                collection;
+                            Scaffold.of(context).closeDrawer();
+                          },
+                        ),
+                  ],
+                ),
+              ),
+              const Divider(indent: 16, endIndent: 16),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Tooltip(
+                  message: context.l10n.settingsTitle,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                    leading: const Icon(AppIcons.settings, size: 24),
+                    title: expanded ? Text(context.l10n.settingsTitle) : null,
+                    onTap: () {
+                      Scaffold.of(context).closeDrawer();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        onPressed: () async {
-          final String? folderPath = await FilePicker.getDirectoryPath();
-          if (folderPath != null) {
-            ref.read(savedFoldersProvider.notifier).addFolder(folderPath);
-
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Scanning folder...")));
-
-            final scanner = ref.read(scannerProvider);
-            await scanner.scanAndGroupFiles(folderPath);
-
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text("Folder added to library"),
-                  backgroundColor: context.appTheme.success,
-                ),
-              );
-            }
-          }
-        },
-        icon: Icon(AppIcons.addFolder,
-            color: context.appTheme.textPrimary),
-        label: Text("Add folder",
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontWeight: FontWeight.bold)),
-      ),
-    );
-  }
-}
-
-class _LeftSidebar extends StatelessWidget {
-  const _LeftSidebar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 70,
-      color: context.appTheme.titleBarSurface,
-      child: Column(
-        children: [
-          const SizedBox(height: AppSpacing.lg),
-          Tooltip(
-            message: "Mode: Anime\n(Click to switch)",
-            decoration: BoxDecoration(
-              color: context.appTheme.surfaceTooltip,
-              borderRadius: BorderRadius.circular(AppRadii.md),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Theme.of(context).colorScheme.primary,
-                boxShadow: [
-                  BoxShadow(
-                      color: Theme.of(context).colorScheme.primary,
-                      blurRadius: 10,
-                      spreadRadius: -2)
-                ],
               ),
-              child: Icon(AppIcons.movie,
-                  color: context.appTheme.textPrimary, size: 24),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Divider(
-            color: context.appTheme.borderFaint,
-            indent: AppSpacing.md,
-            endIndent: AppSpacing.md,
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: AppSpacing.xs),
-                  _SidebarIcon(
-                      icon: AppIcons.all,
-                      tooltip: "All titles",
-                      index: 0),
-                  _SidebarIcon(
-                      icon: AppIcons.watching,
-                      tooltip: "Watching",
-                      index: 1),
-                  _SidebarIcon(
-                      icon: AppIcons.planned,
-                      tooltip: "Planned",
-                      index: 2),
-                  _SidebarIcon(
-                      icon: AppIcons.completed,
-                      tooltip: "Completed",
-                      index: 3),
-                  _SidebarIcon(
-                      icon: AppIcons.dropped,
-                      tooltip: "Dropped",
-                      index: 4),
-                  const SizedBox(height: AppSpacing.md),
-                  Divider(
-                    color: context.appTheme.borderFaint,
-                    indent: AppSpacing.md,
-                    endIndent: AppSpacing.md,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _SidebarIcon(
-                      icon: AppIcons.collections,
-                      tooltip: "My collections",
-                      index: 5),
-                ],
-              ),
-            ),
-          ),
-          const _SidebarIcon(
-              icon: AppIcons.settings,
-              tooltip: "Settings",
-              index: -1,
-              isBottom: true),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-      ),
-    );
-  }
-}
-
-class _SidebarIcon extends ConsumerStatefulWidget {
-  final IconData icon;
-  final String tooltip;
-  final int index;
-  final bool isBottom;
-
-  const _SidebarIcon({
-    required this.icon,
-    required this.tooltip,
-    required this.index,
-    this.isBottom = false,
-  });
-
-  @override
-  ConsumerState<_SidebarIcon> createState() => _SidebarIconState();
-}
-
-class _SidebarIconState extends ConsumerState<_SidebarIcon> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final tokens = context.appTheme;
-    final isSelected = ref.watch(selectedSidebarIndexProvider
-            .select((val) => val == widget.index)) &&
-        !widget.isBottom;
-    final color = isSelected
-        ? primaryColor
-        : (_isHovered ? tokens.textPrimary : tokens.textSubtle);
-
-    return Tooltip(
-      message: widget.tooltip,
-      waitDuration: const Duration(milliseconds: 300),
-      decoration: BoxDecoration(
-        color: tokens.surfaceTooltip,
-        borderRadius: BorderRadius.circular(AppRadii.md),
-        border: Border.all(color: tokens.borderSubtle),
-      ),
-      textStyle: TextStyle(color: tokens.textPrimary, fontSize: 12),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: () {
-            if (widget.isBottom && widget.index == -1) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            } else if (!widget.isBottom) {
-              ref.read(selectedSidebarIndexProvider.notifier).state =
-                  widget.index;
-              if (widget.index == 5) {
-                final collections = ref.read(allCollectionsProvider);
-                if (collections.isNotEmpty &&
-                    ref.read(selectedCollectionProvider) == null) {
-                  ref.read(selectedCollectionProvider.notifier).state =
-                      collections.first;
-                }
-              }
-            }
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? primaryColor.withValues(alpha: 0.15)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadii.lg),
-            ),
-            child: Icon(widget.icon, color: color, size: 28),
+            ],
           ),
         ),
       ),
@@ -256,26 +288,37 @@ class _TopBar extends ConsumerStatefulWidget {
 
 class _TopBarState extends ConsumerState<_TopBar> {
   final _debouncer = Debouncer(milliseconds: 300);
+  final _searchController = TextEditingController();
 
-  String _getTitle(int index) {
+  @override
+  void dispose() {
+    _debouncer.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String _getTitle(BuildContext context, int index) {
     switch (index) {
       case 1:
-        return "Watching";
+        return context.l10n.libraryWatching;
       case 2:
-        return "In plans";
+        return context.l10n.libraryPlanned;
       case 3:
-        return "Watched";
+        return context.l10n.libraryCompleted;
       case 4:
-        return "Abandoned ";
+        return context.l10n.libraryDropped;
       case 5:
-        return "My collections";
+        return context.l10n.libraryCollections;
       default:
-        return "Library";
+        return context.l10n.libraryTitle;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String>(searchQueryProvider, (_, value) {
+      if (value != _searchController.text) _searchController.text = value;
+    });
     final index = ref.watch(selectedSidebarIndexProvider);
     final allCollections = ref.watch(allCollectionsProvider);
     final selectedCollections = ref.watch(selectedCollectionProvider);
@@ -285,58 +328,176 @@ class _TopBarState extends ConsumerState<_TopBar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.lg,
-            AppSpacing.lg,
-            AppSpacing.xs,
-          ),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(_getTitle(index),
-                  style: TextStyle(
-                      color: tokens.textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold)),
-              const Spacer(),
-              SizedBox(
-                width: 300,
-                child: TextField(
-                  onChanged: (value) {
-                    _debouncer.run(() {
-                      ref.read(searchQueryProvider.notifier).state = value;
-                    });
-                  },
-                  style: TextStyle(color: tokens.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: "Search...",
-                    hintStyle: TextStyle(color: tokens.textSubtle),
-                    prefixIcon:
-                        Icon(AppIcons.search, color: tokens.textMuted),
-                    filled: true,
-                    fillColor: tokens.surfaceSubtle,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppRadii.lg),
-                      borderSide: BorderSide.none,
+              Row(
+                children: [
+                  if (MediaQuery.sizeOf(context).width < 900)
+                    IconButton(
+                      tooltip: context.l10n.libraryNavigation,
+                      icon: const Icon(AppIcons.all),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _getTitle(context, index),
+                          style: Theme.of(context).textTheme.displayMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.l10n.libraryTitleCount(
+                            ref.watch(filteredAnimeProvider).length,
+                          ),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
                     ),
                   ),
+                  FilledButton.icon(
+                    onPressed: ref.watch(scanProvider).running
+                        ? null
+                        : () => _addLibraryFolder(context, ref),
+                    icon: const Icon(AppIcons.addFolder, size: 20),
+                    label: Text(context.l10n.libraryAddFolder),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _searchController,
+                focusNode: ref.watch(librarySearchFocusProvider),
+                onChanged: (value) {
+                  setState(() {});
+                  _debouncer.run(() {
+                    if (mounted) {
+                      ref.read(searchQueryProvider.notifier).state = value;
+                    }
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: context.l10n.librarySearchHint,
+                  prefixIcon: const Icon(AppIcons.search),
+                  suffixIcon: _searchController.text.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: context.l10n.libraryClearSearch,
+                          icon: const Icon(AppIcons.close),
+                          onPressed: () {
+                            _debouncer.cancel();
+                            _searchController.clear();
+                            ref.read(searchQueryProvider.notifier).state = '';
+                            setState(() {});
+                          },
+                        ),
                 ),
               ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Text(
+                    context.l10n.libraryBrowse,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const Spacer(),
+                  PopupMenuButton<LibrarySort>(
+                    tooltip: context.l10n.librarySort,
+                    initialValue: ref.watch(libraryViewProvider).sort,
+                    onSelected: ref.read(libraryViewProvider.notifier).sortBy,
+                    itemBuilder: (_) => [
+                      for (final sort in LibrarySort.values)
+                        PopupMenuItem(
+                          value: sort,
+                          child: Text(switch (sort) {
+                            LibrarySort.title => context.l10n.librarySortTitle,
+                            LibrarySort.dateAdded =>
+                              context.l10n.librarySortAdded,
+                            LibrarySort.lastWatched =>
+                              context.l10n.librarySortWatched,
+                            LibrarySort.progress =>
+                              context.l10n.librarySortProgress,
+                          }),
+                        ),
+                    ],
+                    icon: const Icon(AppIcons.sort),
+                  ),
+                  IconButton(
+                    isSelected: !ref.watch(libraryViewProvider).list,
+                    tooltip: context.l10n.libraryGrid,
+                    icon: const Icon(AppIcons.all),
+                    onPressed: () =>
+                        ref.read(libraryViewProvider.notifier).showList(false),
+                  ),
+                  IconButton(
+                    isSelected: ref.watch(libraryViewProvider).list,
+                    tooltip: context.l10n.libraryList,
+                    icon: const Icon(AppIcons.list),
+                    onPressed: () =>
+                        ref.read(libraryViewProvider.notifier).showList(true),
+                  ),
+                ],
+              ),
+              if (!ref.watch(scanProvider).running &&
+                  (ref.watch(scanProvider).errors.isNotEmpty ||
+                      ref.watch(scanProvider).warnings > 0))
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          ref.watch(scanProvider).errors.isNotEmpty
+                              ? context.l10n.libraryScanError
+                              : context.l10n.libraryMetadataWarning,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      if (ref.watch(scanProvider).errors.isNotEmpty)
+                        TextButton(
+                          onPressed: () => ref
+                              .read(scanProvider.notifier)
+                              .scan(ref.read(scanProvider).errors),
+                          child: Text(context.l10n.commonRetry),
+                        ),
+                    ],
+                  ),
+                ),
+              if (ref.watch(scanProvider).running) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Text(context.l10n.libraryScanningFolder)),
+                    TextButton(
+                      onPressed: ref.read(scanProvider.notifier).cancel,
+                      child: Text(context.l10n.dialogCancel),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: index == 5
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 300),
+          child: index == 5 && MediaQuery.sizeOf(context).width < 1200
               ? Container(
                   height: AppSpacing.s50,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
                   child: allCollections.isEmpty
                       ? Align(
                           alignment: AlignmentGeometry.centerLeft,
                           child: Text(
-                            "You don't have any collections yet",
+                            context.l10n.libraryNoCollections,
                             style: TextStyle(color: tokens.textMuted),
                           ),
                         )
@@ -348,40 +509,43 @@ class _TopBarState extends ConsumerState<_TopBar> {
                             final isSelected =
                                 selectedCollections == collectionName;
                             return Padding(
-                              padding:
-                                  const EdgeInsets.only(right: AppSpacing.xs),
+                              padding: const EdgeInsets.only(
+                                right: AppSpacing.xs,
+                              ),
                               child: ChoiceChip(
                                 label: Text(collectionName),
                                 selected: isSelected,
-                                selectedColor: Color(ref
-                                        .watch(settingsProvider)
-                                        .accentColorValue)
-                                    .withValues(alpha: 0.3),
+                                selectedColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.3),
                                 backgroundColor: tokens.surfaceSubtle,
                                 labelStyle: TextStyle(
                                   color: isSelected
-                                      ? Color(ref
-                                          .watch(settingsProvider)
-                                          .accentColorValue)
+                                      ? Theme.of(context).colorScheme.primary
                                       : tokens.textSecondary,
                                 ),
                                 side: BorderSide(
-                                    color: isSelected
-                                        ? Color(ref
-                                            .watch(settingsProvider)
-                                            .accentColorValue)
-                                        : Colors.transparent),
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.transparent,
+                                ),
                                 onSelected: (selected) {
                                   if (selected) {
                                     ref
-                                        .read(
-                                            selectedCollectionProvider.notifier)
-                                        .state = collectionName;
+                                            .read(
+                                              selectedCollectionProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        collectionName;
                                   } else {
                                     ref
-                                        .read(
-                                            selectedCollectionProvider.notifier)
-                                        .state = null;
+                                            .read(
+                                              selectedCollectionProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        null;
                                   }
                                 },
                               ),
@@ -416,10 +580,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
   Future<void> _runAutoScan() async {
     final folders = ref.read(savedFoldersProvider);
     if (folders.isEmpty) return;
-    final scanner = ref.read(scannerProvider);
-    for (String folder in folders) {
-      await scanner.scanAndGroupFiles(folder);
-    }
+    await ref.read(scanProvider.notifier).scan(folders);
   }
 
   Future<void> _checkAndShowVpnWarning() async {
@@ -432,42 +593,45 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
         context: context,
         barrierDismissible: false, // Require an explicit dismissal.
         builder: (ctx) => AlertDialog(
+          scrollable: true,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 24,
+          ),
           backgroundColor: context.appTheme.cardSurface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.xl),
           ),
           title: Row(
             children: [
-              Icon(
-                AppIcons.shield,
-                color: context.appTheme.destructive,
-                size: 28,
-              ),
+              Icon(AppIcons.shield, color: context.appTheme.warning, size: 28),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                "Network recommendation",
-                style: TextStyle(color: context.appTheme.textPrimary),
+              Expanded(
+                child: Text(
+                  context.l10n.networkRecommendationTitle,
+                  style: TextStyle(color: context.appTheme.textPrimary),
+                ),
               ),
             ],
           ),
           content: Text(
-            "Hialyth uses the external services Shikimori and AniSkip to load posters, descriptions, and skip timestamps.\n\n"
-            "Some providers may block these services in certain regions.\n\n"
-            "If you experience errors or endless loading, enable a VPN (for example, with routing for specific IPs) or another workaround.",
-            style:
-                TextStyle(color: context.appTheme.textSecondary, height: 2.5),
+            context.l10n.networkRecommendationBody,
+            style: TextStyle(
+              color: context.appTheme.textSecondary,
+              height: 1.7,
+            ),
           ),
           actions: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Color(ref.watch(settingsProvider).accentColorValue)),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
               onPressed: () {
                 prefs.setBool('has_seen_vpn_warning', true);
                 Navigator.pop(ctx);
               },
               child: Text(
-                "Got it",
+                context.l10n.networkRecommendationGotIt,
                 style: TextStyle(color: context.appTheme.textPrimary),
               ),
             ),
@@ -484,32 +648,156 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Center(
         child: Text(
-          "Database error: $err",
+          context.l10n.libraryDatabaseError(err.toString()),
           style: TextStyle(color: context.appTheme.textPrimary),
         ),
       ),
       data: (allAnimes) {
         final filteredList = ref.watch(filteredAnimeProvider);
         if (filteredList.isEmpty) {
+          final emptyLibrary = allAnimes.isEmpty;
+          final noFiles =
+              emptyLibrary && ref.watch(savedFoldersProvider).isNotEmpty;
           return Center(
-            child: Text(
-              "Nothing found",
-              style: TextStyle(color: context.appTheme.textMuted),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      emptyLibrary ? AppIcons.videoLibrary : AppIcons.search,
+                      size: 48,
+                      color: context.appTheme.textMuted,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      emptyLibrary
+                          ? (noFiles
+                                ? context.l10n.libraryNoFilesTitle
+                                : context.l10n.libraryEmptyTitle)
+                          : context.l10n.libraryNothingFound,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      emptyLibrary
+                          ? (noFiles
+                                ? context.l10n.libraryNoFilesBody
+                                : context.l10n.libraryEmptyBody)
+                          : context.l10n.libraryNoResultsBody,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    if (emptyLibrary)
+                      FilledButton.icon(
+                        onPressed: ref.watch(scanProvider).running
+                            ? null
+                            : () => _addLibraryFolder(context, ref),
+                        icon: const Icon(AppIcons.addFolder),
+                        label: Text(context.l10n.libraryAddFolder),
+                      )
+                    else
+                      TextButton(
+                        onPressed: () {
+                          ref.read(searchQueryProvider.notifier).state = '';
+                          ref
+                                  .read(selectedSidebarIndexProvider.notifier)
+                                  .state =
+                              0;
+                          ref.read(selectedCollectionProvider.notifier).state =
+                              null;
+                        },
+                        child: Text(context.l10n.libraryResetFilters),
+                      ),
+                  ],
+                ),
+              ),
             ),
           );
         }
-        return GridView.builder(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 250,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: AppSpacing.s20,
-              mainAxisSpacing: AppSpacing.s20,
+        final view = ref.watch(libraryViewProvider);
+        final canShowResume =
+            AppFeatures.designV2 &&
+            ref.watch(selectedSidebarIndexProvider) == 0 &&
+            ref.watch(searchQueryProvider).isEmpty;
+        final resumable = canShowResume
+            ? ref.watch(continueWatchingProvider)
+            : const <Anime>[];
+        final showResume = canShowResume && resumable.isNotEmpty;
+        final sectionTitle = switch (ref.watch(selectedSidebarIndexProvider)) {
+          1 => context.l10n.libraryWatching,
+          2 => context.l10n.libraryPlanned,
+          3 => context.l10n.libraryCompleted,
+          4 => context.l10n.libraryDropped,
+          5 =>
+            ref.watch(selectedCollectionProvider) ??
+                context.l10n.libraryCollections,
+          _ => context.l10n.libraryAllTitles,
+        };
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1440),
+            child: CustomScrollView(
+              slivers: [
+                if (showResume)
+                  SliverToBoxAdapter(
+                    child: ContinueWatchingSection(
+                      anime: resumable.take(6).toList(),
+                    ),
+                  ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      24,
+                      showResume ? 24 : 16,
+                      24,
+                      AppSpacing.sm,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            sectionTitle,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        Text(
+                          '${filteredList.length}',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  sliver: view.list
+                      ? SliverList.builder(
+                          itemCount: filteredList.length,
+                          itemBuilder: (context, index) =>
+                              AnimeListTile(anime: filteredList[index]),
+                        )
+                      : SliverGrid.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 240,
+                                childAspectRatio: .56,
+                                crossAxisSpacing: 20,
+                                mainAxisSpacing: 20,
+                              ),
+                          itemCount: filteredList.length,
+                          itemBuilder: (context, index) =>
+                              AnimeCard(anime: filteredList[index]),
+                        ),
+                ),
+              ],
             ),
-            itemCount: filteredList.length,
-            itemBuilder: (context, index) {
-              return AnimeCard(anime: filteredList[index]);
-            });
+          ),
+        );
       },
     );
   }

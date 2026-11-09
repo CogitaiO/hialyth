@@ -7,7 +7,7 @@ part of 'anime.dart';
 // **************************************************************************
 
 // coverage:ignore-file
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types, experimental_member_use
 
 extension GetAnimeCollection on Isar {
   IsarCollection<Anime> get animes => this.collection();
@@ -52,76 +52,62 @@ const AnimeSchema = CollectionSchema(
       name: r'folderPath',
       type: IsarType.string,
     ),
-    r'isHidden': PropertySchema(
-      id: 7,
-      name: r'isHidden',
-      type: IsarType.bool,
-    ),
-    r'nextEpisodeToPlay': PropertySchema(
+    r'isHidden': PropertySchema(id: 7, name: r'isHidden', type: IsarType.bool),
+    r'lastWatchedAt': PropertySchema(
       id: 8,
-      name: r'nextEpisodeToPlay',
-      type: IsarType.string,
+      name: r'lastWatchedAt',
+      type: IsarType.dateTime,
     ),
     r'notes': PropertySchema(
       id: 9,
       name: r'notes',
       type: IsarType.objectList,
+
       target: r'EpisodeNote',
     ),
     r'playbackPositions': PropertySchema(
       id: 10,
       name: r'playbackPositions',
       type: IsarType.objectList,
+
       target: r'PlaybackEntry',
     ),
-    r'progressFraction': PropertySchema(
+    r'scanTitle': PropertySchema(
       id: 11,
-      name: r'progressFraction',
-      type: IsarType.string,
-    ),
-    r'progressPercentage': PropertySchema(
-      id: 12,
-      name: r'progressPercentage',
+      name: r'scanTitle',
       type: IsarType.string,
     ),
     r'shikimoriId': PropertySchema(
-      id: 13,
+      id: 12,
       name: r'shikimoriId',
       type: IsarType.long,
     ),
     r'skipData': PropertySchema(
-      id: 14,
+      id: 13,
       name: r'skipData',
       type: IsarType.objectList,
+
       target: r'EpisodeSkipData',
     ),
-    r'sortedEpisodes': PropertySchema(
-      id: 15,
-      name: r'sortedEpisodes',
+    r'sourceFolders': PropertySchema(
+      id: 14,
+      name: r'sourceFolders',
       type: IsarType.stringList,
     ),
     r'status': PropertySchema(
-      id: 16,
+      id: 15,
       name: r'status',
       type: IsarType.byte,
       enumMap: _AnimestatusEnumValueMap,
     ),
-    r'title': PropertySchema(
-      id: 17,
-      name: r'title',
-      type: IsarType.string,
-    ),
-    r'watchProgress': PropertySchema(
-      id: 18,
-      name: r'watchProgress',
-      type: IsarType.double,
-    ),
+    r'title': PropertySchema(id: 16, name: r'title', type: IsarType.string),
     r'watchedEpisodes': PropertySchema(
-      id: 19,
+      id: 17,
       name: r'watchedEpisodes',
       type: IsarType.stringList,
-    )
+    ),
   },
+
   estimateSize: _animeEstimateSize,
   serialize: _animeSerialize,
   deserialize: _animeDeserialize,
@@ -132,27 +118,28 @@ const AnimeSchema = CollectionSchema(
       id: -7636685945352118059,
       name: r'title',
       unique: true,
-      replace: true,
+      replace: false,
       properties: [
         IndexPropertySchema(
           name: r'title',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {
     r'EpisodeNote': EpisodeNoteSchema,
     r'PlaybackEntry': PlaybackEntrySchema,
     r'EpisodeSkipData': EpisodeSkipDataSchema,
-    r'SkipIntervalDb': SkipIntervalDbSchema
+    r'SkipIntervalDb': SkipIntervalDbSchema,
   },
+
   getId: _animeGetId,
   getLinks: _animeGetLinks,
   attach: _animeAttach,
-  version: '3.1.0+1',
+  version: '3.4.1',
 );
 
 int _animeEstimateSize(
@@ -193,12 +180,6 @@ int _animeEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
-  {
-    final value = object.nextEpisodeToPlay;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
-    }
-  }
   bytesCount += 3 + object.notes.length * 3;
   {
     final offsets = allOffsets[EpisodeNote]!;
@@ -212,25 +193,35 @@ int _animeEstimateSize(
     final offsets = allOffsets[PlaybackEntry]!;
     for (var i = 0; i < object.playbackPositions.length; i++) {
       final value = object.playbackPositions[i];
-      bytesCount +=
-          PlaybackEntrySchema.estimateSize(value, offsets, allOffsets);
+      bytesCount += PlaybackEntrySchema.estimateSize(
+        value,
+        offsets,
+        allOffsets,
+      );
     }
   }
-  bytesCount += 3 + object.progressFraction.length * 3;
-  bytesCount += 3 + object.progressPercentage.length * 3;
+  {
+    final value = object.scanTitle;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.skipData.length * 3;
   {
     final offsets = allOffsets[EpisodeSkipData]!;
     for (var i = 0; i < object.skipData.length; i++) {
       final value = object.skipData[i];
-      bytesCount +=
-          EpisodeSkipDataSchema.estimateSize(value, offsets, allOffsets);
+      bytesCount += EpisodeSkipDataSchema.estimateSize(
+        value,
+        offsets,
+        allOffsets,
+      );
     }
   }
-  bytesCount += 3 + object.sortedEpisodes.length * 3;
+  bytesCount += 3 + object.sourceFolders.length * 3;
   {
-    for (var i = 0; i < object.sortedEpisodes.length; i++) {
-      final value = object.sortedEpisodes[i];
+    for (var i = 0; i < object.sourceFolders.length; i++) {
+      final value = object.sourceFolders[i];
       bytesCount += value.length * 3;
     }
   }
@@ -259,7 +250,7 @@ void _animeSerialize(
   writer.writeStringList(offsets[5], object.episodePaths);
   writer.writeString(offsets[6], object.folderPath);
   writer.writeBool(offsets[7], object.isHidden);
-  writer.writeString(offsets[8], object.nextEpisodeToPlay);
+  writer.writeDateTime(offsets[8], object.lastWatchedAt);
   writer.writeObjectList<EpisodeNote>(
     offsets[9],
     allOffsets,
@@ -272,20 +263,18 @@ void _animeSerialize(
     PlaybackEntrySchema.serialize,
     object.playbackPositions,
   );
-  writer.writeString(offsets[11], object.progressFraction);
-  writer.writeString(offsets[12], object.progressPercentage);
-  writer.writeLong(offsets[13], object.shikimoriId);
+  writer.writeString(offsets[11], object.scanTitle);
+  writer.writeLong(offsets[12], object.shikimoriId);
   writer.writeObjectList<EpisodeSkipData>(
-    offsets[14],
+    offsets[13],
     allOffsets,
     EpisodeSkipDataSchema.serialize,
     object.skipData,
   );
-  writer.writeStringList(offsets[15], object.sortedEpisodes);
-  writer.writeByte(offsets[16], object.status.index);
-  writer.writeString(offsets[17], object.title);
-  writer.writeDouble(offsets[18], object.watchProgress);
-  writer.writeStringList(offsets[19], object.watchedEpisodes);
+  writer.writeStringList(offsets[14], object.sourceFolders);
+  writer.writeByte(offsets[15], object.status.index);
+  writer.writeString(offsets[16], object.title);
+  writer.writeStringList(offsets[17], object.watchedEpisodes);
 }
 
 Anime _animeDeserialize(
@@ -304,33 +293,39 @@ Anime _animeDeserialize(
   object.folderPath = reader.readStringOrNull(offsets[6]);
   object.id = id;
   object.isHidden = reader.readBool(offsets[7]);
-  object.notes = reader.readObjectList<EpisodeNote>(
+  object.lastWatchedAt = reader.readDateTimeOrNull(offsets[8]);
+  object.notes =
+      reader.readObjectList<EpisodeNote>(
         offsets[9],
         EpisodeNoteSchema.deserialize,
         allOffsets,
         EpisodeNote(),
       ) ??
       [];
-  object.playbackPositions = reader.readObjectList<PlaybackEntry>(
+  object.playbackPositions =
+      reader.readObjectList<PlaybackEntry>(
         offsets[10],
         PlaybackEntrySchema.deserialize,
         allOffsets,
         PlaybackEntry(),
       ) ??
       [];
-  object.shikimoriId = reader.readLongOrNull(offsets[13]);
-  object.skipData = reader.readObjectList<EpisodeSkipData>(
-        offsets[14],
+  object.scanTitle = reader.readStringOrNull(offsets[11]);
+  object.shikimoriId = reader.readLongOrNull(offsets[12]);
+  object.skipData =
+      reader.readObjectList<EpisodeSkipData>(
+        offsets[13],
         EpisodeSkipDataSchema.deserialize,
         allOffsets,
         EpisodeSkipData(),
       ) ??
       [];
+  object.sourceFolders = reader.readStringList(offsets[14]) ?? [];
   object.status =
-      _AnimestatusValueEnumMap[reader.readByteOrNull(offsets[16])] ??
-          AnimeStatus.planned;
-  object.title = reader.readString(offsets[17]);
-  object.watchedEpisodes = reader.readStringList(offsets[19]) ?? [];
+      _AnimestatusValueEnumMap[reader.readByteOrNull(offsets[15])] ??
+      AnimeStatus.planned;
+  object.title = reader.readString(offsets[16]);
+  object.watchedEpisodes = reader.readStringList(offsets[17]) ?? [];
   return object;
 }
 
@@ -358,47 +353,47 @@ P _animeDeserializeProp<P>(
     case 7:
       return (reader.readBool(offset)) as P;
     case 8:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
       return (reader.readObjectList<EpisodeNote>(
-            offset,
-            EpisodeNoteSchema.deserialize,
-            allOffsets,
-            EpisodeNote(),
-          ) ??
-          []) as P;
+                offset,
+                EpisodeNoteSchema.deserialize,
+                allOffsets,
+                EpisodeNote(),
+              ) ??
+              [])
+          as P;
     case 10:
       return (reader.readObjectList<PlaybackEntry>(
-            offset,
-            PlaybackEntrySchema.deserialize,
-            allOffsets,
-            PlaybackEntry(),
-          ) ??
-          []) as P;
+                offset,
+                PlaybackEntrySchema.deserialize,
+                allOffsets,
+                PlaybackEntry(),
+              ) ??
+              [])
+          as P;
     case 11:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 12:
-      return (reader.readString(offset)) as P;
-    case 13:
       return (reader.readLongOrNull(offset)) as P;
-    case 14:
+    case 13:
       return (reader.readObjectList<EpisodeSkipData>(
-            offset,
-            EpisodeSkipDataSchema.deserialize,
-            allOffsets,
-            EpisodeSkipData(),
-          ) ??
-          []) as P;
-    case 15:
+                offset,
+                EpisodeSkipDataSchema.deserialize,
+                allOffsets,
+                EpisodeSkipData(),
+              ) ??
+              [])
+          as P;
+    case 14:
       return (reader.readStringList(offset) ?? []) as P;
-    case 16:
+    case 15:
       return (_AnimestatusValueEnumMap[reader.readByteOrNull(offset)] ??
-          AnimeStatus.planned) as P;
-    case 17:
+              AnimeStatus.planned)
+          as P;
+    case 16:
       return (reader.readString(offset)) as P;
-    case 18:
-      return (reader.readDouble(offset)) as P;
-    case 19:
+    case 17:
       return (reader.readStringList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -495,10 +490,7 @@ extension AnimeQueryWhereSort on QueryBuilder<Anime, Anime, QWhere> {
 extension AnimeQueryWhere on QueryBuilder<Anime, Anime, QWhereClause> {
   QueryBuilder<Anime, Anime, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
@@ -524,8 +516,10 @@ extension AnimeQueryWhere on QueryBuilder<Anime, Anime, QWhereClause> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterWhereClause> idGreaterThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<Anime, Anime, QAfterWhereClause> idGreaterThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -533,8 +527,10 @@ extension AnimeQueryWhere on QueryBuilder<Anime, Anime, QWhereClause> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterWhereClause> idLessThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<Anime, Anime, QAfterWhereClause> idLessThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -549,21 +545,22 @@ extension AnimeQueryWhere on QueryBuilder<Anime, Anime, QWhereClause> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterWhereClause> titleEqualTo(String title) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'title',
-        value: [title],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'title', value: [title]),
+      );
     });
   }
 
@@ -571,32 +568,40 @@ extension AnimeQueryWhere on QueryBuilder<Anime, Anime, QWhereClause> {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'title',
-              lower: [],
-              upper: [title],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'title',
-              lower: [title],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'title',
+                lower: [],
+                upper: [title],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'title',
+                lower: [title],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'title',
-              lower: [title],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'title',
-              lower: [],
-              upper: [title],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'title',
+                lower: [title],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'title',
+                lower: [],
+                upper: [title],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
@@ -605,42 +610,41 @@ extension AnimeQueryWhere on QueryBuilder<Anime, Anime, QWhereClause> {
 extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
   QueryBuilder<Anime, Anime, QAfterFilterCondition> ambientColorValueIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'ambientColorValue',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'ambientColorValue'),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      ambientColorValueIsNotNull() {
+  ambientColorValueIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'ambientColorValue',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'ambientColorValue'),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> ambientColorValueEqualTo(
-      int? value) {
+    int? value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'ambientColorValue',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'ambientColorValue', value: value),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      ambientColorValueGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
+  ambientColorValueGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'ambientColorValue',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'ambientColorValue',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -649,11 +653,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'ambientColorValue',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'ambientColorValue',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -664,29 +670,31 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'ambientColorValue',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'ambientColorValue',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> coverUrlIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'coverUrl',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'coverUrl'),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> coverUrlIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'coverUrl',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'coverUrl'),
+      );
     });
   }
 
@@ -695,11 +703,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'coverUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'coverUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -709,12 +719,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'coverUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'coverUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -724,12 +736,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'coverUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'coverUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -741,14 +755,16 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'coverUrl',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'coverUrl',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -757,11 +773,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'coverUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'coverUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -770,104 +788,113 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'coverUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'coverUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> coverUrlContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'coverUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'coverUrl',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> coverUrlMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'coverUrl',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'coverUrl',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> coverUrlIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'coverUrl',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'coverUrl', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> coverUrlIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'coverUrl',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'coverUrl', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  customCollectionsElementEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'customCollections',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'customCollections',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementGreaterThan(
+  customCollectionsElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'customCollections',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'customCollections',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementLessThan(
+  customCollectionsElementLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'customCollections',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'customCollections',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementBetween(
+  customCollectionsElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -875,148 +902,121 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'customCollections',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'customCollections',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'customCollections',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementContains(String value,
-          {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'customCollections',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementMatches(String pattern,
-          {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'customCollections',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'customCollections',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsElementIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'customCollections',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsLengthEqualTo(int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'customCollections',
-        length,
-        true,
-        length,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'customCollections',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
       );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  customCollectionsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'customCollections',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  customCollectionsElementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'customCollections',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  customCollectionsElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'customCollections',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  customCollectionsElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'customCollections',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  customCollectionsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'customCollections', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  customCollectionsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'customCollections', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  customCollectionsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'customCollections', length, true, length, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> customCollectionsIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'customCollections',
-        0,
-        true,
-        0,
-        true,
-      );
+      return query.listLength(r'customCollections', 0, true, 0, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsIsNotEmpty() {
+  customCollectionsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'customCollections',
-        0,
-        false,
-        999999,
-        true,
-      );
+      return query.listLength(r'customCollections', 0, false, 999999, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
+  customCollectionsLengthLessThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'customCollections',
-        0,
-        true,
-        length,
-        include,
-      );
+      return query.listLength(r'customCollections', 0, true, length, include);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
+  customCollectionsLengthGreaterThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'customCollections',
@@ -1029,7 +1029,7 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      customCollectionsLengthBetween(
+  customCollectionsLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -1047,12 +1047,12 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> dateAddedEqualTo(
-      DateTime value) {
+    DateTime value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'dateAdded',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'dateAdded', value: value),
+      );
     });
   }
 
@@ -1061,11 +1061,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'dateAdded',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'dateAdded',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1074,11 +1076,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'dateAdded',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'dateAdded',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1089,29 +1093,31 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'dateAdded',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'dateAdded',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> descripionIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'descripion',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'descripion'),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> descripionIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'descripion',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'descripion'),
+      );
     });
   }
 
@@ -1120,11 +1126,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'descripion',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'descripion',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1134,12 +1142,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'descripion',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'descripion',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1149,12 +1159,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'descripion',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'descripion',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1166,14 +1178,16 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'descripion',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'descripion',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1182,11 +1196,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'descripion',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'descripion',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1195,53 +1211,59 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'descripion',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'descripion',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> descripionContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'descripion',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'descripion',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> descripionMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'descripion',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'descripion',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> descripionIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'descripion',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'descripion', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> descripionIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'descripion',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'descripion', value: ''),
+      );
     });
   }
 
@@ -1250,27 +1272,31 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'episodePaths',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'episodePaths',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      episodePathsElementGreaterThan(
+  episodePathsElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'episodePaths',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'episodePaths',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1280,12 +1306,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'episodePaths',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'episodePaths',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1297,28 +1325,29 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'episodePaths',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'episodePaths',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      episodePathsElementStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  episodePathsElementStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'episodePaths',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'episodePaths',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1327,92 +1356,81 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'episodePaths',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'episodePaths',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> episodePathsElementContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'episodePaths',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'episodePaths',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> episodePathsElementMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'episodePaths',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'episodePaths',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      episodePathsElementIsEmpty() {
+  episodePathsElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'episodePaths',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'episodePaths', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      episodePathsElementIsNotEmpty() {
+  episodePathsElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'episodePaths',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'episodePaths', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> episodePathsLengthEqualTo(
-      int length) {
+    int length,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'episodePaths',
-        length,
-        true,
-        length,
-        true,
-      );
+      return query.listLength(r'episodePaths', length, true, length, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> episodePathsIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'episodePaths',
-        0,
-        true,
-        0,
-        true,
-      );
+      return query.listLength(r'episodePaths', 0, true, 0, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> episodePathsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'episodePaths',
-        0,
-        false,
-        999999,
-        true,
-      );
+      return query.listLength(r'episodePaths', 0, false, 999999, true);
     });
   }
 
@@ -1421,29 +1439,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'episodePaths',
-        0,
-        true,
-        length,
-        include,
-      );
+      return query.listLength(r'episodePaths', 0, true, length, include);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      episodePathsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
+  episodePathsLengthGreaterThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'episodePaths',
-        length,
-        include,
-        999999,
-        true,
-      );
+      return query.listLength(r'episodePaths', length, include, 999999, true);
     });
   }
 
@@ -1466,17 +1469,17 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> folderPathIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'folderPath',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'folderPath'),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> folderPathIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'folderPath',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'folderPath'),
+      );
     });
   }
 
@@ -1485,11 +1488,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'folderPath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'folderPath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1499,12 +1504,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'folderPath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'folderPath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1514,12 +1521,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'folderPath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'folderPath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1531,14 +1540,16 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'folderPath',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'folderPath',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1547,11 +1558,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'folderPath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'folderPath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1560,62 +1573,67 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'folderPath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'folderPath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> folderPathContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'folderPath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'folderPath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> folderPathMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'folderPath',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'folderPath',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> folderPathIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'folderPath',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'folderPath', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> folderPathIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'folderPath',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'folderPath', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
@@ -1624,11 +1642,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1637,11 +1657,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1652,209 +1674,120 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> isHiddenEqualTo(
-      bool value) {
+    bool value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isHidden',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'isHidden', value: value),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayIsNull() {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> lastWatchedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'nextEpisodeToPlay',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastWatchedAt'),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      nextEpisodeToPlayIsNotNull() {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> lastWatchedAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'nextEpisodeToPlay',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastWatchedAt'),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> lastWatchedAtEqualTo(
+    DateTime? value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'nextEpisodeToPlay',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastWatchedAt', value: value),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      nextEpisodeToPlayGreaterThan(
-    String? value, {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> lastWatchedAtGreaterThan(
+    DateTime? value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'nextEpisodeToPlay',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastWatchedAt',
+          value: value,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayLessThan(
-    String? value, {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> lastWatchedAtLessThan(
+    DateTime? value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'nextEpisodeToPlay',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastWatchedAt',
+          value: value,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayBetween(
-    String? lower,
-    String? upper, {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> lastWatchedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'nextEpisodeToPlay',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'nextEpisodeToPlay',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'nextEpisodeToPlay',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'nextEpisodeToPlay',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'nextEpisodeToPlay',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> nextEpisodeToPlayIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'nextEpisodeToPlay',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      nextEpisodeToPlayIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'nextEpisodeToPlay',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastWatchedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> notesLengthEqualTo(
-      int length) {
+    int length,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'notes',
-        length,
-        true,
-        length,
-        true,
-      );
+      return query.listLength(r'notes', length, true, length, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> notesIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'notes',
-        0,
-        true,
-        0,
-        true,
-      );
+      return query.listLength(r'notes', 0, true, 0, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> notesIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'notes',
-        0,
-        false,
-        999999,
-        true,
-      );
+      return query.listLength(r'notes', 0, false, 999999, true);
     });
   }
 
@@ -1863,13 +1796,7 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'notes',
-        0,
-        true,
-        length,
-        include,
-      );
+      return query.listLength(r'notes', 0, true, length, include);
     });
   }
 
@@ -1878,13 +1805,7 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'notes',
-        length,
-        include,
-        999999,
-        true,
-      );
+      return query.listLength(r'notes', length, include, 999999, true);
     });
   }
 
@@ -1906,64 +1827,34 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      playbackPositionsLengthEqualTo(int length) {
+  playbackPositionsLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'playbackPositions',
-        length,
-        true,
-        length,
-        true,
-      );
+      return query.listLength(r'playbackPositions', length, true, length, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> playbackPositionsIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'playbackPositions',
-        0,
-        true,
-        0,
-        true,
-      );
+      return query.listLength(r'playbackPositions', 0, true, 0, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      playbackPositionsIsNotEmpty() {
+  playbackPositionsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'playbackPositions',
-        0,
-        false,
-        999999,
-        true,
-      );
+      return query.listLength(r'playbackPositions', 0, false, 999999, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      playbackPositionsLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
+  playbackPositionsLengthLessThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'playbackPositions',
-        0,
-        true,
-        length,
-        include,
-      );
+      return query.listLength(r'playbackPositions', 0, true, length, include);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      playbackPositionsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
+  playbackPositionsLengthGreaterThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'playbackPositions',
@@ -1976,7 +1867,7 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      playbackPositionsLengthBetween(
+  playbackPositionsLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -1993,294 +1884,191 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'progressFraction',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'scanTitle'),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionGreaterThan(
-    String value, {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'scanTitle'),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'scanTitle',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleGreaterThan(
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'progressFraction',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'scanTitle',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionLessThan(
-    String value, {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleLessThan(
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'progressFraction',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'scanTitle',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionBetween(
-    String lower,
-    String upper, {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleBetween(
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'progressFraction',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'scanTitle',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionStartsWith(
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'progressFraction',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'scanTitle',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionEndsWith(
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'progressFraction',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'scanTitle',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'progressFraction',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'progressFraction',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressFractionIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'progressFraction',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      progressFractionIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'progressFraction',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressPercentageEqualTo(
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleContains(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'progressPercentage',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'scanTitle',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      progressPercentageGreaterThan(
-    String value, {
-    bool include = false,
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleMatches(
+    String pattern, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'progressPercentage',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'scanTitle',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressPercentageLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'progressPercentage',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'scanTitle', value: ''),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressPercentageBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> scanTitleIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'progressPercentage',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      progressPercentageStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'progressPercentage',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressPercentageEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'progressPercentage',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressPercentageContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'progressPercentage',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> progressPercentageMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'progressPercentage',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      progressPercentageIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'progressPercentage',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      progressPercentageIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'progressPercentage',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'scanTitle', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> shikimoriIdIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'shikimoriId',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'shikimoriId'),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> shikimoriIdIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'shikimoriId',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'shikimoriId'),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> shikimoriIdEqualTo(
-      int? value) {
+    int? value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'shikimoriId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'shikimoriId', value: value),
+      );
     });
   }
 
@@ -2289,11 +2077,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'shikimoriId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'shikimoriId',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -2302,11 +2092,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'shikimoriId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'shikimoriId',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -2317,50 +2109,35 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'shikimoriId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'shikimoriId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> skipDataLengthEqualTo(
-      int length) {
+    int length,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'skipData',
-        length,
-        true,
-        length,
-        true,
-      );
+      return query.listLength(r'skipData', length, true, length, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> skipDataIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'skipData',
-        0,
-        true,
-        0,
-        true,
-      );
+      return query.listLength(r'skipData', 0, true, 0, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> skipDataIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'skipData',
-        0,
-        false,
-        999999,
-        true,
-      );
+      return query.listLength(r'skipData', 0, false, 999999, true);
     });
   }
 
@@ -2369,13 +2146,7 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'skipData',
-        0,
-        true,
-        length,
-        include,
-      );
+      return query.listLength(r'skipData', 0, true, length, include);
     });
   }
 
@@ -2384,13 +2155,7 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'skipData',
-        length,
-        include,
-        999999,
-        true,
-      );
+      return query.listLength(r'skipData', length, include, 999999, true);
     });
   }
 
@@ -2411,54 +2176,58 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementEqualTo(
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> sourceFoldersElementEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sortedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'sourceFolders',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'sortedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementLessThan(
+  sourceFoldersElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'sortedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'sourceFolders',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementBetween(
+  sourceFoldersElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'sourceFolders',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> sourceFoldersElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -2466,158 +2235,128 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'sortedEpisodes',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'sourceFolders',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementStartsWith(
-    String value, {
+  sourceFoldersElementStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'sourceFolders',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  sourceFoldersElementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'sourceFolders',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  sourceFoldersElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'sourceFolders',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> sourceFoldersElementMatches(
+    String pattern, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'sortedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'sortedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'sortedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementMatches(String pattern,
-          {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'sortedEpisodes',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sortedEpisodes',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesElementIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'sortedEpisodes',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> sortedEpisodesLengthEqualTo(
-      int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'sortedEpisodes',
-        length,
-        true,
-        length,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> sortedEpisodesIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'sortedEpisodes',
-        0,
-        true,
-        0,
-        true,
-      );
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> sortedEpisodesIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'sortedEpisodes',
-        0,
-        false,
-        999999,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'sourceFolders',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesLengthLessThan(
+  sourceFoldersElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'sourceFolders', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  sourceFoldersElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'sourceFolders', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> sourceFoldersLengthEqualTo(
+    int length,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'sourceFolders', length, true, length, true);
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> sourceFoldersIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'sourceFolders', 0, true, 0, true);
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> sourceFoldersIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'sourceFolders', 0, false, 999999, true);
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> sourceFoldersLengthLessThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'sortedEpisodes',
-        0,
-        true,
-        length,
-        include,
-      );
+      return query.listLength(r'sourceFolders', 0, true, length, include);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      sortedEpisodesLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
+  sourceFoldersLengthGreaterThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'sortedEpisodes',
-        length,
-        include,
-        999999,
-        true,
-      );
+      return query.listLength(r'sourceFolders', length, include, 999999, true);
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> sortedEpisodesLengthBetween(
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> sourceFoldersLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -2625,7 +2364,7 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'sortedEpisodes',
+        r'sourceFolders',
         lower,
         includeLower,
         upper,
@@ -2635,12 +2374,12 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> statusEqualTo(
-      AnimeStatus value) {
+    AnimeStatus value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'status',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'status', value: value),
+      );
     });
   }
 
@@ -2649,11 +2388,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'status',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'status',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -2662,11 +2403,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'status',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'status',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -2677,13 +2420,15 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'status',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'status',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
@@ -2692,11 +2437,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'title',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -2706,12 +2453,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'title',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -2721,12 +2470,14 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'title',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -2738,14 +2489,16 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'title',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'title',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -2754,11 +2507,13 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'title',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -2767,164 +2522,113 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'title',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> titleContains(String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> titleContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'title',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'title',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> titleMatches(String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Anime, Anime, QAfterFilterCondition> titleMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'title',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'title',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> titleIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'title',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'title', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> titleIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'title',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> watchProgressEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'watchProgress',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> watchProgressGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'watchProgress',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> watchProgressLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'watchProgress',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition> watchProgressBetween(
-    double lower,
-    double upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'watchProgress',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'title', value: ''),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  watchedEpisodesElementEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'watchedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'watchedEpisodes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementGreaterThan(
+  watchedEpisodesElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'watchedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'watchedEpisodes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementLessThan(
+  watchedEpisodesElementLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'watchedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'watchedEpisodes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementBetween(
+  watchedEpisodesElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -2932,148 +2636,118 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'watchedEpisodes',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'watchedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'watchedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementContains(String value,
-          {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'watchedEpisodes',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementMatches(String pattern,
-          {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'watchedEpisodes',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'watchedEpisodes',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesElementIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'watchedEpisodes',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesLengthEqualTo(int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'watchedEpisodes',
-        length,
-        true,
-        length,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'watchedEpisodes',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
       );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  watchedEpisodesElementStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'watchedEpisodes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  watchedEpisodesElementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'watchedEpisodes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  watchedEpisodesElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'watchedEpisodes',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  watchedEpisodesElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'watchedEpisodes',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  watchedEpisodesElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'watchedEpisodes', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  watchedEpisodesElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'watchedEpisodes', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<Anime, Anime, QAfterFilterCondition>
+  watchedEpisodesLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'watchedEpisodes', length, true, length, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> watchedEpisodesIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'watchedEpisodes',
-        0,
-        true,
-        0,
-        true,
-      );
+      return query.listLength(r'watchedEpisodes', 0, true, 0, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesIsNotEmpty() {
+  watchedEpisodesIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'watchedEpisodes',
-        0,
-        false,
-        999999,
-        true,
-      );
+      return query.listLength(r'watchedEpisodes', 0, false, 999999, true);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
+  watchedEpisodesLengthLessThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'watchedEpisodes',
-        0,
-        true,
-        length,
-        include,
-      );
+      return query.listLength(r'watchedEpisodes', 0, true, length, include);
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
+  watchedEpisodesLengthGreaterThan(int length, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
         r'watchedEpisodes',
@@ -3086,7 +2760,7 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition>
-      watchedEpisodesLengthBetween(
+  watchedEpisodesLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -3106,21 +2780,24 @@ extension AnimeQueryFilter on QueryBuilder<Anime, Anime, QFilterCondition> {
 
 extension AnimeQueryObject on QueryBuilder<Anime, Anime, QFilterCondition> {
   QueryBuilder<Anime, Anime, QAfterFilterCondition> notesElement(
-      FilterQuery<EpisodeNote> q) {
+    FilterQuery<EpisodeNote> q,
+  ) {
     return QueryBuilder.apply(this, (query) {
       return query.object(q, r'notes');
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> playbackPositionsElement(
-      FilterQuery<PlaybackEntry> q) {
+    FilterQuery<PlaybackEntry> q,
+  ) {
     return QueryBuilder.apply(this, (query) {
       return query.object(q, r'playbackPositions');
     });
   }
 
   QueryBuilder<Anime, Anime, QAfterFilterCondition> skipDataElement(
-      FilterQuery<EpisodeSkipData> q) {
+    FilterQuery<EpisodeSkipData> q,
+  ) {
     return QueryBuilder.apply(this, (query) {
       return query.object(q, r'skipData');
     });
@@ -3202,39 +2879,27 @@ extension AnimeQuerySortBy on QueryBuilder<Anime, Anime, QSortBy> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterSortBy> sortByNextEpisodeToPlay() {
+  QueryBuilder<Anime, Anime, QAfterSortBy> sortByLastWatchedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextEpisodeToPlay', Sort.asc);
+      return query.addSortBy(r'lastWatchedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterSortBy> sortByNextEpisodeToPlayDesc() {
+  QueryBuilder<Anime, Anime, QAfterSortBy> sortByLastWatchedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextEpisodeToPlay', Sort.desc);
+      return query.addSortBy(r'lastWatchedAt', Sort.desc);
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterSortBy> sortByProgressFraction() {
+  QueryBuilder<Anime, Anime, QAfterSortBy> sortByScanTitle() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'progressFraction', Sort.asc);
+      return query.addSortBy(r'scanTitle', Sort.asc);
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterSortBy> sortByProgressFractionDesc() {
+  QueryBuilder<Anime, Anime, QAfterSortBy> sortByScanTitleDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'progressFraction', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterSortBy> sortByProgressPercentage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'progressPercentage', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterSortBy> sortByProgressPercentageDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'progressPercentage', Sort.desc);
+      return query.addSortBy(r'scanTitle', Sort.desc);
     });
   }
 
@@ -3271,18 +2936,6 @@ extension AnimeQuerySortBy on QueryBuilder<Anime, Anime, QSortBy> {
   QueryBuilder<Anime, Anime, QAfterSortBy> sortByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterSortBy> sortByWatchProgress() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'watchProgress', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterSortBy> sortByWatchProgressDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'watchProgress', Sort.desc);
     });
   }
 }
@@ -3372,39 +3025,27 @@ extension AnimeQuerySortThenBy on QueryBuilder<Anime, Anime, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterSortBy> thenByNextEpisodeToPlay() {
+  QueryBuilder<Anime, Anime, QAfterSortBy> thenByLastWatchedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextEpisodeToPlay', Sort.asc);
+      return query.addSortBy(r'lastWatchedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterSortBy> thenByNextEpisodeToPlayDesc() {
+  QueryBuilder<Anime, Anime, QAfterSortBy> thenByLastWatchedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'nextEpisodeToPlay', Sort.desc);
+      return query.addSortBy(r'lastWatchedAt', Sort.desc);
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterSortBy> thenByProgressFraction() {
+  QueryBuilder<Anime, Anime, QAfterSortBy> thenByScanTitle() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'progressFraction', Sort.asc);
+      return query.addSortBy(r'scanTitle', Sort.asc);
     });
   }
 
-  QueryBuilder<Anime, Anime, QAfterSortBy> thenByProgressFractionDesc() {
+  QueryBuilder<Anime, Anime, QAfterSortBy> thenByScanTitleDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'progressFraction', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterSortBy> thenByProgressPercentage() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'progressPercentage', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterSortBy> thenByProgressPercentageDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'progressPercentage', Sort.desc);
+      return query.addSortBy(r'scanTitle', Sort.desc);
     });
   }
 
@@ -3443,18 +3084,6 @@ extension AnimeQuerySortThenBy on QueryBuilder<Anime, Anime, QSortThenBy> {
       return query.addSortBy(r'title', Sort.desc);
     });
   }
-
-  QueryBuilder<Anime, Anime, QAfterSortBy> thenByWatchProgress() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'watchProgress', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QAfterSortBy> thenByWatchProgressDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'watchProgress', Sort.desc);
-    });
-  }
 }
 
 extension AnimeQueryWhereDistinct on QueryBuilder<Anime, Anime, QDistinct> {
@@ -3464,8 +3093,9 @@ extension AnimeQueryWhereDistinct on QueryBuilder<Anime, Anime, QDistinct> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QDistinct> distinctByCoverUrl(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Anime, Anime, QDistinct> distinctByCoverUrl({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'coverUrl', caseSensitive: caseSensitive);
     });
@@ -3483,8 +3113,9 @@ extension AnimeQueryWhereDistinct on QueryBuilder<Anime, Anime, QDistinct> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QDistinct> distinctByDescripion(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Anime, Anime, QDistinct> distinctByDescripion({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'descripion', caseSensitive: caseSensitive);
     });
@@ -3496,8 +3127,9 @@ extension AnimeQueryWhereDistinct on QueryBuilder<Anime, Anime, QDistinct> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QDistinct> distinctByFolderPath(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Anime, Anime, QDistinct> distinctByFolderPath({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'folderPath', caseSensitive: caseSensitive);
     });
@@ -3509,27 +3141,17 @@ extension AnimeQueryWhereDistinct on QueryBuilder<Anime, Anime, QDistinct> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QDistinct> distinctByNextEpisodeToPlay(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Anime, Anime, QDistinct> distinctByLastWatchedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'nextEpisodeToPlay',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'lastWatchedAt');
     });
   }
 
-  QueryBuilder<Anime, Anime, QDistinct> distinctByProgressFraction(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Anime, Anime, QDistinct> distinctByScanTitle({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'progressFraction',
-          caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QDistinct> distinctByProgressPercentage(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'progressPercentage',
-          caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'scanTitle', caseSensitive: caseSensitive);
     });
   }
 
@@ -3539,9 +3161,9 @@ extension AnimeQueryWhereDistinct on QueryBuilder<Anime, Anime, QDistinct> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QDistinct> distinctBySortedEpisodes() {
+  QueryBuilder<Anime, Anime, QDistinct> distinctBySourceFolders() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'sortedEpisodes');
+      return query.addDistinctBy(r'sourceFolders');
     });
   }
 
@@ -3551,16 +3173,11 @@ extension AnimeQueryWhereDistinct on QueryBuilder<Anime, Anime, QDistinct> {
     });
   }
 
-  QueryBuilder<Anime, Anime, QDistinct> distinctByTitle(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Anime, Anime, QDistinct> distinctByTitle({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<Anime, Anime, QDistinct> distinctByWatchProgress() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'watchProgress');
     });
   }
 
@@ -3591,7 +3208,7 @@ extension AnimeQueryProperty on QueryBuilder<Anime, Anime, QQueryProperty> {
   }
 
   QueryBuilder<Anime, List<String>, QQueryOperations>
-      customCollectionsProperty() {
+  customCollectionsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'customCollections');
     });
@@ -3627,9 +3244,9 @@ extension AnimeQueryProperty on QueryBuilder<Anime, Anime, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Anime, String?, QQueryOperations> nextEpisodeToPlayProperty() {
+  QueryBuilder<Anime, DateTime?, QQueryOperations> lastWatchedAtProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'nextEpisodeToPlay');
+      return query.addPropertyName(r'lastWatchedAt');
     });
   }
 
@@ -3640,21 +3257,15 @@ extension AnimeQueryProperty on QueryBuilder<Anime, Anime, QQueryProperty> {
   }
 
   QueryBuilder<Anime, List<PlaybackEntry>, QQueryOperations>
-      playbackPositionsProperty() {
+  playbackPositionsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'playbackPositions');
     });
   }
 
-  QueryBuilder<Anime, String, QQueryOperations> progressFractionProperty() {
+  QueryBuilder<Anime, String?, QQueryOperations> scanTitleProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'progressFraction');
-    });
-  }
-
-  QueryBuilder<Anime, String, QQueryOperations> progressPercentageProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'progressPercentage');
+      return query.addPropertyName(r'scanTitle');
     });
   }
 
@@ -3665,15 +3276,15 @@ extension AnimeQueryProperty on QueryBuilder<Anime, Anime, QQueryProperty> {
   }
 
   QueryBuilder<Anime, List<EpisodeSkipData>, QQueryOperations>
-      skipDataProperty() {
+  skipDataProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'skipData');
     });
   }
 
-  QueryBuilder<Anime, List<String>, QQueryOperations> sortedEpisodesProperty() {
+  QueryBuilder<Anime, List<String>, QQueryOperations> sourceFoldersProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'sortedEpisodes');
+      return query.addPropertyName(r'sourceFolders');
     });
   }
 
@@ -3689,14 +3300,8 @@ extension AnimeQueryProperty on QueryBuilder<Anime, Anime, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Anime, double, QQueryOperations> watchProgressProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'watchProgress');
-    });
-  }
-
   QueryBuilder<Anime, List<String>, QQueryOperations>
-      watchedEpisodesProperty() {
+  watchedEpisodesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'watchedEpisodes');
     });
@@ -3708,7 +3313,7 @@ extension AnimeQueryProperty on QueryBuilder<Anime, Anime, QQueryProperty> {
 // **************************************************************************
 
 // coverage:ignore-file
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types, experimental_member_use
 
 const EpisodeNoteSchema = Schema(
   name: r'EpisodeNote',
@@ -3724,17 +3329,14 @@ const EpisodeNoteSchema = Schema(
       name: r'episodePath',
       type: IsarType.string,
     ),
-    r'text': PropertySchema(
-      id: 2,
-      name: r'text',
-      type: IsarType.string,
-    ),
+    r'text': PropertySchema(id: 2, name: r'text', type: IsarType.string),
     r'timestampSeconds': PropertySchema(
       id: 3,
       name: r'timestampSeconds',
       type: IsarType.long,
-    )
+    ),
   },
+
   estimateSize: _episodeNoteEstimateSize,
   serialize: _episodeNoteSerialize,
   deserialize: _episodeNoteDeserialize,
@@ -3811,145 +3413,147 @@ P _episodeNoteDeserializeProp<P>(
 extension EpisodeNoteQueryFilter
     on QueryBuilder<EpisodeNote, EpisodeNote, QFilterCondition> {
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      createdAtIsNull() {
+  createdAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'createdAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'createdAt'),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      createdAtIsNotNull() {
+  createdAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'createdAt',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'createdAt'),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      createdAtEqualTo(DateTime? value) {
+  createdAtEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'createdAt', value: value),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      createdAtGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  createdAtGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'createdAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      createdAtLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  createdAtLessThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'createdAt',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'createdAt',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      createdAtBetween(
+  createdAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'createdAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'createdAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathIsNull() {
+  episodePathIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'episodePath',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'episodePath'),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathIsNotNull() {
+  episodePathIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'episodePath',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'episodePath'),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  episodePathEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathLessThan(
+  episodePathGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathBetween(
+  episodePathLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
+  episodePathBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -3957,101 +3561,103 @@ extension EpisodeNoteQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'episodePath',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'episodePath',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  episodePathStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  episodePathEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathContains(String value, {bool caseSensitive = true}) {
+  episodePathContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathMatches(String pattern, {bool caseSensitive = true}) {
+  episodePathMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'episodePath',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'episodePath',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathIsEmpty() {
+  episodePathIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'episodePath',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'episodePath', value: ''),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      episodePathIsNotEmpty() {
+  episodePathIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'episodePath',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'episodePath', value: ''),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition> textIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'text',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'text'),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      textIsNotNull() {
+  textIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'text',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'text'),
+      );
     });
   }
 
@@ -4060,11 +3666,13 @@ extension EpisodeNoteQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'text',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'text',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -4074,12 +3682,14 @@ extension EpisodeNoteQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'text',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'text',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -4089,12 +3699,14 @@ extension EpisodeNoteQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'text',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'text',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -4106,14 +3718,16 @@ extension EpisodeNoteQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'text',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'text',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -4122,11 +3736,13 @@ extension EpisodeNoteQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'text',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'text',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -4135,128 +3751,133 @@ extension EpisodeNoteQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'text',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'text',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition> textContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'text',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'text',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition> textMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'text',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'text',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition> textIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'text',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'text', value: ''),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      textIsNotEmpty() {
+  textIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'text',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'text', value: ''),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      timestampSecondsIsNull() {
+  timestampSecondsIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'timestampSeconds',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'timestampSeconds'),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      timestampSecondsIsNotNull() {
+  timestampSecondsIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'timestampSeconds',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'timestampSeconds'),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      timestampSecondsEqualTo(int? value) {
+  timestampSecondsEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'timestampSeconds',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'timestampSeconds', value: value),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      timestampSecondsGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
+  timestampSecondsGreaterThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'timestampSeconds',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'timestampSeconds',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      timestampSecondsLessThan(
-    int? value, {
-    bool include = false,
-  }) {
+  timestampSecondsLessThan(int? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'timestampSeconds',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'timestampSeconds',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeNote, EpisodeNote, QAfterFilterCondition>
-      timestampSecondsBetween(
+  timestampSecondsBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'timestampSeconds',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'timestampSeconds',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -4265,23 +3886,16 @@ extension EpisodeNoteQueryObject
     on QueryBuilder<EpisodeNote, EpisodeNote, QFilterCondition> {}
 
 // coverage:ignore-file
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types, experimental_member_use
 
 const PlaybackEntrySchema = Schema(
   name: r'PlaybackEntry',
   id: 4370651259175256439,
   properties: {
-    r'path': PropertySchema(
-      id: 0,
-      name: r'path',
-      type: IsarType.string,
-    ),
-    r'position': PropertySchema(
-      id: 1,
-      name: r'position',
-      type: IsarType.long,
-    )
+    r'path': PropertySchema(id: 0, name: r'path', type: IsarType.string),
+    r'position': PropertySchema(id: 1, name: r'position', type: IsarType.long),
   },
+
   estimateSize: _playbackEntryEstimateSize,
   serialize: _playbackEntrySerialize,
   deserialize: _playbackEntryDeserialize,
@@ -4344,20 +3958,20 @@ P _playbackEntryDeserializeProp<P>(
 extension PlaybackEntryQueryFilter
     on QueryBuilder<PlaybackEntry, PlaybackEntry, QFilterCondition> {
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathIsNull() {
+  pathIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'path',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'path'),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathIsNotNull() {
+  pathIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'path',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'path'),
+      );
     });
   }
 
@@ -4366,43 +3980,49 @@ extension PlaybackEntryQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'path',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'path',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathGreaterThan(
+  pathGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'path',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'path',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathLessThan(
+  pathLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'path',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'path',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -4414,159 +4034,161 @@ extension PlaybackEntryQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'path',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'path',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  pathStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'path',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'path',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  pathEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'path',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'path',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathContains(String value, {bool caseSensitive = true}) {
+  pathContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'path',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'path',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition> pathMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'path',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'path',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      pathIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'path',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      positionIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'position',
-      ));
-    });
-  }
-
-  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      positionIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'position',
-      ));
-    });
-  }
-
-  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      positionEqualTo(int? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'position',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      positionGreaterThan(
-    int? value, {
-    bool include = false,
+    String pattern, {
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'position',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'path',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      positionLessThan(
-    int? value, {
-    bool include = false,
-  }) {
+  pathIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'position',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'path', value: ''),
+      );
     });
   }
 
   QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
-      positionBetween(
+  pathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'path', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
+  positionIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'position'),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
+  positionIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'position'),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
+  positionEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'position', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
+  positionGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'position',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
+  positionLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'position',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<PlaybackEntry, PlaybackEntry, QAfterFilterCondition>
+  positionBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'position',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'position',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -4575,7 +4197,7 @@ extension PlaybackEntryQueryObject
     on QueryBuilder<PlaybackEntry, PlaybackEntry, QFilterCondition> {}
 
 // coverage:ignore-file
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types, experimental_member_use
 
 const EpisodeSkipDataSchema = Schema(
   name: r'EpisodeSkipData',
@@ -4590,9 +4212,11 @@ const EpisodeSkipDataSchema = Schema(
       id: 1,
       name: r'intervals',
       type: IsarType.objectList,
+
       target: r'SkipIntervalDb',
-    )
+    ),
   },
+
   estimateSize: _episodeSkipDataEstimateSize,
   serialize: _episodeSkipDataSerialize,
   deserialize: _episodeSkipDataDeserialize,
@@ -4616,8 +4240,11 @@ int _episodeSkipDataEstimateSize(
     final offsets = allOffsets[SkipIntervalDb]!;
     for (var i = 0; i < object.intervals.length; i++) {
       final value = object.intervals[i];
-      bytesCount +=
-          SkipIntervalDbSchema.estimateSize(value, offsets, allOffsets);
+      bytesCount += SkipIntervalDbSchema.estimateSize(
+        value,
+        offsets,
+        allOffsets,
+      );
     }
   }
   return bytesCount;
@@ -4646,7 +4273,8 @@ EpisodeSkipData _episodeSkipDataDeserialize(
 ) {
   final object = EpisodeSkipData();
   object.episodePath = reader.readStringOrNull(offsets[0]);
-  object.intervals = reader.readObjectList<SkipIntervalDb>(
+  object.intervals =
+      reader.readObjectList<SkipIntervalDb>(
         offsets[1],
         SkipIntervalDbSchema.deserialize,
         allOffsets,
@@ -4667,12 +4295,13 @@ P _episodeSkipDataDeserializeProp<P>(
       return (reader.readStringOrNull(offset)) as P;
     case 1:
       return (reader.readObjectList<SkipIntervalDb>(
-            offset,
-            SkipIntervalDbSchema.deserialize,
-            allOffsets,
-            SkipIntervalDb(),
-          ) ??
-          []) as P;
+                offset,
+                SkipIntervalDbSchema.deserialize,
+                allOffsets,
+                SkipIntervalDb(),
+              ) ??
+              [])
+          as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -4681,71 +4310,74 @@ P _episodeSkipDataDeserializeProp<P>(
 extension EpisodeSkipDataQueryFilter
     on QueryBuilder<EpisodeSkipData, EpisodeSkipData, QFilterCondition> {
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathIsNull() {
+  episodePathIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'episodePath',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'episodePath'),
+      );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathIsNotNull() {
+  episodePathIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'episodePath',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'episodePath'),
+      );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  episodePathEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathLessThan(
+  episodePathGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathBetween(
+  episodePathLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
+  episodePathBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -4753,160 +4385,126 @@ extension EpisodeSkipDataQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'episodePath',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'episodePath',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'episodePath',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'episodePath',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      episodePathIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'episodePath',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      intervalsLengthEqualTo(int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'intervals',
-        length,
-        true,
-        length,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'episodePath',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      intervalsIsEmpty() {
+  episodePathStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'intervals',
-        0,
-        true,
-        0,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      intervalsIsNotEmpty() {
+  episodePathEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'intervals',
-        0,
-        false,
-        999999,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      intervalsLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
+  episodePathContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'intervals',
-        0,
-        true,
-        length,
-        include,
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'episodePath',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      intervalsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
+  episodePathMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.listLength(
-        r'intervals',
-        length,
-        include,
-        999999,
-        true,
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'episodePath',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      intervalsLengthBetween(
+  episodePathIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'episodePath', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
+  episodePathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'episodePath', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
+  intervalsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'intervals', length, true, length, true);
+    });
+  }
+
+  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
+  intervalsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'intervals', 0, true, 0, true);
+    });
+  }
+
+  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
+  intervalsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'intervals', 0, false, 999999, true);
+    });
+  }
+
+  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
+  intervalsLengthLessThan(int length, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'intervals', 0, true, length, include);
+    });
+  }
+
+  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
+  intervalsLengthGreaterThan(int length, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(r'intervals', length, include, 999999, true);
+    });
+  }
+
+  QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
+  intervalsLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -4927,7 +4525,7 @@ extension EpisodeSkipDataQueryFilter
 extension EpisodeSkipDataQueryObject
     on QueryBuilder<EpisodeSkipData, EpisodeSkipData, QFilterCondition> {
   QueryBuilder<EpisodeSkipData, EpisodeSkipData, QAfterFilterCondition>
-      intervalsElement(FilterQuery<SkipIntervalDb> q) {
+  intervalsElement(FilterQuery<SkipIntervalDb> q) {
     return QueryBuilder.apply(this, (query) {
       return query.object(q, r'intervals');
     });
@@ -4935,28 +4533,21 @@ extension EpisodeSkipDataQueryObject
 }
 
 // coverage:ignore-file
-// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types, experimental_member_use
 
 const SkipIntervalDbSchema = Schema(
   name: r'SkipIntervalDb',
   id: -6299560242180249208,
   properties: {
-    r'endTime': PropertySchema(
-      id: 0,
-      name: r'endTime',
-      type: IsarType.double,
-    ),
+    r'endTime': PropertySchema(id: 0, name: r'endTime', type: IsarType.double),
     r'startTime': PropertySchema(
       id: 1,
       name: r'startTime',
       type: IsarType.double,
     ),
-    r'type': PropertySchema(
-      id: 2,
-      name: r'type',
-      type: IsarType.string,
-    )
+    r'type': PropertySchema(id: 2, name: r'type', type: IsarType.string),
   },
+
   estimateSize: _skipIntervalDbEstimateSize,
   serialize: _skipIntervalDbSerialize,
   deserialize: _skipIntervalDbDeserialize,
@@ -5023,71 +4614,77 @@ P _skipIntervalDbDeserializeProp<P>(
 extension SkipIntervalDbQueryFilter
     on QueryBuilder<SkipIntervalDb, SkipIntervalDb, QFilterCondition> {
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      endTimeIsNull() {
+  endTimeIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'endTime',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'endTime'),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      endTimeIsNotNull() {
+  endTimeIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'endTime',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'endTime'),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      endTimeEqualTo(
-    double? value, {
-    double epsilon = Query.epsilon,
-  }) {
+  endTimeEqualTo(double? value, {double epsilon = Query.epsilon}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'endTime',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'endTime',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      endTimeGreaterThan(
-    double? value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'endTime',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      endTimeLessThan(
+  endTimeGreaterThan(
     double? value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'endTime',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'endTime',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      endTimeBetween(
+  endTimeLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'endTime',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
+  endTimeBetween(
     double? lower,
     double? upper, {
     bool includeLower = true,
@@ -5095,83 +4692,92 @@ extension SkipIntervalDbQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'endTime',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'endTime',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      startTimeIsNull() {
+  startTimeIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'startTime',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'startTime'),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      startTimeIsNotNull() {
+  startTimeIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'startTime',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'startTime'),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      startTimeEqualTo(
-    double? value, {
-    double epsilon = Query.epsilon,
-  }) {
+  startTimeEqualTo(double? value, {double epsilon = Query.epsilon}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'startTime',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'startTime',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      startTimeGreaterThan(
-    double? value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'startTime',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      startTimeLessThan(
+  startTimeGreaterThan(
     double? value, {
     bool include = false,
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'startTime',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'startTime',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      startTimeBetween(
+  startTimeLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'startTime',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
+  startTimeBetween(
     double? lower,
     double? upper, {
     bool includeLower = true,
@@ -5179,83 +4785,89 @@ extension SkipIntervalDbQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'startTime',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'startTime',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeIsNull() {
+  typeIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'type',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'type'),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeIsNotNull() {
+  typeIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'type',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'type'),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  typeEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeLessThan(
+  typeGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeBetween(
+  typeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
+  typeBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -5263,84 +4875,86 @@ extension SkipIntervalDbQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'type',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'type',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  typeStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  typeEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeContains(String value, {bool caseSensitive = true}) {
+  typeContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'type',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeMatches(String pattern, {bool caseSensitive = true}) {
+  typeMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'type',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'type',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeIsEmpty() {
+  typeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'type',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'type', value: ''),
+      );
     });
   }
 
   QueryBuilder<SkipIntervalDb, SkipIntervalDb, QAfterFilterCondition>
-      typeIsNotEmpty() {
+  typeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'type',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'type', value: ''),
+      );
     });
   }
 }

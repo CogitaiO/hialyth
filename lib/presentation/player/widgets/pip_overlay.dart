@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../../../providers/player/player_provider.dart';
+import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../core/localization/l10n.dart';
+import '../../../../widgets/glass_surface.dart';
 
 class PipOverlay extends ConsumerWidget {
   const PipOverlay({super.key});
@@ -15,12 +18,16 @@ class PipOverlay extends ConsumerWidget {
     final isPlaying = ref.watch(playerProvider.select((s) => s.isPlaying));
     final volume = ref.watch(playerProvider.select((s) => s.volume));
     final notifier = ref.read(playerProvider.notifier);
+    final reduceTransparency =
+        ref.watch(settingsProvider.select((s) => s.reduceTransparency));
 
     return IgnorePointer(
       ignoring: !isVisible,
       child: AnimatedOpacity(
         opacity: isVisible ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 200),
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
         child: Container(
           color: tokens.scrim(0.54),
           child: Stack(
@@ -34,46 +41,54 @@ class PipOverlay extends ConsumerWidget {
                 ),
               ),
               Center(
-                child: IconButton(
-                  iconSize: 48,
-                  icon: Icon(
-                    isPlaying
-                        ? AppIcons.pauseCircle
-                        : AppIcons.playCircle,
-                    color: tokens.textPrimary,
+                child: GlassSurface(
+                  reduceTransparency: reduceTransparency,
+                  borderRadius: BorderRadius.circular(999),
+                  padding: const EdgeInsets.all(AppSpacing.xs),
+                  child: IconButton(
+                    iconSize: 48,
+                    icon: Icon(
+                      isPlaying ? AppIcons.pauseCircle : AppIcons.playCircle,
+                      color: tokens.textPrimary,
+                    ),
+                    onPressed: () => notifier.togglePlay(),
                   ),
-                  onPressed: () => notifier.togglePlay(),
                 ),
               ),
               Positioned(
                 bottom: AppSpacing.xs,
                 left: AppSpacing.xs,
                 right: AppSpacing.xs,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      iconSize: 20,
-                      icon: Icon(
-                        volume == 0
-                            ? AppIcons.volumeOff
-                            : (volume < 50
-                                ? AppIcons.volumeDown
-                                : AppIcons.volumeUp),
-                        color: tokens.textPrimary,
+                child: GlassSurface(
+                  reduceTransparency: reduceTransparency,
+                  borderRadius: BorderRadius.circular(999),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        iconSize: 20,
+                        icon: Icon(
+                          volume == 0
+                              ? AppIcons.volumeOff
+                              : (volume < 50
+                                  ? AppIcons.volumeDown
+                                  : AppIcons.volumeUp),
+                          color: tokens.textPrimary,
+                        ),
+                        onPressed: () => notifier.toggleMute(),
                       ),
-                      onPressed: () => notifier.toggleMute(),
-                    ),
-                    IconButton(
-                      iconSize: 20,
-                      tooltip: "Return to player",
-                      icon: Icon(
-                        AppIcons.openExternal,
-                        color: tokens.textPrimary,
+                      IconButton(
+                        iconSize: 20,
+                        tooltip: context.l10n.playerReturnToPlayer,
+                        icon: Icon(
+                          AppIcons.openExternal,
+                          color: tokens.textPrimary,
+                        ),
+                        onPressed: () => notifier.togglePiP(),
                       ),
-                      onPressed: () => notifier.togglePiP(),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

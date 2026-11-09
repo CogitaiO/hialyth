@@ -8,7 +8,10 @@ class PlayerPlaybackState {
     this.videoPath,
     this.playlist = const [],
     this.windowTitle,
+    this.sessionId = 0,
     this.isPlaying = false,
+    this.isLoading = false,
+    this.errorCode,
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.playbackSpeed = 1.0,
@@ -21,7 +24,10 @@ class PlayerPlaybackState {
   final String? videoPath;
   final List<String> playlist;
   final String? windowTitle;
+  final int sessionId;
   final bool isPlaying;
+  final bool isLoading;
+  final String? errorCode;
   final Duration position;
   final Duration duration;
   final double playbackSpeed;
@@ -34,7 +40,11 @@ class PlayerPlaybackState {
     String? videoPath,
     List<String>? playlist,
     String? windowTitle,
+    int? sessionId,
     bool? isPlaying,
+    bool? isLoading,
+    String? errorCode,
+    bool clearError = false,
     Duration? position,
     Duration? duration,
     double? playbackSpeed,
@@ -48,7 +58,10 @@ class PlayerPlaybackState {
       videoPath: videoPath ?? this.videoPath,
       playlist: playlist ?? this.playlist,
       windowTitle: windowTitle ?? this.windowTitle,
+      sessionId: sessionId ?? this.sessionId,
       isPlaying: isPlaying ?? this.isPlaying,
+      isLoading: isLoading ?? this.isLoading,
+      errorCode: clearError ? null : (errorCode ?? this.errorCode),
       position: position ?? this.position,
       duration: duration ?? this.duration,
       playbackSpeed: playbackSpeed ?? this.playbackSpeed,
@@ -146,6 +159,8 @@ class AppPlayerState {
   List<String> get playlist => playback.playlist;
   String? get windowTitle => playback.windowTitle;
   bool get isPlaying => playback.isPlaying;
+  bool get isLoading => playback.isLoading;
+  String? get errorCode => playback.errorCode;
   Duration get position => playback.position;
   Duration get duration => playback.duration;
   double get playbackSpeed => playback.playbackSpeed;

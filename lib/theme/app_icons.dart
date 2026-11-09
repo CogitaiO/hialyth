@@ -11,6 +11,8 @@ abstract final class AppIcons {
   static const close = Iconsax.close_circle_copy;
   static const search = Iconsax.search_normal_copy;
   static const settings = Iconsax.setting_2_copy;
+  static const sort = Iconsax.sort_copy;
+  static const list = Iconsax.row_vertical_copy;
   static const more = Iconsax.more_copy;
   static const dropdown = Iconsax.arrow_down_1_copy;
 

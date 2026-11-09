@@ -2,49 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:discord_rpc/discord_rpc.dart';
 import 'dart:io';
 import 'core/logger.dart';
+import 'core/frame_metrics.dart';
 import 'domain/anime.dart';
 import 'data/repositories/anime_repository.dart';
 import 'providers/repositories_provider.dart';
 import 'presentation/library_screen.dart';
 import 'providers/library_provider.dart';
 import 'providers/settings_provider.dart';
+import 'theme/app_theme.dart';
+import 'l10n/app_localizations.dart';
+import 'presentation/debug/design_system_gallery.dart';
+import 'core/app_features.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme_extension.dart';
+Future<void> main() => runHialyth();
 
-void main() async {
+Future<void> runHialyth() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MediaKit.ensureInitialized();
-  await windowManager.ensureInitialized();
-  await initLogger();
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    try {
-      DiscordRPC.initialize();
-    } catch (e) {
-      talker.debug('DiscordRPC initialization failed: $e');
-    }
-  }
-  WindowOptions windowOptions = const WindowOptions(
-    size: Size(1280, 720),
-    center: true,
-    titleBarStyle: TitleBarStyle.hidden,
-  );
-
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
-
   try {
+    MediaKit.ensureInitialized();
+    final isDesktop =
+        Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    if (isDesktop) {
+      await windowManager.ensureInitialized();
+    }
+    await initLogger();
+    startFrameMetrics();
+    if (isDesktop) {
+      try {
+        DiscordRPC.initialize();
+      } catch (e) {
+        talker.debug('DiscordRPC initialization failed: $e');
+      }
+    }
+    if (isDesktop) {
+      const windowOptions = WindowOptions(
+        size: Size(1280, 720),
+        minimumSize: Size(840, 560),
+        center: true,
+        titleBarStyle: TitleBarStyle.hidden,
+      );
+
+      windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      });
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    final dir = await getApplicationDocumentsDirectory();
-    final isar = await Isar.open([AnimeSchema], directory: dir.path);
+    final databaseDirectory = await getApplicationDocumentsDirectory();
+    final isar =
+        await Isar.open([AnimeSchema], directory: databaseDirectory.path);
     final repository = AnimeRepository(isar);
 
     FlutterError.onError = (details) {
@@ -53,7 +68,7 @@ void main() async {
 
     PlatformDispatcher.instance.onError = (error, stack) {
       talker.handle(error, stack, 'Unhandled asynchronous error');
-      return true; // Keep the app alive after an unhandled async error.
+      return true;
     };
 
     runApp(
@@ -67,6 +82,8 @@ void main() async {
     );
   } catch (e, st) {
     talker.handle(e, st, 'Critical startup error');
+    runApp(_StartupErrorApp(
+        onRetry: () => runHialyth()));
   }
 }
 
@@ -75,36 +92,86 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const appTheme = AppThemeExtension.dark();
-    final accentColorValue = ref.watch(settingsProvider).accentColorValue;
+    final settings = ref.watch(settingsProvider);
+    final accentColorValue = settings.accentColorValue;
     final accentColor = Color(accentColorValue);
-    final onAccentColor = AppPalette.onAccent(accentColor);
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: accentColor,
-      brightness: Brightness.dark,
-    ).copyWith(
-      primary: accentColor,
-      onPrimary: onAccentColor,
-      secondary: accentColor,
-      onSecondary: onAccentColor,
-      surface: appTheme.pageSurface,
-    );
+
     return MaterialApp(
       title: 'Nekaido',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        useMaterial3: true,
-        scaffoldBackgroundColor: appTheme.pageSurface,
-        colorScheme: colorScheme,
-        textSelectionTheme: TextSelectionThemeData(
-          cursorColor: accentColor,
-          selectionColor: accentColor.withValues(alpha: 0.3),
-          selectionHandleColor: accentColor,
+      theme: AppFeatures.designV2
+          ? AppTheme.dark(accent: accentColor)
+          : _legacyTheme(accentColor),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      routes: {
+        if (kDebugMode) '/_design': (_) => const DesignSystemGallery(),
+      },
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          disableAnimations:
+              settings.reduceMotion || MediaQuery.disableAnimationsOf(context),
         ),
-        extensions: const [appTheme],
+        child: HeroMode(
+          enabled: !(settings.reduceMotion ||
+              MediaQuery.disableAnimationsOf(context)),
+          child: child!,
+        ),
       ),
       home: const LibraryScreen(),
     );
   }
+}
+
+ThemeData _legacyTheme(Color accentColor) {
+  const appTheme = AppThemeExtension.dark();
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: accentColor,
+    brightness: Brightness.dark,
+  ).copyWith(
+    primary: accentColor,
+    onPrimary: AppPalette.onAccent(accentColor),
+    secondary: accentColor,
+    onSecondary: AppPalette.onAccent(accentColor),
+    surface: appTheme.pageSurface,
+  );
+
+  return ThemeData.dark(useMaterial3: true).copyWith(
+    scaffoldBackgroundColor: appTheme.pageSurface,
+    colorScheme: colorScheme,
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: accentColor,
+      selectionColor: accentColor.withValues(alpha: 0.3),
+      selectionHandleColor: accentColor,
+    ),
+    extensions: const [appTheme],
+  );
+}
+
+class _StartupErrorApp extends StatelessWidget {
+  const _StartupErrorApp({required this.onRetry});
+  final VoidCallback onRetry;
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+        theme: AppTheme.dark(),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Builder(
+            builder: (context) => Scaffold(
+                    body: Center(
+                        child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text(AppLocalizations.of(context).startupFailed,
+                        style: Theme.of(context).textTheme.headlineMedium),
+                    const SizedBox(height: 16),
+                    Text(AppLocalizations.of(context).startupFailedBody,
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                        onPressed: onRetry,
+                        child: Text(AppLocalizations.of(context).commonRetry)),
+                  ]),
+                )))),
+      );
 }
