@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -22,36 +22,44 @@ import 'presentation/debug/design_system_gallery.dart';
 import 'core/app_features.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme_extension.dart';
+Future<void> main() => runHialyth();
 
-void main() async {
+Future<void> runHialyth() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     MediaKit.ensureInitialized();
-    await windowManager.ensureInitialized();
+    final isDesktop =
+        Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    if (isDesktop) {
+      await windowManager.ensureInitialized();
+    }
     await initLogger();
     startFrameMetrics();
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (isDesktop) {
       try {
         DiscordRPC.initialize();
       } catch (e) {
         talker.debug('DiscordRPC initialization failed: $e');
       }
     }
-    WindowOptions windowOptions = const WindowOptions(
-      size: Size(1280, 720),
-      minimumSize: Size(840, 560),
-      center: true,
-      titleBarStyle: TitleBarStyle.hidden,
-    );
+    if (isDesktop) {
+      const windowOptions = WindowOptions(
+        size: Size(1280, 720),
+        minimumSize: Size(840, 560),
+        center: true,
+        titleBarStyle: TitleBarStyle.hidden,
+      );
 
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
+      windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      });
+    }
 
     final prefs = await SharedPreferences.getInstance();
-    final dir = await getApplicationDocumentsDirectory();
-    final isar = await Isar.open([AnimeSchema], directory: dir.path);
+    final databaseDirectory = await getApplicationDocumentsDirectory();
+    final isar =
+        await Isar.open([AnimeSchema], directory: databaseDirectory.path);
     final repository = AnimeRepository(isar);
 
     FlutterError.onError = (details) {
@@ -74,7 +82,8 @@ void main() async {
     );
   } catch (e, st) {
     talker.handle(e, st, 'Critical startup error');
-    runApp(_StartupErrorApp(onRetry: main));
+    runApp(_StartupErrorApp(
+        onRetry: () => runHialyth()));
   }
 }
 

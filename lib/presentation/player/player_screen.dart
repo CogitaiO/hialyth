@@ -12,6 +12,7 @@ import '../player/widgets/intents.dart';
 import '../player/widgets/pip_overlay.dart';
 import '../../core/logger.dart';
 import 'dart:async';
+import 'dart:io';
 import '../../theme/app_theme_extension.dart';
 import '../../core/localization/l10n.dart';
 import 'widgets/player_status_overlay.dart';
@@ -144,8 +145,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   return null;
                 }
 
-                bool isFull = await windowManager.isFullScreen();
-                if (isFull) {
+                final isDesktop = Platform.isWindows ||
+                    Platform.isLinux ||
+                    Platform.isMacOS;
+                if (isDesktop && await windowManager.isFullScreen()) {
                   await windowManager.setFullScreen(false);
                 } else {
                   if (!context.mounted) return null;

@@ -135,10 +135,10 @@ class AnimeDialogs {
                       suffixIcon: IconButton(
                         icon: Icon(AppIcons.imageSearch, color: accentColor),
                         onPressed: () async {
-                          FilePickerResult? result =
-                              await FilePicker.pickFiles(type: FileType.image);
-                          if (result != null) {
-                            coverController.text = result.files.single.path!;
+                          final result =
+                              await FilePicker.pickFile(type: FileType.image);
+                          if (result?.path != null) {
+                            coverController.text = result!.path!;
                           }
                         },
                       ),

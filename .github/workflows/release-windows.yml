@@ -1,0 +1,25 @@
+name: Windows release build
+on:
+  push:
+    branches: [release/v0.1.0]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - name: Package Windows build
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath Hialyth-0.1.0-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Hialyth-0.1.0-windows-x64
+          path: Hialyth-0.1.0-windows-x64.zip
+          if-no-files-found: error

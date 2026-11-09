@@ -12,6 +12,7 @@ import 'package:nekaido_pre/data/services/file_discovery_service.dart';
 import 'package:nekaido_pre/domain/anime.dart';
 import 'package:nekaido_pre/l10n/app_localizations.dart';
 import 'package:nekaido_pre/presentation/library_screen.dart';
+import 'package:nekaido_pre/presentation/library/library_components.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import 'package:nekaido_pre/providers/library_provider.dart';
 import 'package:nekaido_pre/theme/app_theme.dart';
@@ -262,6 +263,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      expect(find.byType(ContinueWatchingSection), findsOneWidget);
+      expect(find.text('Continue watching'), findsOneWidget);
       await expectLater(find.byType(Scaffold),
           matchesGoldenFile('goldens/library_$label.png'));
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);

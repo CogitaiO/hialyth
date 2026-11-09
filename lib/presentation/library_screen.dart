@@ -27,20 +27,23 @@ Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(result.cancelled
+          content: Text(
+            result.cancelled
                 ? context.l10n.libraryScanCancelled
                 : result.errors.isNotEmpty
-                    ? context.l10n.libraryScanError
-                    : result.warnings > 0
-                        ? context.l10n.libraryMetadataWarning
-                        : context.l10n.libraryFolderAdded)),
+                ? context.l10n.libraryScanError
+                : result.warnings > 0
+                ? context.l10n.libraryMetadataWarning
+                : context.l10n.libraryFolderAdded,
+          ),
+        ),
       );
     }
   } catch (_) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.libraryScanError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.libraryScanError)));
     }
   }
 }
@@ -51,36 +54,50 @@ class LibraryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.keyF, control: true): () =>
-              ref.read(librarySearchFocusProvider).requestFocus(),
-          const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () =>
-              ref.read(librarySearchFocusProvider).requestFocus(),
-        },
-        child: Focus(
-            autofocus: true,
-            child: LayoutBuilder(builder: (context, constraints) {
-              final compact = constraints.maxWidth < AppBreakpoints.compact;
-              return Scaffold(
-                drawer: compact
-                    ? const Drawer(child: _LibraryNavigation(expanded: true))
-                    : null,
-                body: Column(children: [
-                  const CustomTitleBar(),
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () =>
+            ref.read(librarySearchFocusProvider).requestFocus(),
+        const SingleActivator(LogicalKeyboardKey.keyF, meta: true): () =>
+            ref.read(librarySearchFocusProvider).requestFocus(),
+      },
+      child: Focus(
+        autofocus: true,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < AppBreakpoints.compact;
+            return Scaffold(
+              drawer: compact
+                  ? const Drawer(child: _LibraryNavigation(expanded: true))
+                  : null,
+              body: Column(
+                children: [
+                  CustomTitleBar(
+                                      ),
                   Expanded(
-                      child: Row(children: [
-                    if (!compact)
-                      _LibraryNavigation(
-                          expanded: constraints.maxWidth >= 1200),
-                    const Expanded(
-                        child: Column(children: [
-                      _TopBar(),
-                      Expanded(child: _ContentGrid()),
-                    ])),
-                  ])),
-                ]),
-              );
-            })));
+                    child: Row(
+                      children: [
+                        if (!compact)
+                          _LibraryNavigation(
+                            expanded: constraints.maxWidth >= 1200,
+                          ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _TopBar(),
+                              Expanded(child: _ContentGrid()),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 
@@ -108,7 +125,7 @@ class _LibraryNavigation extends ConsumerWidget {
         AnimeStatus.watching,
         AnimeStatus.planned,
         AnimeStatus.completed,
-        AnimeStatus.dropped
+        AnimeStatus.dropped,
       ])
         titles.where((title) => title.status == status).length,
       ref.watch(allCollectionsProvider).length,
@@ -122,107 +139,143 @@ class _LibraryNavigation extends ConsumerWidget {
         border: Border(right: BorderSide(color: colors.borderSubtle)),
       ),
       child: Material(
-          color: Colors.transparent,
-          child: SafeArea(
-              child: Column(children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
-              child:
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(AppIcons.appLogo, color: scheme.primary, size: 28),
-                if (expanded) ...[
-                  const SizedBox(width: 12),
-                  Expanded(
-                      child: Text(context.l10n.appTitle,
-                          style: Theme.of(context).textTheme.titleLarge)),
-                ],
-              ]),
-            ),
-            Expanded(
+        color: Colors.transparent,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 28,
+                  horizontal: 16,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(AppIcons.appLogo, color: scheme.primary, size: 28),
+                    if (expanded) ...[
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          context.l10n.appTitle,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Expanded(
                 child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    children: [
-                  for (var i = 0; i < destinations.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Tooltip(
-                        message: expanded ? '' : destinations[i].$1,
-                        child: Material(
-                          color: selected == i
-                              ? scheme.primary.withValues(alpha: 0.13)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          child: ListTile(
-                            selected: selected == i,
-                            selectedColor: scheme.primary,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: expanded ? 12 : 10),
-                            leading: Icon(destinations[i].$2, size: 24),
-                            title: expanded ? Text(destinations[i].$1) : null,
-                            trailing: expanded
-                                ? Text('${counts[i]}',
-                                    style:
-                                        Theme.of(context).textTheme.labelMedium)
-                                : null,
-                            onTap: () {
-                              ref
-                                  .read(selectedSidebarIndexProvider.notifier)
-                                  .state = i;
-                              if (i == 5 &&
-                                  ref.read(selectedCollectionProvider) ==
-                                      null) {
-                                final collections =
-                                    ref.read(allCollectionsProvider);
-                                if (collections.isNotEmpty) {
-                                  ref
-                                      .read(selectedCollectionProvider.notifier)
-                                      .state = collections.first;
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  children: [
+                    for (var i = 0; i < destinations.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Tooltip(
+                          message: expanded ? '' : destinations[i].$1,
+                          child: Material(
+                            color: selected == i
+                                ? scheme.primary.withValues(alpha: 0.13)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            child: ListTile(
+                              selected: selected == i,
+                              selectedColor: scheme.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: expanded ? 12 : 10,
+                              ),
+                              leading: Icon(destinations[i].$2, size: 24),
+                              title: expanded ? Text(destinations[i].$1) : null,
+                              trailing: expanded
+                                  ? Text(
+                                      '${counts[i]}',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.labelMedium,
+                                    )
+                                  : null,
+                              onTap: () {
+                                ref
+                                        .read(
+                                          selectedSidebarIndexProvider.notifier,
+                                        )
+                                        .state =
+                                    i;
+                                if (i == 5 &&
+                                    ref.read(selectedCollectionProvider) ==
+                                        null) {
+                                  final collections = ref.read(
+                                    allCollectionsProvider,
+                                  );
+                                  if (collections.isNotEmpty) {
+                                    ref
+                                        .read(
+                                          selectedCollectionProvider.notifier,
+                                        )
+                                        .state = collections
+                                        .first;
+                                  }
                                 }
-                              }
-                              Scaffold.of(context).closeDrawer();
-                            },
+                                Scaffold.of(context).closeDrawer();
+                              },
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  if (expanded && selected == 5)
-                    for (final collection in ref.watch(allCollectionsProvider))
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(AppIcons.folder, size: 18),
-                        title: Text(collection,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
-                        selected:
-                            ref.watch(selectedCollectionProvider) == collection,
-                        onTap: () {
-                          ref.read(selectedCollectionProvider.notifier).state =
-                              collection;
-                          Scaffold.of(context).closeDrawer();
-                        },
-                      ),
-                ])),
-            const Divider(indent: 16, endIndent: 16),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Tooltip(
-                message: context.l10n.settingsTitle,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                  leading: const Icon(AppIcons.settings, size: 24),
-                  title: expanded ? Text(context.l10n.settingsTitle) : null,
-                  onTap: () {
-                    Scaffold.of(context).closeDrawer();
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const SettingsScreen()));
-                  },
+                    if (expanded && selected == 5)
+                      for (final collection in ref.watch(
+                        allCollectionsProvider,
+                      ))
+                        ListTile(
+                          dense: true,
+                          leading: const Icon(AppIcons.folder, size: 18),
+                          title: Text(
+                            collection,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          selected:
+                              ref.watch(selectedCollectionProvider) ==
+                              collection,
+                          onTap: () {
+                            ref
+                                    .read(selectedCollectionProvider.notifier)
+                                    .state =
+                                collection;
+                            Scaffold.of(context).closeDrawer();
+                          },
+                        ),
+                  ],
                 ),
               ),
-            ),
-          ]))),
+              const Divider(indent: 16, endIndent: 16),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Tooltip(
+                  message: context.l10n.settingsTitle,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                    leading: const Icon(AppIcons.settings, size: 24),
+                    title: expanded ? Text(context.l10n.settingsTitle) : null,
+                    onTap: () {
+                      Scaffold.of(context).closeDrawer();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -275,134 +328,160 @@ class _TopBarState extends ConsumerState<_TopBar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              if (MediaQuery.sizeOf(context).width < 900)
-                IconButton(
-                  tooltip: context.l10n.libraryNavigation,
-                  icon: const Icon(AppIcons.all),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                ),
-              Expanded(
-                  child: Column(
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  if (MediaQuery.sizeOf(context).width < 900)
+                    IconButton(
+                      tooltip: context.l10n.libraryNavigation,
+                      icon: const Icon(AppIcons.all),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
+                  Expanded(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Text(_getTitle(context, index),
-                        style: Theme.of(context).textTheme.displayMedium),
-                    const SizedBox(height: 4),
-                    Text(
-                        context.l10n.libraryTitleCount(
-                            ref.watch(filteredAnimeProvider).length),
-                        style: Theme.of(context).textTheme.bodyMedium),
-                  ])),
-              FilledButton.icon(
-                onPressed: ref.watch(scanProvider).running
-                    ? null
-                    : () => _addLibraryFolder(context, ref),
-                icon: const Icon(AppIcons.addFolder, size: 20),
-                label: Text(context.l10n.libraryAddFolder),
-              ),
-            ]),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _searchController,
-              focusNode: ref.watch(librarySearchFocusProvider),
-              onChanged: (value) {
-                setState(() {});
-                _debouncer.run(() {
-                  if (mounted) {
-                    ref.read(searchQueryProvider.notifier).state = value;
-                  }
-                });
-              },
-              decoration: InputDecoration(
-                hintText: context.l10n.librarySearchHint,
-                prefixIcon: const Icon(AppIcons.search),
-                suffixIcon: _searchController.text.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: context.l10n.libraryClearSearch,
-                        icon: const Icon(AppIcons.close),
-                        onPressed: () {
-                          _debouncer.cancel();
-                          _searchController.clear();
-                          ref.read(searchQueryProvider.notifier).state = '';
-                          setState(() {});
-                        },
-                      ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(children: [
-              Text(context.l10n.libraryBrowse,
-                  style: Theme.of(context).textTheme.bodySmall),
-              const Spacer(),
-              PopupMenuButton<LibrarySort>(
-                tooltip: context.l10n.librarySort,
-                initialValue: ref.watch(libraryViewProvider).sort,
-                onSelected: ref.read(libraryViewProvider.notifier).sortBy,
-                itemBuilder: (_) => [
-                  for (final sort in LibrarySort.values)
-                    PopupMenuItem(
-                        value: sort,
-                        child: Text(switch (sort) {
-                          LibrarySort.title => context.l10n.librarySortTitle,
-                          LibrarySort.dateAdded =>
-                            context.l10n.librarySortAdded,
-                          LibrarySort.lastWatched =>
-                            context.l10n.librarySortWatched,
-                          LibrarySort.progress =>
-                            context.l10n.librarySortProgress,
-                        })),
+                        Text(
+                          _getTitle(context, index),
+                          style: Theme.of(context).textTheme.displayMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.l10n.libraryTitleCount(
+                            ref.watch(filteredAnimeProvider).length,
+                          ),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  FilledButton.icon(
+                    onPressed: ref.watch(scanProvider).running
+                        ? null
+                        : () => _addLibraryFolder(context, ref),
+                    icon: const Icon(AppIcons.addFolder, size: 20),
+                    label: Text(context.l10n.libraryAddFolder),
+                  ),
                 ],
-                icon: const Icon(AppIcons.sort),
               ),
-              IconButton(
-                  isSelected: !ref.watch(libraryViewProvider).list,
-                  tooltip: context.l10n.libraryGrid,
-                  icon: const Icon(AppIcons.all),
-                  onPressed: () =>
-                      ref.read(libraryViewProvider.notifier).showList(false)),
-              IconButton(
-                  isSelected: ref.watch(libraryViewProvider).list,
-                  tooltip: context.l10n.libraryList,
-                  icon: const Icon(AppIcons.list),
-                  onPressed: () =>
-                      ref.read(libraryViewProvider.notifier).showList(true)),
-            ]),
-            if (!ref.watch(scanProvider).running &&
-                (ref.watch(scanProvider).errors.isNotEmpty ||
-                    ref.watch(scanProvider).warnings > 0))
-              Padding(
+              const SizedBox(height: 12),
+              TextField(
+                controller: _searchController,
+                focusNode: ref.watch(librarySearchFocusProvider),
+                onChanged: (value) {
+                  setState(() {});
+                  _debouncer.run(() {
+                    if (mounted) {
+                      ref.read(searchQueryProvider.notifier).state = value;
+                    }
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: context.l10n.librarySearchHint,
+                  prefixIcon: const Icon(AppIcons.search),
+                  suffixIcon: _searchController.text.isEmpty
+                      ? null
+                      : IconButton(
+                          tooltip: context.l10n.libraryClearSearch,
+                          icon: const Icon(AppIcons.close),
+                          onPressed: () {
+                            _debouncer.cancel();
+                            _searchController.clear();
+                            ref.read(searchQueryProvider.notifier).state = '';
+                            setState(() {});
+                          },
+                        ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Text(
+                    context.l10n.libraryBrowse,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const Spacer(),
+                  PopupMenuButton<LibrarySort>(
+                    tooltip: context.l10n.librarySort,
+                    initialValue: ref.watch(libraryViewProvider).sort,
+                    onSelected: ref.read(libraryViewProvider.notifier).sortBy,
+                    itemBuilder: (_) => [
+                      for (final sort in LibrarySort.values)
+                        PopupMenuItem(
+                          value: sort,
+                          child: Text(switch (sort) {
+                            LibrarySort.title => context.l10n.librarySortTitle,
+                            LibrarySort.dateAdded =>
+                              context.l10n.librarySortAdded,
+                            LibrarySort.lastWatched =>
+                              context.l10n.librarySortWatched,
+                            LibrarySort.progress =>
+                              context.l10n.librarySortProgress,
+                          }),
+                        ),
+                    ],
+                    icon: const Icon(AppIcons.sort),
+                  ),
+                  IconButton(
+                    isSelected: !ref.watch(libraryViewProvider).list,
+                    tooltip: context.l10n.libraryGrid,
+                    icon: const Icon(AppIcons.all),
+                    onPressed: () =>
+                        ref.read(libraryViewProvider.notifier).showList(false),
+                  ),
+                  IconButton(
+                    isSelected: ref.watch(libraryViewProvider).list,
+                    tooltip: context.l10n.libraryList,
+                    icon: const Icon(AppIcons.list),
+                    onPressed: () =>
+                        ref.read(libraryViewProvider.notifier).showList(true),
+                  ),
+                ],
+              ),
+              if (!ref.watch(scanProvider).running &&
+                  (ref.watch(scanProvider).errors.isNotEmpty ||
+                      ref.watch(scanProvider).warnings > 0))
+                Padding(
                   padding: const EdgeInsets.only(top: 12),
-                  child: Row(children: [
-                    Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
                         child: Text(
-                            ref.watch(scanProvider).errors.isNotEmpty
-                                ? context.l10n.libraryScanError
-                                : context.l10n.libraryMetadataWarning,
-                            style: Theme.of(context).textTheme.bodySmall)),
-                    if (ref.watch(scanProvider).errors.isNotEmpty)
-                      TextButton(
+                          ref.watch(scanProvider).errors.isNotEmpty
+                              ? context.l10n.libraryScanError
+                              : context.l10n.libraryMetadataWarning,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      if (ref.watch(scanProvider).errors.isNotEmpty)
+                        TextButton(
                           onPressed: () => ref
                               .read(scanProvider.notifier)
                               .scan(ref.read(scanProvider).errors),
-                          child: Text(context.l10n.commonRetry)),
-                  ])),
-            if (ref.watch(scanProvider).running) ...[
-              const SizedBox(height: 12),
-              const LinearProgressIndicator(),
-              const SizedBox(height: 4),
-              Row(children: [
-                Expanded(child: Text(context.l10n.libraryScanningFolder)),
-                TextButton(
-                    onPressed: ref.read(scanProvider.notifier).cancel,
-                    child: Text(context.l10n.dialogCancel)),
-              ]),
+                          child: Text(context.l10n.commonRetry),
+                        ),
+                    ],
+                  ),
+                ),
+              if (ref.watch(scanProvider).running) ...[
+                const SizedBox(height: 12),
+                const LinearProgressIndicator(),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Expanded(child: Text(context.l10n.libraryScanningFolder)),
+                    TextButton(
+                      onPressed: ref.read(scanProvider.notifier).cancel,
+                      child: Text(context.l10n.dialogCancel),
+                    ),
+                  ],
+                ),
+              ],
             ],
-          ]),
+          ),
         ),
         AnimatedSwitcher(
           duration: MediaQuery.disableAnimationsOf(context)
@@ -411,8 +490,9 @@ class _TopBarState extends ConsumerState<_TopBar> {
           child: index == 5 && MediaQuery.sizeOf(context).width < 1200
               ? Container(
                   height: AppSpacing.s50,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
                   child: allCollections.isEmpty
                       ? Align(
                           alignment: AlignmentGeometry.centerLeft,
@@ -429,15 +509,15 @@ class _TopBarState extends ConsumerState<_TopBar> {
                             final isSelected =
                                 selectedCollections == collectionName;
                             return Padding(
-                              padding:
-                                  const EdgeInsets.only(right: AppSpacing.xs),
+                              padding: const EdgeInsets.only(
+                                right: AppSpacing.xs,
+                              ),
                               child: ChoiceChip(
                                 label: Text(collectionName),
                                 selected: isSelected,
-                                selectedColor: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.3),
+                                selectedColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.3),
                                 backgroundColor: tokens.surfaceSubtle,
                                 labelStyle: TextStyle(
                                   color: isSelected
@@ -445,20 +525,27 @@ class _TopBarState extends ConsumerState<_TopBar> {
                                       : tokens.textSecondary,
                                 ),
                                 side: BorderSide(
-                                    color: isSelected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Colors.transparent),
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.transparent,
+                                ),
                                 onSelected: (selected) {
                                   if (selected) {
                                     ref
-                                        .read(
-                                            selectedCollectionProvider.notifier)
-                                        .state = collectionName;
+                                            .read(
+                                              selectedCollectionProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        collectionName;
                                   } else {
                                     ref
-                                        .read(
-                                            selectedCollectionProvider.notifier)
-                                        .state = null;
+                                            .read(
+                                              selectedCollectionProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        null;
                                   }
                                 },
                               ),
@@ -506,33 +593,39 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
         context: context,
         barrierDismissible: false, // Require an explicit dismissal.
         builder: (ctx) => AlertDialog(
+          scrollable: true,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 24,
+          ),
           backgroundColor: context.appTheme.cardSurface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.xl),
           ),
           title: Row(
             children: [
-              Icon(
-                AppIcons.shield,
-                color: context.appTheme.warning,
-                size: 28,
-              ),
+              Icon(AppIcons.shield, color: context.appTheme.warning, size: 28),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                context.l10n.networkRecommendationTitle,
-                style: TextStyle(color: context.appTheme.textPrimary),
+              Expanded(
+                child: Text(
+                  context.l10n.networkRecommendationTitle,
+                  style: TextStyle(color: context.appTheme.textPrimary),
+                ),
               ),
             ],
           ),
           content: Text(
             context.l10n.networkRecommendationBody,
-            style:
-                TextStyle(color: context.appTheme.textSecondary, height: 2.5),
+            style: TextStyle(
+              color: context.appTheme.textSecondary,
+              height: 1.7,
+            ),
           ),
           actions: [
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
               onPressed: () {
                 prefs.setBool('has_seen_vpn_warning', true);
                 Navigator.pop(ctx);
@@ -566,32 +659,37 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
           final noFiles =
               emptyLibrary && ref.watch(savedFoldersProvider).isNotEmpty;
           return Center(
-              child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: Padding(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(emptyLibrary ? AppIcons.videoLibrary : AppIcons.search,
-                        size: 48, color: context.appTheme.textMuted),
+                    Icon(
+                      emptyLibrary ? AppIcons.videoLibrary : AppIcons.search,
+                      size: 48,
+                      color: context.appTheme.textMuted,
+                    ),
                     const SizedBox(height: 24),
                     Text(
-                        emptyLibrary
-                            ? (noFiles
+                      emptyLibrary
+                          ? (noFiles
                                 ? context.l10n.libraryNoFilesTitle
                                 : context.l10n.libraryEmptyTitle)
-                            : context.l10n.libraryNothingFound,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium),
+                          : context.l10n.libraryNothingFound,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
                     const SizedBox(height: 12),
                     Text(
-                        emptyLibrary
-                            ? (noFiles
+                      emptyLibrary
+                          ? (noFiles
                                 ? context.l10n.libraryNoFilesBody
                                 : context.l10n.libraryEmptyBody)
-                            : context.l10n.libraryNoResultsBody,
-                        textAlign: TextAlign.center),
+                          : context.l10n.libraryNoResultsBody,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 24),
                     if (emptyLibrary)
                       FilledButton.icon(
@@ -606,70 +704,100 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
                         onPressed: () {
                           ref.read(searchQueryProvider.notifier).state = '';
                           ref
-                              .read(selectedSidebarIndexProvider.notifier)
-                              .state = 0;
+                                  .read(selectedSidebarIndexProvider.notifier)
+                                  .state =
+                              0;
                           ref.read(selectedCollectionProvider.notifier).state =
                               null;
                         },
                         child: Text(context.l10n.libraryResetFilters),
                       ),
                   ],
-                )),
-          ));
+                ),
+              ),
+            ),
+          );
         }
         final view = ref.watch(libraryViewProvider);
-        final resumable = allAnimes
-            .where((a) =>
-                a.episodePaths.isNotEmpty &&
-                a.watchProgress < 1 &&
-                (a.lastWatchedAt != null ||
-                    a.watchedEpisodes.isNotEmpty ||
-                    a.playbackPositions.any((p) => (p.position ?? 0) > 0)))
-            .toList()
-          ..sort((a, b) => (b.lastWatchedAt ?? DateTime(1970))
-              .compareTo(a.lastWatchedAt ?? DateTime(1970)));
-        final showResume = AppFeatures.designV2 &&
+        final canShowResume =
+            AppFeatures.designV2 &&
             ref.watch(selectedSidebarIndexProvider) == 0 &&
-            ref.watch(searchQueryProvider).isEmpty &&
-            resumable.isNotEmpty;
+            ref.watch(searchQueryProvider).isEmpty;
+        final resumable = canShowResume
+            ? ref.watch(continueWatchingProvider)
+            : const <Anime>[];
+        final showResume = canShowResume && resumable.isNotEmpty;
+        final sectionTitle = switch (ref.watch(selectedSidebarIndexProvider)) {
+          1 => context.l10n.libraryWatching,
+          2 => context.l10n.libraryPlanned,
+          3 => context.l10n.libraryCompleted,
+          4 => context.l10n.libraryDropped,
+          5 =>
+            ref.watch(selectedCollectionProvider) ??
+                context.l10n.libraryCollections,
+          _ => context.l10n.libraryAllTitles,
+        };
         return Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1440),
-              child: CustomScrollView(slivers: [
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1440),
+            child: CustomScrollView(
+              slivers: [
                 if (showResume)
                   SliverToBoxAdapter(
-                      child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                    child: ContinueWatchingCard(anime: resumable.first),
-                  )),
-                if (showResume)
-                  SliverToBoxAdapter(
-                      child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(context.l10n.libraryAllTitles,
-                        style: Theme.of(context).textTheme.titleLarge),
-                  )),
+                    child: ContinueWatchingSection(
+                      anime: resumable.take(6).toList(),
+                    ),
+                  ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      24,
+                      showResume ? 24 : 16,
+                      24,
+                      AppSpacing.sm,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            sectionTitle,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        Text(
+                          '${filteredList.length}',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 SliverPadding(
-                    padding: const EdgeInsets.all(24),
-                    sliver: view.list
-                        ? SliverList.builder(
-                            itemCount: filteredList.length,
-                            itemBuilder: (context, index) =>
-                                AnimeListTile(anime: filteredList[index]))
-                        : SliverGrid.builder(
-                            gridDelegate:
-                                const SliverGridDelegateWithMaxCrossAxisExtent(
-                                    maxCrossAxisExtent: 240,
-                                    childAspectRatio: .56,
-                                    crossAxisSpacing: 20,
-                                    mainAxisSpacing: 20),
-                            itemCount: filteredList.length,
-                            itemBuilder: (context, index) =>
-                                AnimeCard(anime: filteredList[index]),
-                          )),
-              ]),
-            ));
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  sliver: view.list
+                      ? SliverList.builder(
+                          itemCount: filteredList.length,
+                          itemBuilder: (context, index) =>
+                              AnimeListTile(anime: filteredList[index]),
+                        )
+                      : SliverGrid.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 240,
+                                childAspectRatio: .56,
+                                crossAxisSpacing: 20,
+                                mainAxisSpacing: 20,
+                              ),
+                          itemCount: filteredList.length,
+                          itemBuilder: (context, index) =>
+                              AnimeCard(anime: filteredList[index]),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }

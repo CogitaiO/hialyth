@@ -20,7 +20,9 @@ final animeColorProvider =
   try {
     ImageProvider provider = anime.coverUrl!.startsWith('http')
         ? NetworkImage(anime.coverUrl!) as ImageProvider
-        : FileImage(File(anime.coverUrl!));
+        : anime.coverUrl!.startsWith('asset:')
+            ? AssetImage(anime.coverUrl!.substring('asset:'.length))
+            : FileImage(File(anime.coverUrl!));
 
     final resizedProvider = ResizeImage(provider, width: 100);
 

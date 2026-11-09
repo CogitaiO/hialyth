@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'library_provider.dart';
 import '../data/services/file_discovery_service.dart';
@@ -25,13 +27,18 @@ class ScanController extends StateNotifier<ScanState> {
   ScanController(this._scanner) : super(const ScanState());
   final FileDiscoveryService _scanner;
   bool _cancel = false;
+  Completer<void>? _cancellation;
   void cancel() {
     _cancel = true;
+    if (_cancellation != null && !_cancellation!.isCompleted) {
+      _cancellation!.complete();
+    }
   }
 
   Future<ScanState> scan(List<String> folders) async {
     if (state.running) return state;
     _cancel = false;
+    _cancellation = Completer<void>();
     var completed = 0;
     var warnings = 0;
     final errors = <String>[];
@@ -41,7 +48,8 @@ class ScanController extends StateNotifier<ScanState> {
       if (_cancel || !mounted) break;
       try {
         final result = await _scanner.scanAndGroupFiles(folder,
-            isCancelled: () => _cancel || !mounted);
+            isCancelled: () => _cancel || !mounted,
+            cancellation: _cancellation!.future);
         warnings += result.warnings.length;
       } catch (_) {
         errors.add(folder);
@@ -67,7 +75,7 @@ class ScanController extends StateNotifier<ScanState> {
 
   @override
   void dispose() {
-    _cancel = true;
+    cancel();
     super.dispose();
   }
 }

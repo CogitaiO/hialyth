@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/widgets.dart';
+import 'package:collection/collection.dart';
 import 'package:nekaido_pre/data/services/file_discovery_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -32,13 +33,32 @@ final allCollectionsProvider = Provider<List<String>>((ref) {
   return list;
 });
 
-final filteredAnimeProvider = Provider<List<Anime>>((ref) {
-  final allAnime = ref.watch(libraryProvider).value ?? [];
+typedef _OrderEntry = ({
+  int id,
+  String title,
+  DateTime? date,
+  double? progress
+});
+
+class _OrderEntries {
+  const _OrderEntries(this.entries);
+  final List<_OrderEntry> entries;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _OrderEntries &&
+      const ListEquality<_OrderEntry>().equals(entries, other.entries);
+
+  @override
+  int get hashCode => const ListEquality<_OrderEntry>().hash(entries);
+}
+
+final _sortedAnimeIdsProvider = Provider<List<int>>((ref) {
   final query = ref.watch(searchQueryProvider).toLowerCase();
   final index = ref.watch(selectedSidebarIndexProvider);
   final selectedCollection = ref.watch(selectedCollectionProvider);
-
-  final result = allAnime.where((anime) {
+  final sort = ref.watch(libraryViewProvider).sort;
+  bool matches(Anime anime) {
     if (query.isNotEmpty && !anime.title.toLowerCase().contains(query)) {
       return false;
     }
@@ -59,23 +79,67 @@ final filteredAnimeProvider = Provider<List<Anime>>((ref) {
       default:
         return true;
     }
-  }).toList();
-  final sort = ref.watch(libraryViewProvider).sort;
+  }
+
+  final entries = ref.watch(libraryProvider.select((library) => _OrderEntries([
+        for (final anime in library.value ?? <Anime>[])
+          if (matches(anime))
+            (
+              id: anime.id,
+              title: anime.title,
+              date: switch (sort) {
+                LibrarySort.dateAdded => anime.dateAdded,
+                LibrarySort.lastWatched => anime.lastWatchedAt,
+                _ => null,
+              },
+              progress:
+                  sort == LibrarySort.progress ? anime.watchProgress : null,
+            ),
+      ])));
+  final result = entries.entries.toList();
+  final epoch = DateTime(1970);
   result.sort((a, b) {
     final comparison = switch (sort) {
       LibrarySort.title =>
         a.title.toLowerCase().compareTo(b.title.toLowerCase()),
-      LibrarySort.dateAdded => b.dateAdded.compareTo(a.dateAdded),
-      LibrarySort.lastWatched => (b.lastWatchedAt ?? DateTime(1970))
-          .compareTo(a.lastWatchedAt ?? DateTime(1970)),
-      LibrarySort.progress => b.watchProgress.compareTo(a.watchProgress),
+      LibrarySort.dateAdded ||
+      LibrarySort.lastWatched =>
+        (b.date ?? epoch).compareTo(a.date ?? epoch),
+      LibrarySort.progress => b.progress!.compareTo(a.progress!),
     };
     return comparison == 0 ? a.title.compareTo(b.title) : comparison;
   });
-  return result;
+  return [for (final entry in result) entry.id];
 });
 
-final animeDetailsProvider = StreamProvider.family<Anime?, int>((ref, id) {
+final filteredAnimeProvider = Provider<List<Anime>>((ref) {
+  final allAnime = ref.watch(libraryProvider).value ?? [];
+  final ids = ref.watch(_sortedAnimeIdsProvider);
+  final byId = {for (final anime in allAnime) anime.id: anime};
+  return [
+    for (final id in ids)
+      if (byId[id] case final Anime anime) anime
+  ];
+});
+
+final continueWatchingProvider = Provider<List<Anime>>((ref) {
+  final allAnime = ref.watch(libraryProvider).value ?? [];
+  final epoch = DateTime(1970);
+  return allAnime
+      .where((anime) =>
+          anime.episodePaths.isNotEmpty &&
+          (anime.lastWatchedAt != null ||
+              anime.watchedEpisodes.isNotEmpty ||
+              anime.playbackPositions
+                  .any((entry) => (entry.position ?? 0) > 0)) &&
+          anime.watchProgress < 1)
+      .toList()
+    ..sort((a, b) =>
+        (b.lastWatchedAt ?? epoch).compareTo(a.lastWatchedAt ?? epoch));
+});
+
+final animeDetailsProvider =
+    StreamProvider.autoDispose.family<Anime?, int>((ref, id) {
   final repo = ref.watch(animeRepoProvider);
   return repo.watchAnimeById(id);
 });

@@ -12,7 +12,7 @@ void main() {
         .load();
   });
 
-  testWidgets('glass keeps readable secondary text over white and black frames',
+  testWidgets('video surfaces keep readable text without backdrop sampling',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
         theme: ThemeData.dark(),
@@ -21,8 +21,7 @@ void main() {
               reduceTransparency: false,
               child: SizedBox(width: 200, height: 100)),
         )));
-    final filter = tester.widget<BackdropFilter>(find.byType(BackdropFilter));
-    expect(filter.blendMode, BlendMode.src);
+    expect(find.byType(BackdropFilter), findsNothing);
     final box = tester.widget<DecoratedBox>(find.descendant(
       of: find.byType(GlassSurface),
       matching: find.byType(DecoratedBox),
@@ -85,7 +84,7 @@ void main() {
         matchesGoldenFile('goldens/player_glass_extreme_frames.png'));
   });
 
-  testWidgets('glass surface blurs its bounded backdrop when enabled',
+  testWidgets('translucent video surface does not create a backdrop filter',
       (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -98,7 +97,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(BackdropFilter), findsOneWidget);
+    expect(find.byType(BackdropFilter), findsNothing);
   });
 
   testWidgets('reduced transparency uses the solid fallback without blur',
