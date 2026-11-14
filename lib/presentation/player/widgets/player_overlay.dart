@@ -55,108 +55,113 @@ class PlayerOverlay extends ConsumerWidget {
       }
     }
 
+    final fadeDuration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 300);
+
     return Stack(
       children: [
-        IgnorePointer(
-          ignoring: !isVisible,
-          child: AnimatedOpacity(
-            opacity: isVisible ? 1.0 : 0.0,
-            curve: Curves.easeOutCubic,
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 300),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [tokens.scrim(0.8), Colors.transparent],
-                      ),
-                    ),
-                    child: CustomTitleBar(
-                      backgroundColor: Colors.transparent,
-                      leading: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(width: AppSpacing.xxs),
-                          Tooltip(
-                            message: context.l10n.playerBack,
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                            margin: const EdgeInsets.only(top: AppSpacing.s10),
-                            decoration: BoxDecoration(
-                              color:
-                                  tokens.surfaceOverlay.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(AppRadii.md),
-                              border: Border.all(color: tokens.borderStrong),
-                            ),
-                            textStyle: TextStyle(
-                              color: tokens.textSubtle,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            waitDuration: const Duration(milliseconds: 500),
-                            showDuration: const Duration(seconds: 2),
-                            child: IconButton(
-                              icon: Icon(
-                                AppIcons.back,
-                                color: tokens.textPrimary,
-                                size: 24,
-                              ),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                        ],
-                      ),
-                      title: Expanded(
-                        child: Text(
-                          displayTitle,
-                          style: TextStyle(
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+            ignoring: !isVisible,
+            child: AnimatedOpacity(
+              opacity: isVisible ? 1.0 : 0.0,
+              curve: Curves.easeOutCubic,
+              duration: fadeDuration,
+              child: Container(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [tokens.scrim(0.8), Colors.transparent],
+                  ),
+                ),
+                child: CustomTitleBar(
+                  backgroundColor: Colors.transparent,
+                  leading: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(width: AppSpacing.xxs),
+                      Tooltip(
+                        message: context.l10n.playerBack,
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        margin: const EdgeInsets.only(top: AppSpacing.s10),
+                        decoration: BoxDecoration(
+                          color: tokens.surfaceOverlay.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(AppRadii.md),
+                          border: Border.all(color: tokens.borderStrong),
+                        ),
+                        textStyle: TextStyle(
+                          color: tokens.textSubtle,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        waitDuration: const Duration(milliseconds: 500),
+                        showDuration: const Duration(seconds: 2),
+                        child: IconButton(
+                          icon: Icon(
+                            AppIcons.back,
                             color: tokens.textPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            size: 24,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          onPressed: () => Navigator.pop(context),
                         ),
                       ),
+                      const SizedBox(width: AppSpacing.xs),
+                    ],
+                  ),
+                  title: Expanded(
+                    child: Text(
+                      displayTitle,
+                      style: TextStyle(
+                        color: tokens.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.only(
-                      top: AppSpacing.s64,
-                      bottom: AppSpacing.md,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [tokens.scrim(0.9), Colors.transparent],
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GlassSurface(
-                        reduceTransparency: reduceTransparency || sidebarOpen,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: const PlayerProgressBar(),
-                      ),
-                    ),
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+            ignoring: !isVisible,
+            child: AnimatedOpacity(
+              opacity: isVisible ? 1.0 : 0.0,
+              curve: Curves.easeOutCubic,
+              duration: fadeDuration,
+              child: Container(
+                padding: const EdgeInsets.only(
+                  top: AppSpacing.s64,
+                  bottom: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [tokens.scrim(0.9), Colors.transparent],
                   ),
                 ),
-              ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GlassSurface(
+                    reduceTransparency: reduceTransparency || sidebarOpen,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: const PlayerProgressBar(),
+                  ),
+                ),
+              ),
             ),
           ),
         ),

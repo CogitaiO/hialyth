@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -22,37 +22,63 @@ import 'presentation/debug/design_system_gallery.dart';
 import 'core/app_features.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme_extension.dart';
+import 'demo/showcase_fixtures.dart';
+import 'demo/showcase_storage.dart';
 
-void main() async {
+bool _showcasePreferencesPrefixSet = false;
+
+Future<void> main() => runHialyth();
+
+Future<void> runHialyth({bool showcaseMode = false}) async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     MediaKit.ensureInitialized();
-    await windowManager.ensureInitialized();
+    final isDesktop =
+        Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    if (isDesktop) {
+      await windowManager.ensureInitialized();
+    }
     await initLogger();
     startFrameMetrics();
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (!showcaseMode && isDesktop) {
       try {
         DiscordRPC.initialize();
       } catch (e) {
         talker.debug('DiscordRPC initialization failed: $e');
       }
     }
-    WindowOptions windowOptions = const WindowOptions(
-      size: Size(1280, 720),
-      minimumSize: Size(840, 560),
-      center: true,
-      titleBarStyle: TitleBarStyle.hidden,
-    );
+    if (isDesktop) {
+      const windowOptions = WindowOptions(
+        size: Size(1280, 720),
+        minimumSize: Size(840, 560),
+        center: true,
+        titleBarStyle: TitleBarStyle.hidden,
+      );
 
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
+      windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      });
+    }
 
+    if (showcaseMode && !_showcasePreferencesPrefixSet) {
+      SharedPreferences.setPrefix(ShowcaseStorage.preferencesPrefix);
+      _showcasePreferencesPrefixSet = true;
+    }
     final prefs = await SharedPreferences.getInstance();
-    final dir = await getApplicationDocumentsDirectory();
-    final isar = await Isar.open([AnimeSchema], directory: dir.path);
+    final databaseDirectory = showcaseMode
+        ? Directory(ShowcaseStorage.databasePath(
+            (await getApplicationSupportDirectory()).path))
+        : await getApplicationDocumentsDirectory();
+    if (showcaseMode) {
+      await databaseDirectory.create(recursive: true);
+    }
+    final isar =
+        await Isar.open([AnimeSchema], directory: databaseDirectory.path);
     final repository = AnimeRepository(isar);
+    if (showcaseMode) {
+      await ShowcaseFixtures.seedOnFirstLaunch(repository, prefs);
+    }
 
     FlutterError.onError = (details) {
       talker.handle(details.exception, details.stack, 'Critical UI error');
@@ -69,17 +95,19 @@ void main() async {
           animeRepoProvider.overrideWithValue(repository),
           sharedPrefsProvider.overrideWithValue(prefs),
         ],
-        child: const MyApp(),
+        child: MyApp(showcaseMode: showcaseMode),
       ),
     );
   } catch (e, st) {
     talker.handle(e, st, 'Critical startup error');
-    runApp(_StartupErrorApp(onRetry: main));
+    runApp(_StartupErrorApp(
+        onRetry: () => runHialyth(showcaseMode: showcaseMode)));
   }
 }
 
 class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.showcaseMode = false});
+  final bool showcaseMode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -88,7 +116,7 @@ class MyApp extends ConsumerWidget {
     final accentColor = Color(accentColorValue);
 
     return MaterialApp(
-      title: 'Nekaido',
+      title: showcaseMode ? 'Hialyth Showcase' : 'Nekaido',
       debugShowCheckedModeBanner: false,
       theme: AppFeatures.designV2
           ? AppTheme.dark(accent: accentColor)
@@ -109,7 +137,7 @@ class MyApp extends ConsumerWidget {
           child: child!,
         ),
       ),
-      home: const LibraryScreen(),
+      home: LibraryScreen(showcaseMode: showcaseMode),
     );
   }
 }

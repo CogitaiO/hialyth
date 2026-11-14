@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:collection/collection.dart';
 part 'anime.g.dart';
 
@@ -32,16 +32,19 @@ class Anime {
   List<String> customCollections = [];
   List<EpisodeSkipData> skipData = [];
 
+  @ignore
   List<String> get sortedEpisodes {
     return List.from(episodePaths)..sort(compareNatural);
   }
 
+  @ignore
   double get watchProgress {
     if (episodePaths.isEmpty) return 0.0;
     return episodePaths.toSet().intersection(watchedEpisodes.toSet()).length /
         episodePaths.toSet().length;
   }
 
+  @ignore
   String? get nextEpisodeToPlay {
     final sorted = sortedEpisodes;
     for (var ep in sorted) {
@@ -52,12 +55,14 @@ class Anime {
     return null;
   }
 
+  @ignore
   String get progressPercentage {
     if (episodePaths.isEmpty) return "0%";
     final percent = (watchProgress * 100).toInt();
     return "$percent%";
   }
 
+  @ignore
   String get progressFraction {
     return "${episodePaths.toSet().intersection(watchedEpisodes.toSet()).length} / ${episodePaths.toSet().length}";
   }

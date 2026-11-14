@@ -5,9 +5,9 @@ import 'app_surfaces.dart';
 import 'app_theme_extension.dart';
 import 'app_typography.dart';
 
-/// Centralized theme builder. Constructs a complete [ThemeData] from
-/// semantic tokens. No hardcoded colors in widgets — everything flows
-/// through ColorScheme, AppThemeExtension, and component themes.
+/// Centralized Material theme builder. Standard Material components use
+/// semantic ColorScheme, AppThemeExtension, and component themes. App-specific
+/// widgets should use the same semantic tokens instead of raw color literals.
 abstract final class AppTheme {
   /// Builds the dark theme with the given accent color.
   /// [accent] defaults to [AppPalette.fallbackAccent] (Iris).

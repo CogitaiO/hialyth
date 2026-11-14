@@ -1,13 +1,13 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import '../theme/app_surfaces.dart';
 import '../core/app_features.dart';
 
-/// A bounded frosted surface for controls placed over video.
+/// A bounded translucent surface for controls placed over video.
 ///
 /// When transparency is reduced, this keeps the same shape and border while
-/// replacing blur and translucency with the opaque overlay surface.
+/// replacing translucency with the opaque overlay surface. It intentionally
+/// does not sample/blur the live video backdrop, which correlated with raster
+/// spikes on Linux.
 class GlassSurface extends StatelessWidget {
   final Widget child;
   final BorderRadius borderRadius;
@@ -48,20 +48,6 @@ class GlassSurface extends StatelessWidget {
           child: Material(type: MaterialType.transparency, child: child)),
     );
 
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: opaque
-          ? surface
-          : BackdropFilter(
-              // Opacity creates a saveLayer; srcOver would blend the captured
-              // video a second time and can brighten the panel during fades.
-              blendMode: BlendMode.src,
-              filter: ImageFilter.blur(
-                sigmaX: AppSurfaces.glassBlur,
-                sigmaY: AppSurfaces.glassBlur,
-              ),
-              child: surface,
-            ),
-    );
+    return ClipRRect(borderRadius: borderRadius, child: surface);
   }
 }

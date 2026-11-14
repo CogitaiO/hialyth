@@ -481,7 +481,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsReduceTransparencyDescription =>
-      'Disable blur and use solid surfaces in the player.';
+      'Use opaque player controls for clarity and lower rendering cost.';
 
   @override
   String get settingsAppAccentColor => 'App Accent Color';

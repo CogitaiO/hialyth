@@ -18,19 +18,26 @@ class ScanResult {
 }
 
 typedef MetadataLookup = Future<Map<String, String>?> Function(String title);
+typedef DirectoryScanWorker = void Function((String, SendPort));
 
 class FileDiscoveryService {
-  FileDiscoveryService(this._repository, {MetadataLookup? metadataLookup})
-      : _lookup = metadataLookup ?? ShikimoriService().fetchAnimeDetails;
+  FileDiscoveryService(this._repository,
+      {MetadataLookup? metadataLookup,
+      DirectoryScanWorker? scanWorker,
+      this.scanTimeout = const Duration(minutes: 2)})
+      : _lookup = metadataLookup ?? ShikimoriService().fetchAnimeDetails,
+        _scanWorker = scanWorker ?? _runScan;
   final AnimeRepository _repository;
   final MetadataLookup _lookup;
+  final DirectoryScanWorker _scanWorker;
+  final Duration scanTimeout;
 
   Future<ScanResult> scanAndGroupFiles(String folderPath,
-      {bool Function()? isCancelled}) async {
+      {bool Function()? isCancelled, Future<void>? cancellation}) async {
     final root = AnimeRepository.normalizeRoot(folderPath);
-    // Exceptions intentionally reach the scan controller instead of looking like success.
-    final grouped = await Isolate.run(() => _scanDirectory(root))
-        .timeout(const Duration(minutes: 2));
+    if (isCancelled?.call() == true) return const ScanResult(cancelled: true);
+    final grouped = await _scan(root, cancellation);
+    if (grouped == null) return const ScanResult(cancelled: true);
     if (isCancelled?.call() == true) return const ScanResult(cancelled: true);
     // Import local media before any network request. Progress and notes are
     // preserved by transactional field updates in the repository.
@@ -72,6 +79,48 @@ class FileDiscoveryService {
         files: grouped.values.fold(0, (n, paths) => n + paths.length),
         warnings: warnings,
         cancelled: isCancelled?.call() == true);
+  }
+
+  Future<Map<String, List<String>>?> _scan(
+      String root, Future<void>? cancellation) async {
+    final results = ReceivePort();
+    final errors = ReceivePort();
+    Isolate? isolate;
+    try {
+      isolate = await Isolate.spawn(_scanWorker, (root, results.sendPort),
+          onError: errors.sendPort, errorsAreFatal: true);
+      final result = results.first.then<Map<String, List<String>>?>((message) {
+        final data = message as List<Object?>;
+        if (data[0] == false) {
+          Error.throwWithStackTrace(
+              data[1] as Object, StackTrace.fromString(data[2] as String));
+        }
+        return (data[1] as Map).cast<String, List<String>>();
+      });
+      final failed = errors.first.then<Map<String, List<String>>?>((message) {
+        final data = message as List;
+        Error.throwWithStackTrace(
+            RemoteError(data[0].toString(), data[1].toString()),
+            StackTrace.fromString(data[1].toString()));
+      });
+      return await Future.any<Map<String, List<String>>?>([
+        result,
+        failed,
+        if (cancellation != null) cancellation.then((_) => null),
+      ]).timeout(scanTimeout);
+    } finally {
+      isolate?.kill(priority: Isolate.immediate);
+      results.close();
+      errors.close();
+    }
+  }
+
+  static void _runScan((String, SendPort) request) {
+    try {
+      request.$2.send([true, _scanDirectory(request.$1)]);
+    } catch (error, stack) {
+      request.$2.send([false, error, stack.toString()]);
+    }
   }
 
   static Map<String, List<String>> _scanDirectory(String root) {

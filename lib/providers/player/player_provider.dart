@@ -12,6 +12,7 @@ import '../../data/services/anime_filename_parser.dart';
 import '../../data/services/playback_progress_service.dart';
 import '../../providers/repositories_provider.dart';
 import 'playback_engine.dart';
+import 'external_media_discovery.dart';
 import 'playback_progress_tracker.dart';
 import 'player_lifecycle.dart';
 import 'player_state.dart';
@@ -45,9 +46,12 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   final PlaybackBackend _engine;
   late final PlayerLifecycle _lifecycle;
   final DiscordService _discordService;
+  final ExternalMediaDiscovery _externalMedia;
   late bool _rpcEnabled;
   int _loadGeneration = 0;
   Future<void> _loadQueue = Future.value();
+  Timer? _volumeSaveTimer;
+  double? _pendingVolume;
   bool _current(int generation) => mounted && generation == _loadGeneration;
 
   int _lastStateSeconds = -1; // Throttle UI updates to one per second.
@@ -66,12 +70,14 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     PlaybackProgressTracker? progress,
     PlaybackBackend? engine,
     DiscordService? discordService,
+    ExternalMediaDiscovery? externalMedia,
   })  : _repository = repository,
         _prefs = prefs,
         _progress = progress ??
             PlaybackProgressTracker(PlaybackProgressService(repository)),
         _engine = engine ?? PlaybackEngine(),
         _discordService = discordService ?? DiscordService(),
+        _externalMedia = externalMedia ?? ExternalMediaDiscovery(),
         super(AppPlayerState(
           tracks: PlayerTracksState(
             volume: prefs.getDouble('player_volume') ?? 100.0,
@@ -243,8 +249,23 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   void setVolume(double value) {
     _engine.setVolume(value);
-    _prefs.setDouble('player_volume', value);
+    _pendingVolume = value;
+    _volumeSaveTimer?.cancel();
+    _volumeSaveTimer = Timer(const Duration(milliseconds: 500), _saveVolume);
     showUi();
+  }
+
+  void _saveVolume() {
+    _volumeSaveTimer?.cancel();
+    _volumeSaveTimer = null;
+    final value = _pendingVolume;
+    _pendingVolume = null;
+    if (value != null) {
+      unawaited(_prefs.setDouble('player_volume', value).then<void>((_) {},
+          onError: (Object error, StackTrace stack) {
+        talker.handle(error, stack, 'Failed to save player volume');
+      }));
+    }
   }
 
   void changeVolume(double delta) {
@@ -319,8 +340,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
       final anime = await _repository.getAnimeById(animeId);
       if (!_current(generation)) return;
       final savedSeconds = _progress.restore(anime, path);
-      final subsMap = await _applyExternalMedia(path, generation)
-          .timeout(const Duration(seconds: 5));
+      final subsMap = await _applyExternalMedia(path, generation);
       if (!_current(generation)) return;
       final cached =
           anime?.skipData.where((s) => s.episodePath == path).firstOrNull;
@@ -449,61 +469,20 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   Future<Map<String, List<String>>> _applyExternalMedia(
       String videoPath, int generation) async {
-    Map<String, List<String>> subsMap = {};
+    ExternalMedia? media;
     try {
-      final parentDir = File(videoPath).parent;
-      Set<String> audioDirs = {};
-      Set<String> subDirs = {};
-      String? fontsDir;
-
-      await for (var entity
-          in parentDir.list(recursive: true, followLinks: false)) {
-        final path = entity.path;
-        final pathLower = path.toLowerCase();
-
-        if (entity is File) {
-          if (pathLower.endsWith('.mka') ||
-              pathLower.endsWith('.m4a') ||
-              pathLower.endsWith('.ac3') ||
-              pathLower.endsWith('.flac')) {
-            audioDirs.add(entity.parent.path);
-          } else if (pathLower.endsWith('.ass') || pathLower.endsWith('.srt')) {
-            subDirs.add(entity.parent.path);
-
-            final parts = entity.parent.path.replaceAll('\\', '/').split('/');
-            String folderName = parts.last;
-            if (parts.length > 1 &&
-                (folderName.toLowerCase() == 'надписи' ||
-                    folderName.toLowerCase() == 'signs')) {
-              folderName = "${parts[parts.length - 2]} $folderName";
-            }
-
-            final fileName = entity.uri.pathSegments.last;
-            subsMap.putIfAbsent(fileName, () => []).add(folderName);
-          }
-        } else if (entity is Directory) {
-          if (pathLower.endsWith('fonts') || pathLower.endsWith('шрифты')) {
-            fontsDir = path;
-          }
-        }
-      }
-
-      if (!_current(generation)) return {};
-      _engine.setProperty('sub-auto', 'fuzzy');
-      _engine.setProperty('audio-file-auto', 'fuzzy');
-      String sep = Platform.isWindows ? ';' : ':';
-
-      final sortedAudioDirs = audioDirs.toList()..sort();
-      final sortedSubDirs = subDirs.toList()..sort();
-
-      _engine.setProperty('audio-file-paths', sortedAudioDirs.join(sep));
-      _engine.setProperty('sub-file-paths', sortedSubDirs.join(sep));
-      _engine.setProperty('sub-fonts-dir', fontsDir ?? '');
+      media = await _externalMedia.discover(videoPath);
     } catch (e, st) {
       talker.handle(e, st, 'Failed to auto-detect external media');
     }
-
-    return subsMap;
+    if (!_current(generation)) return {};
+    final sep = Platform.isWindows ? ';' : ':';
+    _engine.setProperty('sub-auto', 'fuzzy');
+    _engine.setProperty('audio-file-auto', 'fuzzy');
+    _engine.setProperty('audio-file-paths', media?.audioDirs.join(sep) ?? '');
+    _engine.setProperty('sub-file-paths', media?.subDirs.join(sep) ?? '');
+    _engine.setProperty('sub-fonts-dir', media?.fontsDir ?? '');
+    return media?.subs ?? {};
   }
 
   void togglePlay() {
@@ -574,6 +553,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   @override
   void dispose() {
     ++_loadGeneration;
+    _saveVolume();
     _lifecycle.dispose();
     _discordService.dispose();
     final finalSeconds = state.position.inSeconds;

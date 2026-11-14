@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:isar/isar.dart';
+import 'package:collection/collection.dart';
+import 'package:isar_community/isar.dart';
 import '../../domain/anime.dart';
 import 'playback_progress_store.dart';
 
@@ -174,18 +175,33 @@ class AnimeRepository implements PlaybackProgressStore {
               anime.episodePaths.any((path) => _under(path, root));
           if (found == null && !belongs) continue;
           remaining.remove(key);
-          anime.scanTitle ??= key;
-          anime.sourceFolders = {
+          final scanTitle = anime.scanTitle ?? key;
+          final sourceFolders = {
             ...anime.sourceFolders,
             if (anime.folderPath != null) normalizeRoot(anime.folderPath!),
             root
           }.toList();
-          anime.folderPath ??= root;
-          anime.episodePaths = {
+          final folderPath = anime.folderPath ?? root;
+          final episodePaths = {
             ...anime.episodePaths.where((path) => !_under(path, root)),
             ...?found
           }.toList();
-          await db.animes.put(anime);
+          const listEquality = ListEquality<String>();
+          const setEquality = SetEquality<String>();
+          final episodesUnchanged =
+              anime.episodePaths.length == episodePaths.length &&
+                  setEquality.equals(
+                      anime.episodePaths.toSet(), episodePaths.toSet());
+          if (anime.scanTitle != scanTitle ||
+              anime.folderPath != folderPath ||
+              !listEquality.equals(anime.sourceFolders, sourceFolders) ||
+              !episodesUnchanged) {
+            anime.scanTitle = scanTitle;
+            anime.sourceFolders = sourceFolders;
+            anime.folderPath = folderPath;
+            if (!episodesUnchanged) anime.episodePaths = episodePaths;
+            await db.animes.put(anime);
+          }
           affected.add(anime);
         }
         for (final entry in remaining.entries) {

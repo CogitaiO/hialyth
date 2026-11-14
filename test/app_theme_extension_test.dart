@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nekaido_pre/theme/app_palette.dart';
+import 'package:nekaido_pre/theme/app_breakpoints.dart';
+import 'package:nekaido_pre/theme/app_motion.dart';
 import 'package:nekaido_pre/theme/app_theme_extension.dart';
+import 'package:nekaido_pre/theme/app_typography.dart';
 
 void main() {
   group('AppThemeExtension', () {
@@ -72,6 +75,28 @@ void main() {
       expect(AppRadii.xl, 16);
       expect(AppRadii.xxl, 24);
       expect(AppRadii.pill, 999);
+    });
+
+    test('keeps the shared type, motion, and desktop layout scales named', () {
+      expect(AppTypography.displayLarge.fontSize, 36);
+      expect(AppTypography.headline.fontSize, 24);
+      expect(AppTypography.title.fontSize, 16);
+      expect(AppTypography.body.fontSize, 14);
+      expect(AppTypography.caption.fontSize, 11);
+      expect(AppTypography.mono.fontFamily, 'JetBrainsMono');
+
+      expect(AppMotion.fast, const Duration(milliseconds: 100));
+      expect(AppMotion.page, const Duration(milliseconds: 250));
+      expect(
+        AppMotion.effective(AppMotion.slow,
+            decorative: true, reduceMotion: true),
+        Duration.zero,
+      );
+
+      expect(AppBreakpoints.forWidth(839), Breakpoint.compact);
+      expect(AppBreakpoints.forWidth(900), Breakpoint.medium);
+      expect(AppBreakpoints.forWidth(1200), Breakpoint.expanded);
+      expect(AppBreakpoints.forWidth(1600), Breakpoint.wide);
     });
 
     test('supports ThemeExtension copy and interpolation', () {

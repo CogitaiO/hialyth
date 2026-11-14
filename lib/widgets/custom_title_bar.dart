@@ -8,12 +8,14 @@ class CustomTitleBar extends StatefulWidget {
   final Color? backgroundColor;
   final Widget? leading; // Optional leading widget, e.g. a back button.
   final Widget? title; // Optional title widget.
+  final String? appName;
 
   const CustomTitleBar({
     super.key,
     this.backgroundColor,
     this.leading,
     this.title,
+    this.appName,
   });
 
   @override
@@ -90,7 +92,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
             widget.title!
           else
             Text(
-              'Nekaido',
+              widget.appName ?? 'Nekaido',
               style: TextStyle(
                   color: tokens.textSecondary,
                   fontSize: 13,

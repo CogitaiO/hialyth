@@ -7,6 +7,7 @@ import 'package:nekaido_pre/data/repositories/anime_repository.dart';
 import 'package:nekaido_pre/data/services/discord_service.dart';
 import 'package:nekaido_pre/domain/anime.dart';
 import 'package:nekaido_pre/providers/player/playback_engine.dart';
+import 'package:nekaido_pre/providers/player/external_media_discovery.dart';
 import 'package:nekaido_pre/providers/player/player_provider.dart';
 
 class Repository extends Fake implements AnimeRepository {
@@ -27,6 +28,7 @@ class Backend extends Fake implements PlaybackBackend {
   final properties = <String, String>{};
   bool disposed = false;
   bool failDuration = false;
+  final volumes = <double>[];
   String? subtitles;
   @override
   Stream<Duration> get positionStream => const Stream.empty();
@@ -68,6 +70,8 @@ class Backend extends Fake implements PlaybackBackend {
   Future<void> seek(Duration value) async {}
   @override
   Future<void> play() async {}
+  @override
+  Future<void> setVolume(double volume) async => volumes.add(volume);
   @override
   Future<void> waitForDuration() async {
     if (failDuration) throw TimeoutException('No duration');
@@ -191,5 +195,49 @@ void main() {
     await notifier.loadVideo(1, one);
     expect(notifier.state.isPlaying, isTrue);
     expect(notifier.state.errorCode, isNull);
+  });
+  test('external media timeout does not prevent playback or reuse old paths',
+      () async {
+    notifier.dispose();
+    final prefs = await SharedPreferences.getInstance();
+    var scans = 0;
+    var cancelled = false;
+    final discovery = ExternalMediaDiscovery(
+      cacheDuration: Duration.zero,
+      timeout: const Duration(milliseconds: 20),
+      listDirectory: (_) {
+        scans++;
+        if (scans == 1) {
+          return Stream.value(File('${dir.path}/subs/episode.srt'));
+        }
+        return StreamController<FileSystemEntity>(
+          onCancel: () => cancelled = true,
+        ).stream;
+      },
+    );
+    notifier = PlayerNotifier(repo, prefs,
+        engine: backend, discordService: presence, externalMedia: discovery);
+    await notifier.loadVideo(1, one);
+    expect(backend.properties['sub-file-paths'], '${dir.path}/subs');
+    await notifier.loadVideo(2, two);
+    expect(cancelled, isTrue);
+    expect(backend.properties['sub-file-paths'], isEmpty);
+    expect(backend.opened, [one, two]);
+    expect(notifier.state.isPlaying, isTrue);
+    expect(notifier.state.errorCode, isNull);
+  });
+  test('coalesces volume changes and flushes the last value on dispose',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    notifier.setVolume(10);
+    notifier.setVolume(20);
+    notifier.setVolume(30);
+    expect(backend.volumes, [10, 20, 30]);
+    expect(prefs.getDouble('player_volume'), isNull);
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    expect(prefs.getDouble('player_volume'), 30);
+    notifier.setVolume(40);
+    notifier.dispose();
+    expect(prefs.getDouble('player_volume'), 40);
   });
 }

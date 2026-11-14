@@ -89,12 +89,6 @@ abstract final class AppSurfaces {
 
   // ── Glass configuration ──
 
-  /// Blur radius for BackdropFilter (16–24). Default 20.
-  static const double glassBlur = 20;
-
-  /// Glass saturation factor.
-  static const double glassSaturation = 1.15;
-
   /// Glass border opacity (dark).
   static const double glassBorderOpacity = 0.12;
 

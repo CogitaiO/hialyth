@@ -10,6 +10,7 @@ import '../presentation/anime_details/anime_details_screen.dart';
 import '../../providers/repositories_provider.dart';
 import '../presentation/anime_details/dialogs/anime_dialogs.dart';
 import '../theme/app_icons.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_theme_extension.dart';
 import '../core/localization/l10n.dart';
 import '../presentation/player/player_screen.dart';
@@ -119,6 +120,18 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
     final scheme = Theme.of(context).colorScheme;
     final active = _isHovered || _isFocused;
     final cover = widget.anime.coverUrl;
+    final (statusLabel, statusColor) = switch (widget.anime.status) {
+      AnimeStatus.planned => (context.l10n.statusPlanned, tokens.statusPlanned),
+      AnimeStatus.watching => (
+          context.l10n.statusWatching,
+          tokens.statusWatching
+        ),
+      AnimeStatus.completed => (
+          context.l10n.statusCompleted,
+          tokens.statusCompleted
+        ),
+      AnimeStatus.dropped => (context.l10n.statusDropped, tokens.statusDropped),
+    };
     final placeholder =
         Center(child: Icon(AppIcons.image, color: tokens.textMuted, size: 40));
     return FocusableActionDetector(
@@ -140,11 +153,11 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
           child: AnimatedContainer(
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
-                : const Duration(milliseconds: 150),
-            padding: const EdgeInsets.all(8),
+                : AppMotion.normal,
+            padding: const EdgeInsets.all(AppSpacing.xs),
             decoration: BoxDecoration(
               color: active ? tokens.containerHigh : tokens.cardSurface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(
                   color: _isFocused
                       ? scheme.primary
@@ -157,7 +170,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                   child: Hero(
                 tag: 'poster_${widget.anime.id}_library',
                 child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadii.md),
                     child: Stack(fit: StackFit.expand, children: [
                       DecoratedBox(
                           decoration: BoxDecoration(
@@ -175,6 +188,12 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                           memCacheWidth: 440,
                           placeholder: (_, __) => placeholder,
                           errorWidget: (_, __, ___) => placeholder,
+                        )
+                      else if (cover.startsWith('asset:'))
+                        Image.asset(
+                          cover.substring('asset:'.length),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => placeholder,
                         )
                       else
                         Image.file(File(cover),
@@ -227,6 +246,30 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                                       },
                                     ))),
                       ],
+                      Positioned(
+                        top: AppSpacing.xs,
+                        left: AppSpacing.xs,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: tokens.surfaceOverlay,
+                            borderRadius: BorderRadius.circular(AppRadii.pill),
+                            border: Border.all(color: tokens.borderFaint),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.xs, vertical: 3),
+                            child: Text(
+                              statusLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(color: statusColor),
+                            ),
+                          ),
+                        ),
+                      ),
                       if (widget.anime.watchProgress > 0)
                         Positioned(
                             bottom: 0,
@@ -240,15 +283,15 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                             )),
                     ])),
               )),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               Text(widget.anime.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context)
                       .textTheme
-                      .titleSmall
+                      .titleMedium
                       ?.copyWith(color: tokens.textPrimary)),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                   context.l10n.detailsWatched(
                       widget.anime.episodePaths.length,
@@ -348,10 +391,10 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                       color: Theme.of(context).colorScheme.primary),
                   tooltip: context.l10n.detailsChooseImage,
                   onPressed: () async {
-                    FilePickerResult? result =
-                        await FilePicker.pickFiles(type: FileType.image);
-                    if (result != null && result.files.single.path != null) {
-                      coverController.text = result.files.single.path!;
+                    final result =
+                        await FilePicker.pickFile(type: FileType.image);
+                    if (result?.path != null) {
+                      coverController.text = result!.path!;
                     }
                   },
                 ),

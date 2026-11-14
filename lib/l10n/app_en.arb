@@ -139,7 +139,7 @@
   "settingsAdvanced": "Advanced",
   "settingsTheme": "Theme",
   "settingsThemeColors": "Theme & Colors",
-  "settingsReduceTransparencyDescription": "Disable blur and use solid surfaces in the player.",
+  "settingsReduceTransparencyDescription": "Use opaque player controls for clarity and lower rendering cost.",
   "settingsAppAccentColor": "App Accent Color",
   "settingsThemeSystem": "System",
   "settingsThemeDark": "Dark",
