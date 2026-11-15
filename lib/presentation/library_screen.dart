@@ -338,6 +338,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
     final selectedCollections = ref.watch(selectedCollectionProvider);
     final tokens = context.appTheme;
     final phone = MediaQuery.sizeOf(context).width < 600;
+    final folders = ref.watch(savedFoldersProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,6 +440,15 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
+                  ),
+                  IconButton(
+                    key: const ValueKey('library-refresh'),
+                    tooltip: context.l10n.settingsRescanLibrary,
+                    icon: const Icon(AppIcons.rescan),
+                    onPressed:
+                        folders.isEmpty || ref.watch(scanProvider).running
+                        ? null
+                        : () => ref.read(scanProvider.notifier).scan(folders),
                   ),
                   PopupMenuButton<LibrarySort>(
                     tooltip: context.l10n.librarySort,
@@ -608,15 +618,8 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndShowVpnWarning();
-      _runAutoScan();
+      if (mounted) _checkAndShowVpnWarning();
     });
-  }
-
-  Future<void> _runAutoScan() async {
-    final folders = ref.read(savedFoldersProvider);
-    if (folders.isEmpty) return;
-    await ref.read(scanProvider.notifier).scan(folders);
   }
 
   Future<void> _checkAndShowVpnWarning() async {
@@ -753,9 +756,14 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
               ),
             ),
           );
-          return MediaQuery.sizeOf(context).width < 600
-              ? SingleChildScrollView(child: emptyContent)
-              : emptyContent;
+          return LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: emptyContent,
+              ),
+            ),
+          );
         }
         final view = ref.watch(libraryViewProvider);
         final canShowResume =
