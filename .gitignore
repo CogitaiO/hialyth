@@ -33,6 +33,12 @@ migrate_working_dir/
 /build/
 /build_showcase/
 /coverage/
+/test/failures/
+
+# Generated iOS configuration contains machine-specific SDK and checkout paths.
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/ephemeral/
 
 # Symbolication related
 app.*.symbols
@@ -41,8 +47,14 @@ app.*.symbols
 app.*.map.json
 
 # Android Studio will place build artifacts here
+/android/build/
 /android/app/debug
 /android/app/profile
 /android/app/release
 
 /nekaido_lib.txt
+
+# Local tool preferences and instruction backups
+/devtools_options.yaml
+/AGENTS.md.backup
+/AGENTS.md.bak-*
