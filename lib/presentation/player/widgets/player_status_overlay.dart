@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 
 class PlayerStatusOverlay extends StatelessWidget {
   const PlayerStatusOverlay(
@@ -28,7 +29,7 @@ class PlayerStatusOverlay extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (loading &&
-                              !MediaQuery.disableAnimationsOf(context))
+                               !AppMotion.isReduced(context))
                             const CircularProgressIndicator()
                           else
                             Icon(

@@ -105,7 +105,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
                     child:
                         widget.title ??
                         Text(
-                          widget.appName ?? 'Nekaido',
+                          widget.appName ?? 'Hialyth',
                           style: TextStyle(
                             color: tokens.textSecondary,
                             fontSize: 13,
@@ -185,9 +185,7 @@ class _WindowButtonState extends State<_WindowButton> {
         onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : AppMotion.medium,
+          duration: AppMotion.resolveDuration(context, AppMotion.medium),
           curve: AppMotion.enter,
           width: 46,
           height: double.infinity,

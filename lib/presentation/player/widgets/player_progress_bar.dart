@@ -7,6 +7,7 @@ import 'playback_timeline.dart';
 import '../../../theme/app_typography.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../widgets/animated_play_pause_icon.dart';
 
@@ -34,6 +35,20 @@ class PlayerProgressBar extends StatelessWidget {
 
 class _TransportControls extends ConsumerWidget {
   const _TransportControls();
+
+  Future<void> _openTrackSelector(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(playerProvider.notifier);
+    notifier.beginUiInteraction();
+    try {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => const TrackSelectorDialog(),
+      );
+    } finally {
+      notifier.endUiInteraction();
+      if (context.mounted) notifier.showUi();
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -77,9 +92,10 @@ class _TransportControls extends ConsumerWidget {
                 iconSize: 24,
                 tooltip: context.l10n.playerMute,
                 icon: AnimatedSwitcher(
-                  duration: MediaQuery.disableAnimationsOf(context)
-                      ? Duration.zero
-                      : const Duration(milliseconds: 150),
+                  duration: AppMotion.resolveDuration(
+                    context,
+                    const Duration(milliseconds: 150),
+                  ),
                   transitionBuilder: (child, animation) =>
                       FadeTransition(opacity: animation, child: child),
                   child: Icon(
@@ -133,7 +149,12 @@ class _TransportControls extends ConsumerWidget {
             child: PopupMenuButton<double>(
               tooltip: context.l10n.playerSpeed,
               offset: const Offset(0, -250),
-              onSelected: (speed) => notifier.setPlaybackSpeed(speed),
+              onOpened: notifier.beginUiInteraction,
+              onCanceled: notifier.endUiInteraction,
+              onSelected: (speed) {
+                notifier.setPlaybackSpeed(speed);
+                notifier.endUiInteraction();
+              },
               itemBuilder: (context) =>
                   [0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map((speed) {
                     return PopupMenuItem<double>(
@@ -204,12 +225,7 @@ class _TransportControls extends ConsumerWidget {
           IconButton(
             icon: Icon(AppIcons.subtitles, color: tokens.textPrimary),
             tooltip: context.l10n.playerDubsSubs,
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const TrackSelectorDialog(),
-              );
-            },
+            onPressed: () => _openTrackSelector(context, ref),
           ),
           IconButton(
             icon: Icon(AppIcons.pip, color: tokens.textPrimary),
@@ -258,6 +274,8 @@ class _PlayerTimeline extends ConsumerWidget {
         position: snapshot.data ?? Duration.zero,
         duration: duration,
         playing: playing && visible,
+        onInteractionStart: notifier.beginUiInteraction,
+        onInteractionEnd: notifier.endUiInteraction,
         intervals: intervals
             .map(
               (s) => SkipIntervalDb()

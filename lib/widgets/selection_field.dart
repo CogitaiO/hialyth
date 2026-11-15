@@ -35,9 +35,7 @@ class SelectionField<T> extends StatelessWidget {
           onSelected: onChanged,
           tooltip: '',
           popUpAnimationStyle: AnimationStyle(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : AppMotion.medium,
+            duration: AppMotion.resolveDuration(context, AppMotion.medium),
             curve: AppMotion.enter,
             reverseCurve: AppMotion.exit,
           ),

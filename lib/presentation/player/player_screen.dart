@@ -14,6 +14,7 @@ import '../../core/logger.dart';
 import 'dart:async';
 import 'dart:io';
 import '../../theme/app_theme_extension.dart';
+import '../../theme/app_motion.dart';
 import '../../core/localization/l10n.dart';
 import 'widgets/player_status_overlay.dart';
 
@@ -305,7 +306,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                                 },
                               ),
                             ),
-                          if (!MediaQuery.disableAnimationsOf(context))
+                          if (!AppMotion.isReduced(context))
                             Positioned.fill(
                               child: SeekRippleOverlay(
                                 isLeft: _showLeftRipple,
@@ -318,9 +319,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           else
                             const PlayerOverlay(),
                           AnimatedSwitcher(
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 500),
+                            duration: AppMotion.resolveDuration(
+                              context,
+                              const Duration(milliseconds: 500),
+                            ),
                             switchInCurve: Curves.easeOut,
                             switchOutCurve: Curves.easeIn,
                             child: playerState.isVideoCompleted

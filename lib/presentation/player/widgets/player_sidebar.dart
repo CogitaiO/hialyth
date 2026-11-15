@@ -8,6 +8,7 @@ import '../../../../providers/library_provider.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../../widgets/glass_surface.dart';
 
@@ -34,9 +35,10 @@ class PlayerSidebar extends ConsumerWidget {
         ignoring: !isOpen,
         child: AnimatedSlide(
           offset: isOpen ? Offset.zero : const Offset(1, 0),
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 200),
+          duration: AppMotion.resolveDuration(
+            context,
+            const Duration(milliseconds: 200),
+          ),
           curve: Curves.easeOutCubic,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,

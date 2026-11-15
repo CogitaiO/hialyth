@@ -81,9 +81,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ];
                     final content = AnimatedSwitcher(
-                      duration: MediaQuery.disableAnimationsOf(context)
-                          ? Duration.zero
-                          : const Duration(milliseconds: 200),
+                      duration: AppMotion.resolveDuration(
+                        context,
+                        const Duration(milliseconds: 200),
+                      ),
                       child: _buildContent(_selectedIndex, accentColor, ref),
                     );
                     return Center(
@@ -258,9 +259,10 @@ class _AppearanceSettings extends ConsumerWidget {
                       return InkResponse(
                         onTap: () => notifier.updateAccentColor(c),
                         child: AnimatedContainer(
-                          duration: MediaQuery.disableAnimationsOf(context)
-                              ? Duration.zero
-                              : AppMotion.medium,
+                          duration: AppMotion.resolveDuration(
+                            context,
+                            AppMotion.medium,
+                          ),
                           curve: AppMotion.enter,
                           margin: const EdgeInsets.only(right: AppSpacing.sm),
                           width: 40,
@@ -285,9 +287,10 @@ class _AppearanceSettings extends ConsumerWidget {
                           ),
                           child: AnimatedOpacity(
                             opacity: isSelected ? 1 : 0,
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : AppMotion.medium,
+                            duration: AppMotion.resolveDuration(
+                              context,
+                              AppMotion.medium,
+                            ),
                             child: Icon(
                               AppIcons.selected,
                               color: AppPalette.onAccent(c),
@@ -597,9 +600,10 @@ class _MenuTab extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadii.lg),
       child: AnimatedContainer(
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 200),
+        duration: AppMotion.resolveDuration(
+          context,
+          const Duration(milliseconds: 200),
+        ),
         margin: const EdgeInsets.only(bottom: AppSpacing.xs),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -820,7 +824,10 @@ class _AdvancedSettings extends ConsumerWidget {
             title: Text(context.l10n.settingsViewLogs),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => TalkerScreen(talker: talker)),
+              AppMotion.pageRoute(
+                context,
+                builder: (_) => TalkerScreen(talker: talker),
+              ),
             ),
           ),
         ),

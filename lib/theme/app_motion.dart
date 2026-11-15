@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Motion tokens: durations and curves.
-/// Respects `reduceMotion` accessibility setting — when enabled, decorative
-/// animations become instant (0 ms) or a short fade (80 ms).
+/// Respects the `disableAnimations` accessibility setting — all visual
+/// transitions become instantaneous while their state changes still run.
 abstract final class AppMotion {
   /// 100 ms — color changes, opacity, hover states.
   static const Duration fast = Duration(milliseconds: 100);
@@ -39,18 +39,34 @@ abstract final class AppMotion {
   /// Emphasized curve: easeOutQuart — for major transitions (hero, page).
   static const Curve emphasized = Curves.easeOutQuart;
 
-  /// Returns the effective duration respecting `reduceMotion`.
-  /// Decorative animations (scale, slide, bounce) become 0 ms.
-  /// Structural transitions (fade, page) become a short fade.
+  /// Whether this subtree should render visual transitions instantaneously.
+  static bool isReduced(BuildContext context) =>
+      MediaQuery.disableAnimationsOf(context);
+
+  /// Resolves a motion token against the system/accessibility preference.
+  static Duration resolveDuration(BuildContext context, Duration duration) =>
+      isReduced(context) ? Duration.zero : duration;
+
+  /// Context-free counterpart for callers that already hold the preference.
+  /// [decorative] is retained for source compatibility; reduced motion now
+  /// makes every visual transition instantaneous, not only decorative ones.
   static Duration effective(
     Duration base, {
     bool decorative = false,
     bool reduceMotion = false,
   }) {
-    if (!reduceMotion) return base;
-    if (decorative) return Duration.zero;
-    return base.inMilliseconds > 150 ? const Duration(milliseconds: 80) : base;
+    return reduceMotion ? Duration.zero : base;
   }
+
+  /// Material route with platform behavior and reduced-motion timing resolved
+  /// when it is pushed, for consistent forward and reverse transitions.
+  static PageRoute<T> pageRoute<T>(
+    BuildContext context, {
+    required WidgetBuilder builder,
+  }) => _AppMaterialPageRoute<T>(
+    builder: builder,
+    reduceMotion: isReduced(context),
+  );
 
   /// Standard page transition: fade + slide 8px.
   static PageTransitionsBuilder pageTransitionsBuilder({
@@ -72,9 +88,7 @@ class _AppPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    if (reduceMotion || MediaQuery.disableAnimationsOf(context)) {
-      return FadeTransition(opacity: animation, child: child);
-    }
+    if (reduceMotion || AppMotion.isReduced(context)) return child;
     return SlideTransition(
       position: Tween<Offset>(begin: const Offset(0, 0.02), end: Offset.zero)
           .animate(
@@ -83,4 +97,18 @@ class _AppPageTransitionsBuilder extends PageTransitionsBuilder {
       child: FadeTransition(opacity: animation, child: child),
     );
   }
+}
+
+class _AppMaterialPageRoute<T> extends MaterialPageRoute<T> {
+  _AppMaterialPageRoute({required super.builder, required this.reduceMotion});
+
+  final bool reduceMotion;
+
+  @override
+  Duration get transitionDuration =>
+      reduceMotion ? Duration.zero : super.transitionDuration;
+
+  @override
+  Duration get reverseTransitionDuration =>
+      reduceMotion ? Duration.zero : super.reverseTransitionDuration;
 }

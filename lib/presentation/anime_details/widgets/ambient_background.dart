@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/app_features.dart';
+import '../../../theme/app_motion.dart';
 import '../../../theme/app_theme_extension.dart';
 
 /// Artwork tint is painted directly; no full-screen backdrop sampling or shadow blur.
@@ -8,9 +9,10 @@ class AmbientBackground extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) => AnimatedContainer(
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 300),
+        duration: AppMotion.resolveDuration(
+          context,
+          const Duration(milliseconds: 300),
+        ),
         decoration: BoxDecoration(
             gradient: RadialGradient(
           center: Alignment.topLeft,

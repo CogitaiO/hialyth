@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/anime.dart';
 import '../../core/localization/l10n.dart';
 import '../../theme/app_icons.dart';
+import '../../theme/app_motion.dart';
 import '../../theme/app_theme_extension.dart';
 import '../../widgets/anime_artwork.dart';
 import '../anime_details/anime_details_screen.dart';
@@ -9,7 +10,8 @@ import '../player/player_screen.dart';
 
 void _details(BuildContext context, Anime anime) => Navigator.push(
     context,
-    MaterialPageRoute(
+    AppMotion.pageRoute(
+        context,
         builder: (_) => AnimeDetailsScreen(
             animeId: anime.id, heroTag: 'library_list_${anime.id}')));
 
@@ -118,7 +120,8 @@ class ContinueWatchingCard extends StatelessWidget {
                             ? null
                             : () => Navigator.push(
                                 context,
-                                MaterialPageRoute(
+                                AppMotion.pageRoute(
+                                    context,
                                     builder: (_) => PlayerScreen(
                                         animeId: anime.id, videoPath: next))),
                         icon: const Icon(AppIcons.play, size: 16),
