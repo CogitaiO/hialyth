@@ -1,0 +1,31 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#191B2A"/>
+      <stop offset="0.55" stop-color="#0E1018"/>
+      <stop offset="1" stop-color="#08090C"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="50%">
+      <stop offset="0" stop-color="#8B7CF6" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#8B7CF6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#B7A7FF"/>
+      <stop offset="0.5" stop-color="#8B7CF6"/>
+      <stop offset="1" stop-color="#5B4BC4"/>
+    </linearGradient>
+    <linearGradient id="ivory" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DCE2EC"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="220" fill="url(#glow)"/>
+  <rect x="10" y="10" width="1004" height="1004" rx="212" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="8"/>
+
+  <!-- Halo + H -->
+  <circle cx="512" cy="512" r="300" fill="none" stroke="url(#ring)" stroke-width="28" stroke-opacity="0.9"/>
+  <rect x="330" y="330" width="92" height="364" rx="28" fill="url(#ivory)"/>
+  <rect x="606" y="330" width="92" height="364" rx="28" fill="url(#ivory)"/>
+  <rect x="422" y="492" width="184" height="40" rx="20" fill="url(#ivory)"/>
+</svg>

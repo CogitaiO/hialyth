@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#0b0d14"/>
+  <g fill="#121521" stroke="#292d3d" stroke-width="1.5">
+    <rect x="48" y="70" width="336" height="560" rx="28"/>
+    <rect x="432" y="70" width="336" height="560" rx="28"/>
+    <rect x="816" y="70" width="336" height="560" rx="28"/>
+  </g>
+  <g stroke="#dcd9ff" stroke-width="3" stroke-linejoin="round">
+    <!-- Drop -->
+    <path fill="#a8a1f4" d="M218 197c31 0 56 24 56 56 0 20-7 32-7 44 0 28-18 52-49 52s-49-24-49-52c0-12-7-24-7-44 0-32 25-56 56-56z"/>
+    <path fill="#a8a1f4" stroke-width="2" d="M169 274c-18-8-22-22-14-28s18 5 22 18zm98 0c18-8 22-22 14-28s-18 5-22 18z"/>
+    <!-- Gloop -->
+    <path fill="#8b7cf6" d="M584 342c-26-7-37-31-29-55 6-19-1-34 8-56 10-26 39-39 63-27 18 9 23 28 38 34 17 7 26 23 22 42-4 18-16 26-16 40-1 23-24 36-46 30-14-3-25-3-40-8z"/>
+    <path fill="none" stroke="#cfcaff" stroke-width="5" stroke-linecap="round" d="M579 249c10-25 33-31 50-17"/>
+    <!-- Mote -->
+    <path fill="#b4adf8" d="M948 319c-25-16-29-49-13-73 12-18 36-25 56-17 19 8 23 27 38 37 17 13 19 36 6 52s-35 19-51 13c-14-5-25-4-36-12z"/>
+    <path fill="#b4adf8" stroke-width="2" d="M934 310c-18 10-17 27 0 30 11 1 17-8 20-14z"/>
+  </g>
+  <g fill="#25243e">
+    <ellipse cx="197.5" cy="271" rx="5.5" ry="8"/><ellipse cx="236.5" cy="271" rx="5.5" ry="8"/>
+    <ellipse cx="595" cy="278.5" rx="6" ry="8.5"/><ellipse cx="637" cy="278.5" rx="6" ry="8.5"/>
+    <ellipse cx="961" cy="278.5" rx="5" ry="7.5"/><ellipse cx="995" cy="275.5" rx="5" ry="7.5"/>
+  </g>
+  <g fill="none" stroke="#393653" stroke-width="3" stroke-linecap="round">
+    <path d="M208 291q10 8 20 0"/><path d="M608 300q9 6 19-2"/><path d="M973 296q7 6 14-1"/>
+  </g>
+  <circle cx="661.5" cy="213.5" r="8.5" fill="#f0d98a" stroke="#fff0bd" stroke-width="2"/>
+  <circle cx="1026.5" cy="218.5" r="12.5" fill="#e9d88e" stroke="#fff0bd" stroke-width="2"/><circle cx="1026.5" cy="218.5" r="5.5" fill="#fff4ce"/>
+  <g font-family="Inter, sans-serif" text-anchor="middle">
+    <g fill="#e5e5ef" font-size="19"><text x="216" y="440">Lyth / DROP</text><text x="600" y="440">Lyth / GLOOP</text><text x="984" y="440">Lyth / MOTE</text></g>
+    <g fill="#9296a8" font-size="14"><text x="216" y="470">Hialyth mascot study</text><text x="600" y="470">Hialyth mascot study</text><text x="984" y="470">Hialyth mascot study</text></g>
+  </g>
+</svg>

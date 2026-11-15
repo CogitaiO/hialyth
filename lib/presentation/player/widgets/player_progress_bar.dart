@@ -10,17 +10,25 @@ import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
 
 class PlayerProgressBar extends StatelessWidget {
-  const PlayerProgressBar({super.key});
+  const PlayerProgressBar({
+    super.key,
+    this.timelineOnly = false,
+    this.mobileStyle = false,
+  });
+  final bool timelineOnly;
+  final bool mobileStyle;
 
   @override
-  Widget build(BuildContext context) => const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          RepaintBoundary(child: _PlayerTimeline()),
-          SizedBox(height: 4),
-          _TransportControls(),
-        ],
-      );
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      RepaintBoundary(child: _PlayerTimeline(mobileStyle: mobileStyle)),
+      if (!timelineOnly) ...[
+        const SizedBox(height: 4),
+        const _TransportControls(),
+      ],
+    ],
+  );
 }
 
 class _TransportControls extends ConsumerWidget {
@@ -30,12 +38,15 @@ class _TransportControls extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final volume = ref.watch(playerProvider.select((s) => s.volume));
     final isPlaying = ref.watch(playerProvider.select((s) => s.isPlaying));
-    final playbackSpeed =
-        ref.watch(playerProvider.select((s) => s.playbackSpeed));
-    final hasNextEpisode = ref.watch(playerProvider.select((s) {
-      final index = s.playlist.indexOf(s.videoPath ?? '');
-      return index >= 0 && index + 1 < s.playlist.length;
-    }));
+    final playbackSpeed = ref.watch(
+      playerProvider.select((s) => s.playbackSpeed),
+    );
+    final hasNextEpisode = ref.watch(
+      playerProvider.select((s) {
+        final index = s.playlist.indexOf(s.videoPath ?? '');
+        return index >= 0 && index + 1 < s.playlist.length;
+      }),
+    );
     final notifier = ref.read(playerProvider.notifier);
     final tokens = context.appTheme;
     return Padding(
@@ -51,8 +62,11 @@ class _TransportControls extends ConsumerWidget {
                   : const Duration(milliseconds: 150),
               transitionBuilder: (child, animation) =>
                   FadeTransition(opacity: animation, child: child),
-              child: Icon(isPlaying ? AppIcons.pause : AppIcons.play,
-                  key: ValueKey(isPlaying), color: tokens.textPrimary),
+              child: Icon(
+                isPlaying ? AppIcons.pause : AppIcons.play,
+                key: ValueKey(isPlaying),
+                color: tokens.textPrimary,
+              ),
             ),
             onPressed: () => notifier.togglePlay(),
           ),
@@ -79,8 +93,8 @@ class _TransportControls extends ConsumerWidget {
                     volume == 0
                         ? AppIcons.volumeOff
                         : (volume < 50
-                            ? AppIcons.volumeDown
-                            : AppIcons.volumeUp),
+                              ? AppIcons.volumeDown
+                              : AppIcons.volumeUp),
                     key: ValueKey(volume == 0 ? 0 : (volume < 50 ? 1 : 2)),
                     color: tokens.textPrimary,
                   ),
@@ -93,8 +107,9 @@ class _TransportControls extends ConsumerWidget {
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       trackHeight: 2.0,
-                      thumbShape:
-                          const RoundSliderThumbShape(enabledThumbRadius: 5.0),
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 5.0,
+                      ),
                       overlayShape: SliderComponentShape.noOverlay,
                       activeTrackColor: tokens.textPrimary,
                       inactiveTrackColor: tokens.borderStrong,
@@ -111,7 +126,7 @@ class _TransportControls extends ConsumerWidget {
             ],
           ),
           const SizedBox(width: AppSpacing.md),
-          const _PlaybackTimeLabel(),
+          const PlayerTimeLabel(),
           const Spacer(),
           Theme(
             data: Theme.of(context).copyWith(
@@ -128,37 +143,37 @@ class _TransportControls extends ConsumerWidget {
               onSelected: (speed) => notifier.setPlaybackSpeed(speed),
               itemBuilder: (context) =>
                   [0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map((speed) {
-                return PopupMenuItem<double>(
-                  value: speed,
-                  child: Row(
-                    children: [
-                      Icon(
-                        playbackSpeed == speed
-                            ? AppIcons.checkCircle
-                            : AppIcons.circleOutline,
-                        color: playbackSpeed == speed
-                            ? Theme.of(context).colorScheme.primary
-                            : tokens.textSubtle,
-                        size: 18,
+                    return PopupMenuItem<double>(
+                      value: speed,
+                      child: Row(
+                        children: [
+                          Icon(
+                            playbackSpeed == speed
+                                ? AppIcons.checkCircle
+                                : AppIcons.circleOutline,
+                            color: playbackSpeed == speed
+                                ? Theme.of(context).colorScheme.primary
+                                : tokens.textSubtle,
+                            size: 18,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            speed == 1.0
+                                ? context.l10n.playerSpeedNormal
+                                : "${speed}x",
+                            style: TextStyle(
+                              color: playbackSpeed == speed
+                                  ? Theme.of(context).colorScheme.primary
+                                  : tokens.textPrimary,
+                              fontWeight: playbackSpeed == speed
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        speed == 1.0
-                            ? context.l10n.playerSpeedNormal
-                            : "${speed}x",
-                        style: TextStyle(
-                          color: playbackSpeed == speed
-                              ? Theme.of(context).colorScheme.primary
-                              : tokens.textPrimary,
-                          fontWeight: playbackSpeed == speed
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
               child: Container(
                 margin: const EdgeInsets.only(right: AppSpacing.sm),
                 padding: const EdgeInsets.symmetric(
@@ -166,20 +181,20 @@ class _TransportControls extends ConsumerWidget {
                   vertical: AppSpacing.s6,
                 ),
                 decoration: BoxDecoration(
+                  color: playbackSpeed != 1.0
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2)
+                      : tokens.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  border: Border.all(
                     color: playbackSpeed != 1.0
-                        ? Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.2)
-                        : tokens.surfaceSubtle,
-                    borderRadius: BorderRadius.circular(AppRadii.md),
-                    border: Border.all(
-                        color: playbackSpeed != 1.0
-                            ? Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.5)
-                            : Colors.transparent)),
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.5)
+                        : Colors.transparent,
+                  ),
+                ),
                 child: Text(
                   "${playbackSpeed}x",
                   style: TextStyle(
@@ -204,18 +219,12 @@ class _TransportControls extends ConsumerWidget {
             },
           ),
           IconButton(
-            icon: Icon(
-              AppIcons.pip,
-              color: tokens.textPrimary,
-            ),
+            icon: Icon(AppIcons.pip, color: tokens.textPrimary),
             tooltip: context.l10n.playerPictureInPicture,
             onPressed: () => notifier.togglePiP(),
           ),
           IconButton(
-            icon: Icon(
-              AppIcons.playlist,
-              color: tokens.textPrimary,
-            ),
+            icon: Icon(AppIcons.playlist, color: tokens.textPrimary),
             tooltip: context.l10n.playerEpisodesNotes,
             onPressed: () => notifier.toggleSideBar(),
           ),
@@ -232,12 +241,16 @@ class _TransportControls extends ConsumerWidget {
 }
 
 class _PlayerTimeline extends ConsumerWidget {
-  const _PlayerTimeline();
+  const _PlayerTimeline({this.mobileStyle = false});
+  final bool mobileStyle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final identity = ref.watch(playerProvider
-        .select((s) => (s.animeId, s.videoPath, s.playback.sessionId)));
+    final identity = ref.watch(
+      playerProvider.select(
+        (s) => (s.animeId, s.videoPath, s.playback.sessionId),
+      ),
+    );
     final duration = ref.watch(playerProvider.select((s) => s.duration));
     final playing = ref.watch(playerProvider.select((s) => s.isPlaying));
     final visible = ref.watch(playerProvider.select((s) => s.isUiVisible));
@@ -248,13 +261,16 @@ class _PlayerTimeline extends ConsumerWidget {
       stream: visible ? notifier.player.stream.position : null,
       initialData: ref.read(playerProvider).position,
       builder: (context, snapshot) => PlaybackTimeline(
+        mobileStyle: mobileStyle,
         position: snapshot.data ?? Duration.zero,
         duration: duration,
         playing: playing && visible,
         intervals: intervals
-            .map((s) => SkipIntervalDb()
-              ..startTime = s.startTime
-              ..endTime = s.endTime)
+            .map(
+              (s) => SkipIntervalDb()
+                ..startTime = s.startTime
+                ..endTime = s.endTime,
+            )
             .toList(),
         onSeek: notifier.seek,
       ),
@@ -262,17 +278,22 @@ class _PlayerTimeline extends ConsumerWidget {
   }
 }
 
-class _PlaybackTimeLabel extends ConsumerWidget {
-  const _PlaybackTimeLabel();
+class PlayerTimeLabel extends ConsumerWidget {
+  const PlayerTimeLabel({super.key, this.style});
+  final TextStyle? style;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final seconds =
-        ref.watch(playerProvider.select((s) => s.position.inSeconds));
+    final seconds = ref.watch(
+      playerProvider.select((s) => s.position.inSeconds),
+    );
     final duration = ref.watch(playerProvider.select((s) => s.duration));
-    return Text('${_format(Duration(seconds: seconds))} / ${_format(duration)}',
-        style:
-            AppTypography.mono.copyWith(color: context.appTheme.textSecondary));
+    return Text(
+      '${_format(Duration(seconds: seconds))} / ${_format(duration)}',
+      style:
+          style ??
+          AppTypography.mono.copyWith(color: context.appTheme.textSecondary),
+    );
   }
 
   String _format(Duration d) {

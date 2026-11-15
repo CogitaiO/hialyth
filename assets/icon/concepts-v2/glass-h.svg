@@ -1,0 +1,56 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#161A26"/>
+      <stop offset="0.55" stop-color="#0D0F16"/>
+      <stop offset="1" stop-color="#07080B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0" stop-color="#8B7CF6" stop-opacity="0.22"/>
+      <stop offset="0.6" stop-color="#8B7CF6" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#8B7CF6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.96"/>
+      <stop offset="0.32" stop-color="#E2E8FF" stop-opacity="0.82"/>
+      <stop offset="0.68" stop-color="#AAB8F4" stop-opacity="0.58"/>
+      <stop offset="1" stop-color="#5F6CB8" stop-opacity="0.36"/>
+    </linearGradient>
+    <linearGradient id="bevel" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.58"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.34"/>
+    </linearGradient>
+    <radialGradient id="caustic" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#A89AFF" stop-opacity="0.30"/>
+      <stop offset="0.55" stop-color="#6F7FE8" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#6F7FE8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="220" fill="url(#glow)"/>
+  <ellipse cx="512" cy="780" rx="260" ry="70" fill="url(#caustic)"/>
+
+  <!-- Refraction shadows -->
+  <g opacity="0.22">
+    <rect x="282" y="300" width="112" height="448" rx="36" fill="#5D6ED6"/>
+    <rect x="630" y="276" width="112" height="448" rx="36" fill="#B59CFF"/>
+  </g>
+
+  <!-- Glass H -->
+  <g>
+    <rect x="292" y="288" width="112" height="448" rx="36" fill="url(#glass)" stroke="#FFFFFF" stroke-opacity="0.44" stroke-width="4"/>
+    <rect x="620" y="288" width="112" height="448" rx="36" fill="url(#glass)" stroke="#FFFFFF" stroke-opacity="0.44" stroke-width="4"/>
+    <rect x="404" y="480" width="216" height="64" rx="24" fill="url(#glass)" stroke="#FFFFFF" stroke-opacity="0.44" stroke-width="4"/>
+
+    <!-- Bevel highlights -->
+    <rect x="306" y="302" width="20" height="420" rx="10" fill="url(#bevel)"/>
+    <rect x="634" y="302" width="20" height="420" rx="10" fill="url(#bevel)"/>
+    <rect x="418" y="490" width="188" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.45"/>
+
+    <!-- Edge shadows -->
+    <rect x="376" y="306" width="12" height="412" rx="6" fill="#1B2140" fill-opacity="0.22"/>
+    <rect x="704" y="306" width="12" height="412" rx="6" fill="#1B2140" fill-opacity="0.22"/>
+  </g>
+</svg>

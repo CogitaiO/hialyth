@@ -706,6 +706,12 @@ abstract class AppLocalizations {
   /// **'Next episode'**
   String get playerNextEpisode;
 
+  /// No description provided for @playerPreviousEpisode.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous episode'**
+  String get playerPreviousEpisode;
+
   /// No description provided for @playerEpisodeComplete.
   ///
   /// In en, this message translates to:

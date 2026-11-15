@@ -3,14 +3,16 @@ import 'dart:io';
 import 'dart:isolate';
 import '../repositories/anime_repository.dart';
 import 'anime_filename_parser.dart';
+import 'android_documents.dart';
 import 'shikimori_service.dart';
 
 class ScanResult {
-  const ScanResult(
-      {this.titles = 0,
-      this.files = 0,
-      this.warnings = const [],
-      this.cancelled = false});
+  const ScanResult({
+    this.titles = 0,
+    this.files = 0,
+    this.warnings = const [],
+    this.cancelled = false,
+  });
   final int titles;
   final int files;
   final List<String> warnings;
@@ -21,22 +23,43 @@ typedef MetadataLookup = Future<Map<String, String>?> Function(String title);
 typedef DirectoryScanWorker = void Function((String, SendPort));
 
 class FileDiscoveryService {
-  FileDiscoveryService(this._repository,
-      {MetadataLookup? metadataLookup,
-      DirectoryScanWorker? scanWorker,
-      this.scanTimeout = const Duration(minutes: 2)})
-      : _lookup = metadataLookup ?? ShikimoriService().fetchAnimeDetails,
-        _scanWorker = scanWorker ?? _runScan;
+  FileDiscoveryService(
+    this._repository, {
+    MetadataLookup? metadataLookup,
+    DirectoryScanWorker? scanWorker,
+    this.scanTimeout = const Duration(minutes: 2),
+  }) : _lookup = metadataLookup ?? ShikimoriService().fetchAnimeDetails,
+       _scanWorker = scanWorker ?? _runScan;
   final AnimeRepository _repository;
   final MetadataLookup _lookup;
   final DirectoryScanWorker _scanWorker;
   final Duration scanTimeout;
 
-  Future<ScanResult> scanAndGroupFiles(String folderPath,
-      {bool Function()? isCancelled, Future<void>? cancellation}) async {
+  Future<ScanResult> scanAndGroupFiles(
+    String folderPath, {
+    bool Function()? isCancelled,
+    Future<void>? cancellation,
+  }) async {
     final root = AnimeRepository.normalizeRoot(folderPath);
     if (isCancelled?.call() == true) return const ScanResult(cancelled: true);
-    final grouped = await _scan(root, cancellation);
+    if (Platform.isAndroid && !AndroidDocuments.isDocumentUri(root)) {
+      throw const FileSystemException(
+          'Select this folder again to grant Android document access');
+    }
+    final Map<String, List<String>>? grouped;
+    if (AndroidDocuments.isDocumentUri(root)) {
+      final files = await AndroidDocuments.scan(root).timeout(scanTimeout);
+      if (isCancelled?.call() == true) return const ScanResult(cancelled: true);
+      grouped = <String, List<String>>{};
+      for (final file in files) {
+        final title = AnimeFilenameParser.parseTitle(file['name']!);
+        if (title.isNotEmpty) {
+          grouped.putIfAbsent(title, () => []).add(file['uri']!);
+        }
+      }
+    } else {
+      grouped = await _scan(root, cancellation);
+    }
     if (grouped == null) return const ScanResult(cancelled: true);
     if (isCancelled?.call() == true) return const ScanResult(cancelled: true);
     // Import local media before any network request. Progress and notes are
@@ -46,10 +69,11 @@ class FileDiscoveryService {
     for (final anime in affected) {
       if (isCancelled?.call() == true) {
         return ScanResult(
-            titles: grouped.length,
-            files: grouped.values.fold(0, (n, paths) => n + paths.length),
-            warnings: warnings,
-            cancelled: true);
+          titles: grouped.length,
+          files: grouped.values.fold(0, (n, paths) => n + paths.length),
+          warnings: warnings,
+          cancelled: true,
+        );
       }
       if (anime.isHidden ||
           anime.episodePaths.isEmpty ||
@@ -57,8 +81,9 @@ class FileDiscoveryService {
         continue;
       }
       try {
-        final metadata = await _lookup(anime.scanTitle ?? anime.title)
-            .timeout(const Duration(seconds: 18));
+        final metadata = await _lookup(
+          anime.scanTitle ?? anime.title,
+        ).timeout(const Duration(seconds: 18));
         if (isCancelled?.call() == true) break;
         if (metadata == null) {
           warnings.add(anime.title);
@@ -75,33 +100,43 @@ class FileDiscoveryService {
       }
     }
     return ScanResult(
-        titles: grouped.length,
-        files: grouped.values.fold(0, (n, paths) => n + paths.length),
-        warnings: warnings,
-        cancelled: isCancelled?.call() == true);
+      titles: grouped.length,
+      files: grouped.values.fold(0, (n, paths) => n + paths.length),
+      warnings: warnings,
+      cancelled: isCancelled?.call() == true,
+    );
   }
 
   Future<Map<String, List<String>>?> _scan(
-      String root, Future<void>? cancellation) async {
+    String root,
+    Future<void>? cancellation,
+  ) async {
     final results = ReceivePort();
     final errors = ReceivePort();
     Isolate? isolate;
     try {
-      isolate = await Isolate.spawn(_scanWorker, (root, results.sendPort),
-          onError: errors.sendPort, errorsAreFatal: true);
+      isolate = await Isolate.spawn(
+        _scanWorker,
+        (root, results.sendPort),
+        onError: errors.sendPort,
+        errorsAreFatal: true,
+      );
       final result = results.first.then<Map<String, List<String>>?>((message) {
         final data = message as List<Object?>;
         if (data[0] == false) {
           Error.throwWithStackTrace(
-              data[1] as Object, StackTrace.fromString(data[2] as String));
+            data[1] as Object,
+            StackTrace.fromString(data[2] as String),
+          );
         }
         return (data[1] as Map).cast<String, List<String>>();
       });
       final failed = errors.first.then<Map<String, List<String>>?>((message) {
         final data = message as List;
         Error.throwWithStackTrace(
-            RemoteError(data[0].toString(), data[1].toString()),
-            StackTrace.fromString(data[1].toString()));
+          RemoteError(data[0].toString(), data[1].toString()),
+          StackTrace.fromString(data[1].toString()),
+        );
       });
       return await Future.any<Map<String, List<String>>?>([
         result,
@@ -129,15 +164,20 @@ class FileDiscoveryService {
       throw FileSystemException('Library folder is unavailable', root);
     }
     final grouped = <String, List<String>>{};
-    for (final entity
-        in directory.listSync(recursive: true, followLinks: false)) {
+    for (final entity in directory.listSync(
+      recursive: true,
+      followLinks: false,
+    )) {
       if (entity is! File ||
-          !RegExp(r'\.(mkv|mp4|avi)$', caseSensitive: false)
-              .hasMatch(entity.path)) {
+          !RegExp(
+            r'\.(mkv|mp4|avi)$',
+            caseSensitive: false,
+          ).hasMatch(entity.path)) {
         continue;
       }
-      final title =
-          AnimeFilenameParser.parseTitle(entity.uri.pathSegments.last);
+      final title = AnimeFilenameParser.parseTitle(
+        entity.uri.pathSegments.last,
+      );
       if (title.isNotEmpty) {
         grouped.putIfAbsent(title, () => []).add(entity.path);
       }

@@ -22,9 +22,14 @@ import 'presentation/debug/design_system_gallery.dart';
 import 'core/app_features.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme_extension.dart';
+import 'demo/showcase_fixtures.dart';
+import 'demo/showcase_storage.dart';
+
+bool _showcasePreferencesPrefixSet = false;
+
 Future<void> main() => runHialyth();
 
-Future<void> runHialyth() async {
+Future<void> runHialyth({bool showcaseMode = false}) async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     MediaKit.ensureInitialized();
@@ -35,7 +40,7 @@ Future<void> runHialyth() async {
     }
     await initLogger();
     startFrameMetrics();
-    if (isDesktop) {
+    if (!showcaseMode && isDesktop) {
       try {
         DiscordRPC.initialize();
       } catch (e) {
@@ -56,11 +61,24 @@ Future<void> runHialyth() async {
       });
     }
 
+    if (showcaseMode && !_showcasePreferencesPrefixSet) {
+      SharedPreferences.setPrefix(ShowcaseStorage.preferencesPrefix);
+      _showcasePreferencesPrefixSet = true;
+    }
     final prefs = await SharedPreferences.getInstance();
-    final databaseDirectory = await getApplicationDocumentsDirectory();
+    final databaseDirectory = showcaseMode
+        ? Directory(ShowcaseStorage.databasePath(
+            (await getApplicationSupportDirectory()).path))
+        : await getApplicationDocumentsDirectory();
+    if (showcaseMode) {
+      await databaseDirectory.create(recursive: true);
+    }
     final isar =
         await Isar.open([AnimeSchema], directory: databaseDirectory.path);
     final repository = AnimeRepository(isar);
+    if (showcaseMode) {
+      await ShowcaseFixtures.seedOnFirstLaunch(repository, prefs);
+    }
 
     FlutterError.onError = (details) {
       talker.handle(details.exception, details.stack, 'Critical UI error');
@@ -77,18 +95,19 @@ Future<void> runHialyth() async {
           animeRepoProvider.overrideWithValue(repository),
           sharedPrefsProvider.overrideWithValue(prefs),
         ],
-        child: const MyApp(),
+        child: MyApp(showcaseMode: showcaseMode),
       ),
     );
   } catch (e, st) {
     talker.handle(e, st, 'Critical startup error');
     runApp(_StartupErrorApp(
-        onRetry: () => runHialyth()));
+        onRetry: () => runHialyth(showcaseMode: showcaseMode)));
   }
 }
 
 class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.showcaseMode = false});
+  final bool showcaseMode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -97,7 +116,7 @@ class MyApp extends ConsumerWidget {
     final accentColor = Color(accentColorValue);
 
     return MaterialApp(
-      title: 'Nekaido',
+      title: showcaseMode ? 'Hialyth Showcase' : 'Nekaido',
       debugShowCheckedModeBanner: false,
       theme: AppFeatures.designV2
           ? AppTheme.dark(accent: accentColor)
@@ -118,7 +137,7 @@ class MyApp extends ConsumerWidget {
           child: child!,
         ),
       ),
-      home: const LibraryScreen(),
+      home: LibraryScreen(showcaseMode: showcaseMode),
     );
   }
 }

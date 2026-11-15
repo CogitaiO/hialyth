@@ -10,6 +10,7 @@ import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../../widgets/glass_surface.dart';
+import 'mobile_player_overlay.dart';
 
 class PlayerOverlay extends ConsumerWidget {
   const PlayerOverlay({super.key});
@@ -18,17 +19,20 @@ class PlayerOverlay extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
     final isVisible = ref.watch(playerProvider.select((s) => s.isUiVisible));
+    final mobile = Platform.isAndroid || Platform.isIOS;
     final activeSkip = ref.watch(playerProvider.select((s) => s.activeSkip));
-    final reduceTransparency =
-        ref.watch(settingsProvider.select((s) => s.reduceTransparency));
+    final reduceTransparency = ref.watch(
+      settingsProvider.select((s) => s.reduceTransparency),
+    );
 
     final videoPath =
         ref.watch(playerProvider.select((s) => s.videoPath)) ?? '';
     final animeId = ref.watch(playerProvider.select((s) => s.animeId));
     final playlist = ref.watch(playerProvider.select((s) => s.playlist));
 
-    final sidebarOpen =
-        ref.watch(playerProvider.select((s) => s.isSidebarOpen));
+    final sidebarOpen = ref.watch(
+      playerProvider.select((s) => s.isSidebarOpen),
+    );
 
     final isOp = activeSkip?.type == 'op';
 
@@ -58,6 +62,8 @@ class PlayerOverlay extends ConsumerWidget {
     final fadeDuration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : const Duration(milliseconds: 300);
+
+    if (mobile) return MobilePlayerOverlay(title: displayTitle);
 
     return Stack(
       children: [
@@ -197,11 +203,19 @@ class PlayerOverlay extends ConsumerWidget {
                             ? context.l10n.playerSkipOpening
                             : context.l10n.playerSkipEnding,
                         style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       onPressed: () {
-                        ref.read(playerProvider.notifier).seek(Duration(
-                            milliseconds: (activeSkip.endTime * 1000).toInt()));
+                        ref
+                            .read(playerProvider.notifier)
+                            .seek(
+                              Duration(
+                                milliseconds: (activeSkip.endTime * 1000)
+                                    .toInt(),
+                              ),
+                            );
                       },
                     ),
                   ),

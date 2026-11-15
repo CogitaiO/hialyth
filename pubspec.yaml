@@ -47,6 +47,7 @@ dependencies:
   cached_network_image: any
   palette_generator: any
   file_picker: ^13.3.2
+  android_file_picker: ^2.1.4
   window_manager: ^0.5.1
   shared_preferences: ^2.5.5
   http: ^1.6.0
@@ -91,6 +92,7 @@ flutter:
 
   assets:
     - assets/icon/sounds/sunder.mp3
+    - assets/showcase/posters/
 
   fonts:
     - family: Inter

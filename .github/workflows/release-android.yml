@@ -1,0 +1,105 @@
+name: Android release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate version and tag
+        id: version
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: python3 tool/android_release.py version
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: python3 -m unittest discover -s tool -p 'test_*.py'
+      - run: flutter analyze --no-pub
+      - run: flutter test --no-pub
+      - name: Prepare release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: python3 tool/android_release.py signing
+      - name: Build signed APKs
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: flutter build apk --release --split-per-abi --no-pub
+      - name: Verify APK signatures
+        shell: bash
+        run: |
+          signer=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)
+          test -n "$signer"
+          for apk in build/app/outputs/flutter-apk/*-release.apk; do
+            "$signer" verify "$apk"
+          done
+      - name: Package APKs and checksums
+        run: python3 tool/android_release.py package
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Hialyth-${{ steps.version.outputs.version }}-android
+          path: dist/android/*
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove temporary signing key
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          if os.environ.get('ANDROID_KEYSTORE_PATH'):
+              Path(os.environ['ANDROID_KEYSTORE_PATH']).unlink(missing_ok=True)
+          PY
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: Hialyth-${{ needs.build.outputs.version }}-android
+          path: dist/android
+      - name: Publish Android release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+        shell: bash
+        run: |
+          args=("$RELEASE_TAG" --verify-tag --title "Hialyth $VERSION — Android" --generate-notes)
+          args+=(--notes 'Android APKs: arm64-v8a for most modern phones, armeabi-v7a for 32-bit devices, x86_64 for compatible emulators. SHA256SUMS contains download checksums. Back up app data before upgrading. Desktop 0.1.0 builds remain historical releases; Android is the current development focus.')
+          if [ "$PRERELEASE" = true ]; then
+            args+=(--prerelease)
+          fi
+          gh release create "${args[@]}" dist/android/*.apk dist/android/SHA256SUMS

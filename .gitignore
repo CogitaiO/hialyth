@@ -31,7 +31,16 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+/build_showcase/
 /coverage/
+/dist/
+/tool/__pycache__/
+/test/failures/
+
+# Generated iOS configuration contains machine-specific SDK and checkout paths.
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/ephemeral/
 
 # Symbolication related
 app.*.symbols
@@ -40,8 +49,19 @@ app.*.symbols
 app.*.map.json
 
 # Android Studio will place build artifacts here
+/android/build/
 /android/app/debug
 /android/app/profile
 /android/app/release
 
+# Android release signing material must stay outside version control.
+*.jks
+*.keystore
+key.properties
+
 /nekaido_lib.txt
+
+# Local tool preferences and instruction backups
+/devtools_options.yaml
+/AGENTS.md.backup
+/AGENTS.md.bak-*

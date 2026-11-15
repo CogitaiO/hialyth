@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:io';
+import '../data/services/android_documents.dart';
 import '../core/app_features.dart';
 import 'library/library_components.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
+import 'package:nekaido_pre/presentation/debug/showcase_console_screen.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/scan_provider.dart';
@@ -19,11 +22,15 @@ import '../theme/app_theme_extension.dart';
 
 Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
   if (ref.read(scanProvider).running) return;
-  final path = await FilePicker.getDirectoryPath();
-  if (path == null || !context.mounted) return;
   try {
-    ref.read(savedFoldersProvider.notifier).addFolder(path);
+    final path = Platform.isAndroid
+        ? await AndroidDocuments.pickFolder()
+        : await FilePicker.getDirectoryPath();
+    if (path == null || !context.mounted) return;
     final result = await ref.read(scanProvider.notifier).scan([path]);
+    if (!result.cancelled && result.errors.isEmpty) {
+      ref.read(savedFoldersProvider.notifier).addFolder(path);
+    }
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -49,7 +56,8 @@ Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
 }
 
 class LibraryScreen extends ConsumerWidget {
-  const LibraryScreen({super.key});
+  const LibraryScreen({super.key, this.showcaseMode = false});
+  final bool showcaseMode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,29 +77,34 @@ class LibraryScreen extends ConsumerWidget {
               drawer: compact
                   ? const Drawer(child: _LibraryNavigation(expanded: true))
                   : null,
-              body: Column(
-                children: [
-                  CustomTitleBar(
-                                      ),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        if (!compact)
-                          _LibraryNavigation(
-                            expanded: constraints.maxWidth >= 1200,
-                          ),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _TopBar(),
-                              Expanded(child: _ContentGrid()),
-                            ],
-                          ),
-                        ),
-                      ],
+              body: SafeArea(
+                top: constraints.maxWidth < 600,
+                bottom: constraints.maxWidth < 600,
+                child: Column(
+                  children: [
+                    CustomTitleBar(
+                      appName: showcaseMode ? 'Hialyth Showcase' : null,
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: Row(
+                        children: [
+                          if (!compact)
+                            _LibraryNavigation(
+                              expanded: constraints.maxWidth >= 1200,
+                            ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                _TopBar(showcaseMode: showcaseMode),
+                                Expanded(child: _ContentGrid()),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -281,7 +294,8 @@ class _LibraryNavigation extends ConsumerWidget {
 }
 
 class _TopBar extends ConsumerStatefulWidget {
-  const _TopBar();
+  const _TopBar({required this.showcaseMode});
+  final bool showcaseMode;
   @override
   ConsumerState<_TopBar> createState() => _TopBarState();
 }
@@ -323,12 +337,19 @@ class _TopBarState extends ConsumerState<_TopBar> {
     final allCollections = ref.watch(allCollectionsProvider);
     final selectedCollections = ref.watch(selectedCollectionProvider);
     final tokens = context.appTheme;
+    final phone = MediaQuery.sizeOf(context).width < 600;
+    final folders = ref.watch(savedFoldersProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+          padding: EdgeInsets.fromLTRB(
+            phone ? 16 : 24,
+            phone ? 8 : 16,
+            phone ? 16 : 24,
+            8,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -346,7 +367,9 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       children: [
                         Text(
                           _getTitle(context, index),
-                          style: Theme.of(context).textTheme.displayMedium,
+                          style: phone
+                              ? Theme.of(context).textTheme.headlineSmall
+                              : Theme.of(context).textTheme.displayMedium,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -358,6 +381,17 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       ],
                     ),
                   ),
+                  if (widget.showcaseMode)
+                    IconButton(
+                      tooltip: 'Showcase developer console',
+                      icon: const Icon(AppIcons.fileFormat),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ShowcaseConsoleScreen(),
+                        ),
+                      ),
+                    ),
                   FilledButton.icon(
                     onPressed: ref.watch(scanProvider).running
                         ? null
@@ -399,11 +433,23 @@ class _TopBarState extends ConsumerState<_TopBar> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Text(
-                    context.l10n.libraryBrowse,
-                    style: Theme.of(context).textTheme.bodySmall,
+                  Expanded(
+                    child: Text(
+                      context.l10n.libraryBrowse,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ),
-                  const Spacer(),
+                  IconButton(
+                    key: const ValueKey('library-refresh'),
+                    tooltip: context.l10n.settingsRescanLibrary,
+                    icon: const Icon(AppIcons.rescan),
+                    onPressed:
+                        folders.isEmpty || ref.watch(scanProvider).running
+                        ? null
+                        : () => ref.read(scanProvider.notifier).scan(folders),
+                  ),
                   PopupMenuButton<LibrarySort>(
                     tooltip: context.l10n.librarySort,
                     initialValue: ref.watch(libraryViewProvider).sort,
@@ -572,15 +618,8 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndShowVpnWarning();
-      _runAutoScan();
+      if (mounted) _checkAndShowVpnWarning();
     });
-  }
-
-  Future<void> _runAutoScan() async {
-    final folders = ref.read(savedFoldersProvider);
-    if (folders.isEmpty) return;
-    await ref.read(scanProvider.notifier).scan(folders);
   }
 
   Future<void> _checkAndShowVpnWarning() async {
@@ -658,7 +697,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
           final emptyLibrary = allAnimes.isEmpty;
           final noFiles =
               emptyLibrary && ref.watch(savedFoldersProvider).isNotEmpty;
-          return Center(
+          final emptyContent = Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: Padding(
@@ -714,6 +753,14 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
                       ),
                   ],
                 ),
+              ),
+            ),
+          );
+          return LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: emptyContent,
               ),
             ),
           );
