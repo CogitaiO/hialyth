@@ -9,6 +9,7 @@ import '../../../../providers/repositories_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
+import 'collection_dialog.dart';
 
 class AnimeDialogs {
   static void openFolderInOs(String? path) {
@@ -184,107 +185,26 @@ class AnimeDialogs {
 
   static void showCollectionDialog(
       BuildContext context, WidgetRef ref, Anime anime, Color accentColor) {
-    TextEditingController controller = TextEditingController();
-
     final allCollections = ref.read(allCollectionsProvider);
     final availableCollections = allCollections
         .where((c) => !anime.customCollections.contains(c))
         .toList();
-
-    showDialog(
-        context: context,
-        builder: (context) {
-          return StatefulBuilder(
-            builder: (context, setState) {
-              final tokens = context.appTheme;
-              return AlertDialog(
-                backgroundColor: tokens.cardSurface,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadii.xl),
-                ),
-                title: Text(
-                  context.l10n.detailsCollection,
-                  style: TextStyle(color: tokens.textPrimary),
-                ),
-                content: SizedBox(
-                  width: 300,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: controller,
-                        style: TextStyle(color: tokens.textPrimary),
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: context.l10n.detailsNewCollection,
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: accentColor),
-                          ),
-                          hintStyle: TextStyle(color: tokens.textSubtle),
-                        ),
-                      ),
-                      if (availableCollections.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          context.l10n.detailsChooseCollection,
-                          style:
-                              TextStyle(color: tokens.textMuted, fontSize: 12),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Wrap(
-                          spacing: AppSpacing.xs,
-                          runSpacing: AppSpacing.xs,
-                          children: availableCollections.map((colName) {
-                            return ActionChip(
-                              label: Text(
-                                colName,
-                                style: TextStyle(color: tokens.textPrimary),
-                              ),
-                              backgroundColor: tokens.surfaceHover,
-                              side: BorderSide.none,
-                              onPressed: () {
-                                controller.text = colName;
-                              },
-                            );
-                          }).toList(),
-                        ),
-                      ]
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      context.l10n.dialogCancel,
-                      style: TextStyle(color: tokens.textMuted),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: accentColor),
-                    onPressed: () async {
-                      final text = controller.text.trim();
-                      if (text.isNotEmpty) {
-                        if (!anime.customCollections.contains(text)) {
-                          await ref
-                              .read(animeRepoProvider)
-                              .addToCollection(anime.id, text);
-                        }
-                        if (context.mounted) Navigator.pop(context);
-                      }
-                    },
-                    child: Text(
-                      context.l10n.dialogAdd,
-                      style: TextStyle(color: tokens.textPrimary),
-                    ),
-                  ),
-                ],
-              );
-            },
-          );
-        });
+    final repository = ref.read(animeRepoProvider);
+    showDialog<void>(
+      context: context,
+      animationStyle: MediaQuery.disableAnimationsOf(context)
+          ? AnimationStyle.noAnimation
+          : null,
+      builder: (_) => CollectionDialog(
+        collections: availableCollections,
+        accentColor: accentColor,
+        onSave: (name) async {
+          if (!anime.customCollections.contains(name)) {
+            await repository.addToCollection(anime.id, name);
+          }
+        },
+      ),
+    );
   }
 
   static Widget _buildStatRow(

@@ -21,6 +21,9 @@ class AnimeDetailsScreen extends ConsumerWidget {
     final animeSync = ref.watch(animeDetailsProvider(animeId));
     return Escapable(
         child: Scaffold(
+            // Text entry lives in dialog routes; keep the details behind them
+            // stable while the keyboard animates.
+            resizeToAvoidBottomInset: false,
             body: Column(children: [
       const CustomTitleBar(),
       Expanded(
