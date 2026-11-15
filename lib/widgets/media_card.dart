@@ -186,20 +186,20 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                           imageUrl: cover,
                           fit: BoxFit.cover,
                           memCacheWidth: 440,
-                          placeholder: (_, __) => placeholder,
-                          errorWidget: (_, __, ___) => placeholder,
+                          placeholder: (_, _) => placeholder,
+                          errorWidget: (_, _, _) => placeholder,
                         )
                       else if (cover.startsWith('asset:'))
                         Image.asset(
                           cover.substring('asset:'.length),
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => placeholder,
+                          errorBuilder: (_, _, _) => placeholder,
                         )
                       else
                         Image.file(File(cover),
                             fit: BoxFit.cover,
                             cacheWidth: 440,
-                            errorBuilder: (_, __, ___) => placeholder),
+                            errorBuilder: (_, _, _) => placeholder),
                       Positioned(
                           left: 0,
                           right: 0,

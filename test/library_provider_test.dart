@@ -57,7 +57,7 @@ void main() {
       container.dispose();
       await stream.close();
     });
-    final subscription = container.listen(filteredAnimeProvider, (_, __) {});
+    final subscription = container.listen(filteredAnimeProvider, (_, _) {});
     addTearDown(subscription.close);
     Anime record(int id, String title, int position) => Anime()
       ..id = id

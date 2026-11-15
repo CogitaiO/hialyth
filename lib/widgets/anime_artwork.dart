@@ -26,15 +26,15 @@ class AnimeArtwork extends StatelessWidget {
                     imageUrl: cover!,
                     fit: BoxFit.cover,
                     memCacheWidth: cacheWidth,
-                    placeholder: (_, __) => placeholder,
-                    errorWidget: (_, __, ___) => placeholder)
+                    placeholder: (_, _) => placeholder,
+                    errorWidget: (_, _, _) => placeholder)
                 : cover!.startsWith('asset:')
                     ? Image.asset(cover!.substring('asset:'.length),
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => placeholder)
+                        errorBuilder: (_, _, _) => placeholder)
                     : Image.file(File(cover!),
                         fit: BoxFit.cover,
                         cacheWidth: cacheWidth,
-                        errorBuilder: (_, __, ___) => placeholder));
+                        errorBuilder: (_, _, _) => placeholder));
   }
 }

@@ -232,7 +232,7 @@ class _ShowcaseConsoleScreenState extends ConsumerState<ShowcaseConsoleScreen> {
                                         ? AnimeArtwork(cover: _cover, radius: 6)
                                         : Image.file(File(_cover!),
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
+                                            errorBuilder: (_, _, _) =>
                                                 const Icon(
                                                     AppIcons.imageMissing)),
                               ),

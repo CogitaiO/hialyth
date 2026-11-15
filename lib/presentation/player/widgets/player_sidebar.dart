@@ -140,7 +140,7 @@ class PlayerSidebar extends ConsumerWidget {
 
     return animeAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => Center(
+      error: (_, _) => Center(
         child: Text(
           context.l10n.playerLoadingError,
           style: TextStyle(color: tokens.textSecondary),

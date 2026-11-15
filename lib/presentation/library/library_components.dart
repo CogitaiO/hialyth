@@ -39,7 +39,7 @@ class ContinueWatchingSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             scrollDirection: Axis.horizontal,
             itemCount: anime.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (context, index) => SizedBox(
               width: cardWidth,
               child: ContinueWatchingCard(anime: anime[index]),
