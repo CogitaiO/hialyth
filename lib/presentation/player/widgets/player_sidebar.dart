@@ -18,14 +18,17 @@ class PlayerSidebar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
     final isOpen = ref.watch(playerProvider.select((s) => s.isSidebarOpen));
-    final reduceTransparency =
-        ref.watch(settingsProvider.select((s) => s.reduceTransparency));
+    final reduceTransparency = ref.watch(
+      settingsProvider.select((s) => s.reduceTransparency),
+    );
 
     return Positioned(
       top: 0,
       bottom: 0,
       right: 0,
-      width: 360,
+      width: MediaQuery.sizeOf(context).width < 360
+          ? MediaQuery.sizeOf(context).width
+          : 360,
       child: IgnorePointer(
         ignoring: !isOpen,
         child: AnimatedSlide(
@@ -68,8 +71,10 @@ class PlayerSidebar extends ConsumerWidget {
                                 ),
                               ),
                               IconButton(
-                                icon: Icon(AppIcons.close,
-                                    color: tokens.textSecondary),
+                                icon: Icon(
+                                  AppIcons.close,
+                                  color: tokens.textSecondary,
+                                ),
                                 onPressed: () => {
                                   FocusManager.instance.primaryFocus?.unfocus(),
                                   ref
@@ -82,15 +87,18 @@ class PlayerSidebar extends ConsumerWidget {
                           ),
                         ),
                         TabBar(
+                          tabAlignment: TabAlignment.fill,
                           unselectedLabelColor: tokens.textSecondary,
                           dividerColor: tokens.borderSubtle,
                           tabs: [
                             Tab(
-                                icon: Icon(AppIcons.videoLibrary),
-                                text: context.l10n.playerEpisodes),
+                              icon: Icon(AppIcons.videoLibrary),
+                              text: context.l10n.playerEpisodes,
+                            ),
                             Tab(
-                                icon: Icon(AppIcons.notes),
-                                text: context.l10n.playerNotes),
+                              icon: Icon(AppIcons.notes),
+                              text: context.l10n.playerNotes,
+                            ),
                           ],
                         ),
                         Expanded(
@@ -131,70 +139,70 @@ class PlayerSidebar extends ConsumerWidget {
     final animeAsync = ref.watch(animeDetailsProvider(animeId));
 
     return animeAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(
-              child: Text(
-                context.l10n.playerLoadingError,
-                style: TextStyle(color: tokens.textSecondary),
-              ),
-            ),
-        data: (anime) {
-          if (anime == null) return const SizedBox.shrink();
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-            itemCount: playlist.length,
-            itemBuilder: (context, index) {
-              final path = playlist[index];
-              final isCurrent = path == currentVideo;
-              final isWatched = anime.watchedEpisodes.contains(path);
-              final fileName = path.split(Platform.pathSeparator).last;
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => Center(
+        child: Text(
+          context.l10n.playerLoadingError,
+          style: TextStyle(color: tokens.textSecondary),
+        ),
+      ),
+      data: (anime) {
+        if (anime == null) return const SizedBox.shrink();
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          itemCount: playlist.length,
+          itemBuilder: (context, index) {
+            final path = playlist[index];
+            final isCurrent = path == currentVideo;
+            final isWatched = anime.watchedEpisodes.contains(path);
+            final fileName = path.split(Platform.pathSeparator).last;
 
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.xxs,
-                ),
-                tileColor: isCurrent
-                    ? Theme.of(context).colorScheme.primary
-                        .withValues(alpha: 0.1)
-                    : Colors.transparent,
-                leading: Icon(
-                  isCurrent
-                      ? AppIcons.playCircle
-                      : (isWatched
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.xxs,
+              ),
+              tileColor: isCurrent
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                  : Colors.transparent,
+              leading: Icon(
+                isCurrent
+                    ? AppIcons.playCircle
+                    : (isWatched
                           ? AppIcons.checkCircleOutline
                           : AppIcons.circleOutline),
+                color: isCurrent
+                    ? Theme.of(context).colorScheme.primary
+                    : (isWatched ? tokens.success : tokens.textSecondary),
+              ),
+              title: Text(
+                context.l10n.playerEpisodeNumber(index + 1),
+                style: TextStyle(
                   color: isCurrent
                       ? Theme.of(context).colorScheme.primary
-                      : (isWatched ? tokens.success : tokens.textSecondary),
+                      : tokens.textPrimary,
+                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                 ),
-                title: Text(
-                  context.l10n.playerEpisodeNumber(index + 1),
-                  style: TextStyle(
-                      color: isCurrent
-                          ? Theme.of(context).colorScheme.primary
-                          : tokens.textPrimary,
-                      fontWeight:
-                          isCurrent ? FontWeight.bold : FontWeight.normal),
-                ),
-                subtitle: Text(
-                  fileName,
-                  style: TextStyle(color: tokens.textSecondary, fontSize: 11),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onTap: () {
-                  final notifier = ref.read(playerProvider.notifier);
-                  notifier.toggleSideBar();
+              ),
+              subtitle: Text(
+                fileName,
+                style: TextStyle(color: tokens.textSecondary, fontSize: 11),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () {
+                final notifier = ref.read(playerProvider.notifier);
+                notifier.toggleSideBar();
 
-                  if (!isCurrent) {
-                    notifier.loadVideo(animeId, path);
-                  }
-                },
-              );
-            },
-          );
-        });
+                if (!isCurrent) {
+                  notifier.loadVideo(animeId, path);
+                }
+              },
+            );
+          },
+        );
+      },
+    );
   }
 }
 
@@ -296,11 +304,14 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
               const SizedBox(width: AppSpacing.xs),
               IconButton(
                 style: IconButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primary
-                            .withValues(alpha: 0.2)),
-                icon: Icon(AppIcons.add,
-                    color: Theme.of(context).colorScheme.primary),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.2),
+                ),
+                icon: Icon(
+                  AppIcons.add,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 onPressed: () => _saveNote(animeId, currentPath),
               ),
             ],
@@ -308,111 +319,120 @@ class _EpisodeNoteTabState extends ConsumerState<_EpisodeNoteTab> {
         ),
         Divider(color: tokens.borderSubtle, height: 1),
         Expanded(
-            child: animeAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(
-                    child: Text(context.l10n.playerErrorDetail(e.toString()),
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.error))),
-                data: (anime) {
-                  if (anime == null) return const SizedBox.shrink();
-                  final episodeNotes = anime.notes
+          child: animeAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Text(
+                context.l10n.playerErrorDetail(e.toString()),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+            data: (anime) {
+              if (anime == null) return const SizedBox.shrink();
+              final episodeNotes =
+                  anime.notes
                       .where((n) => n.episodePath == currentPath)
                       .toList()
-                    ..sort((a, b) => (a.timestampSeconds ?? 0)
-                        .compareTo(b.timestampSeconds ?? 0));
-                  if (episodeNotes.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            AppIcons.editNote,
-                            size: 48,
-                            color: tokens.surfaceHover,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            context.l10n.playerNoNotes,
-                            style: TextStyle(color: tokens.textSecondary),
-                          ),
-                        ],
+                    ..sort(
+                      (a, b) => (a.timestampSeconds ?? 0).compareTo(
+                        b.timestampSeconds ?? 0,
                       ),
                     );
-                  }
+              if (episodeNotes.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        AppIcons.editNote,
+                        size: 48,
+                        color: tokens.surfaceHover,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        context.l10n.playerNoNotes,
+                        style: TextStyle(color: tokens.textSecondary),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
-                  return ListView.builder(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                    itemCount: episodeNotes.length,
-                    itemBuilder: (context, index) {
-                      final note = episodeNotes[index];
-                      final timestamp = note.timestampSeconds ?? 0;
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                itemCount: episodeNotes.length,
+                itemBuilder: (context, index) {
+                  final note = episodeNotes[index];
+                  final timestamp = note.timestampSeconds ?? 0;
 
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.xxs,
-                        ),
-                        leading: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () {
-                              ref
-                                  .read(playerProvider.notifier)
-                                  .seek(Duration(seconds: timestamp));
-                              ref.read(playerProvider.notifier).showUi();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.xs,
-                                vertical: AppSpacing.xxs,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary
-                                    .withValues(alpha: 0.2),
-                                borderRadius:
-                                    BorderRadius.circular(AppRadii.sm),
-                                border: Border.all(
-                                    color: Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: 0.5)),
-                              ),
-                              child: Text(
-                                _formatTime(timestamp),
-                                style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13),
-                              ),
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.xxs,
+                    ),
+                    leading: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () {
+                          ref
+                              .read(playerProvider.notifier)
+                              .seek(Duration(seconds: timestamp));
+                          ref.read(playerProvider.notifier).showUi();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xs,
+                            vertical: AppSpacing.xxs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(AppRadii.sm),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Text(
+                            _formatTime(timestamp),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
                             ),
                           ),
                         ),
-                        title: Text(
-                          note.text ?? '',
-                          style: TextStyle(
-                              color: tokens.textPrimary, fontSize: 14),
-                        ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            AppIcons.delete,
-                            color: tokens.textSecondary,
-                            size: 20,
-                          ),
-                          onPressed: () {
-                            if (note.createdAt != null) {
-                              ref
-                                  .read(animeRepoProvider)
-                                  .deleteNote(animeId, note.createdAt!);
-                            }
-                          },
-                          hoverColor: Theme.of(context).colorScheme.primary
-                              .withValues(alpha: 0.2),
-                        ),
-                      );
-                    },
+                      ),
+                    ),
+                    title: Text(
+                      note.text ?? '',
+                      style: TextStyle(color: tokens.textPrimary, fontSize: 14),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(
+                        AppIcons.delete,
+                        color: tokens.textSecondary,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        if (note.createdAt != null) {
+                          ref
+                              .read(animeRepoProvider)
+                              .deleteNote(animeId, note.createdAt!);
+                        }
+                      },
+                      hoverColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.2),
+                    ),
                   );
-                })),
+                },
+              );
+            },
+          ),
+        ),
       ],
     );
   }

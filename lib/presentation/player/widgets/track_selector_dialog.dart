@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
 import '../../../../providers/player/player_provider.dart';
@@ -7,7 +8,8 @@ import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
 
 class TrackSelectorDialog extends ConsumerWidget {
-  const TrackSelectorDialog({super.key});
+  const TrackSelectorDialog({super.key, this.initialIndex = 0});
+  final int initialIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,20 +24,32 @@ class TrackSelectorDialog extends ConsumerWidget {
       ),
       child: SizedBox(
         width: 400,
-        height: 500,
+        height: math.max(
+          120,
+          math.min(
+            500,
+            MediaQuery.sizeOf(context).height -
+                MediaQuery.paddingOf(context).vertical -
+                48,
+          ),
+        ),
         child: DefaultTabController(
           length: 2,
+          initialIndex: initialIndex,
           child: Column(
             children: [
               TabBar(
+                tabAlignment: TabAlignment.fill,
                 unselectedLabelColor: tokens.textMuted,
                 tabs: [
                   Tab(
-                      icon: Icon(AppIcons.audio),
-                      text: context.l10n.playerAudioTracks),
+                    icon: Icon(AppIcons.audio),
+                    text: context.l10n.playerAudioTracks,
+                  ),
                   Tab(
-                      icon: Icon(AppIcons.subtitles),
-                      text: context.l10n.playerSubtitleTracks),
+                    icon: Icon(AppIcons.subtitles),
+                    text: context.l10n.playerSubtitleTracks,
+                  ),
                 ],
               ),
               Expanded(
@@ -146,10 +160,11 @@ class TrackSelectorDialog extends ConsumerWidget {
           title: Text(
             trackName,
             style: TextStyle(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : context.appTheme.textPrimary,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : context.appTheme.textPrimary,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

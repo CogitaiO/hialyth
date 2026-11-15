@@ -17,6 +17,7 @@ class PlaybackTimeline extends StatefulWidget {
     required this.playing,
     required this.onSeek,
     this.intervals = const [],
+    this.mobileStyle = false,
   });
 
   final Duration position;
@@ -24,6 +25,7 @@ class PlaybackTimeline extends StatefulWidget {
   final bool playing;
   final ValueChanged<Duration> onSeek;
   final List<SkipIntervalDb> intervals;
+  final bool mobileStyle;
 
   @override
   State<PlaybackTimeline> createState() => _PlaybackTimelineState();
@@ -50,7 +52,8 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
       }
       _lastSampleAt = now;
     }
-    _animate = widget.playing &&
+    _animate =
+        widget.playing &&
         delta > Duration.zero &&
         delta <= const Duration(seconds: 1) &&
         _pendingSeek == null;
@@ -70,75 +73,80 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
   @override
   Widget build(BuildContext context) {
     final maximum = widget.duration.inMilliseconds.toDouble();
-    final position = (_dragValue ??
-            _pendingSeek ??
-            widget.position.inMilliseconds.toDouble())
-        .clamp(0.0, maximum > 0 ? maximum : 1.0);
+    final position =
+        (_dragValue ??
+                _pendingSeek ??
+                widget.position.inMilliseconds.toDouble())
+            .clamp(0.0, maximum > 0 ? maximum : 1.0);
     final accent = Theme.of(context).colorScheme.primary;
     final tokens = context.appTheme;
+    final inactive = widget.mobileStyle ? Colors.white30 : tokens.borderStrong;
     final active = _hovering || _dragValue != null;
     return MouseRegion(
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
       cursor: SystemMouseCursors.click,
       child: SizedBox(
-          height: 28,
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: active ? 4 : 2,
-              thumbShape:
-                  RoundSliderThumbShape(enabledThumbRadius: active ? 6 : 0),
-              overlayShape: SliderComponentShape.noOverlay,
-              activeTrackColor: accent,
-              inactiveTrackColor: tokens.borderStrong,
-              thumbColor: accent,
-              trackShape: SkipIntervalTrackShape(
-                intervals: widget.intervals,
-                durationInSeconds: maximum / 1000,
-                skipColor: AppPalette.skipMarker,
-                activeFallbackColor: accent,
-                inactiveFallbackColor: tokens.borderStrong,
-              ),
+        height: widget.mobileStyle ? 48 : 28,
+        child: SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: widget.mobileStyle || active ? 4 : 2,
+            thumbShape: RoundSliderThumbShape(
+              enabledThumbRadius: widget.mobileStyle || active ? 6 : 0,
             ),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(end: position),
-              duration: _animate &&
-                      _dragValue == null &&
-                      _pendingSeek == null &&
-                      !MediaQuery.disableAnimationsOf(context)
-                  ? Duration(milliseconds: _sampleIntervalMs)
-                  : Duration.zero,
-              curve: Curves.linear,
-              builder: (context, value, _) => Slider(
-                value: value.clamp(0, maximum > 0 ? maximum : 1),
-                max: maximum > 0 ? maximum : 1,
-                onChangeStart: maximum <= 0
-                    ? null
-                    : (value) {
-                        _seekTimeout?.cancel();
-                        setState(() {
-                          _dragValue = value;
-                          _pendingSeek = null;
-                        });
-                      },
-                onChanged: maximum <= 0
-                    ? null
-                    : (value) => setState(() => _dragValue = value),
-                onChangeEnd: maximum <= 0
-                    ? null
-                    : (value) {
-                        setState(() {
-                          _pendingSeek = value;
-                          _dragValue = null;
-                        });
-                        _seekTimeout = Timer(const Duration(seconds: 2), () {
-                          if (mounted) setState(() => _pendingSeek = null);
-                        });
-                        widget.onSeek(Duration(milliseconds: value.round()));
-                      },
-              ),
+            overlayShape: SliderComponentShape.noOverlay,
+            activeTrackColor: accent,
+            inactiveTrackColor: inactive,
+            thumbColor: accent,
+            trackShape: SkipIntervalTrackShape(
+              intervals: widget.intervals,
+              durationInSeconds: maximum / 1000,
+              skipColor: AppPalette.skipMarker,
+              activeFallbackColor: accent,
+              inactiveFallbackColor: inactive,
             ),
-          )),
+          ),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(end: position),
+            duration:
+                _animate &&
+                    _dragValue == null &&
+                    _pendingSeek == null &&
+                    !MediaQuery.disableAnimationsOf(context)
+                ? Duration(milliseconds: _sampleIntervalMs)
+                : Duration.zero,
+            curve: Curves.linear,
+            builder: (context, value, _) => Slider(
+              value: value.clamp(0, maximum > 0 ? maximum : 1),
+              max: maximum > 0 ? maximum : 1,
+              onChangeStart: maximum <= 0
+                  ? null
+                  : (value) {
+                      _seekTimeout?.cancel();
+                      setState(() {
+                        _dragValue = value;
+                        _pendingSeek = null;
+                      });
+                    },
+              onChanged: maximum <= 0
+                  ? null
+                  : (value) => setState(() => _dragValue = value),
+              onChangeEnd: maximum <= 0
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _pendingSeek = value;
+                        _dragValue = null;
+                      });
+                      _seekTimeout = Timer(const Duration(seconds: 2), () {
+                        if (mounted) setState(() => _pendingSeek = null);
+                      });
+                      widget.onSeek(Duration(milliseconds: value.round()));
+                    },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

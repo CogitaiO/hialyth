@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/anime.dart';
+import '../../../../data/services/android_documents.dart';
 import '../../../../widgets/anime_artwork.dart';
 import '../../../../providers/repositories_provider.dart';
 import '../../player/player_screen.dart';
@@ -25,8 +25,10 @@ class LeftControlPanel extends ConsumerWidget {
     this.showPoster = true,
   });
 
-  void _playEpisode(BuildContext context, String path) {
-    if (!File(path).existsSync()) {
+  Future<void> _playEpisode(BuildContext context, String path) async {
+    final exists = await AndroidDocuments.exists(path);
+    if (!context.mounted) return;
+    if (!exists) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(context.l10n.detailsMissingFile),
@@ -38,8 +40,8 @@ class LeftControlPanel extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) =>
-              PlayerScreen(animeId: anime.id, videoPath: path)),
+        builder: (context) => PlayerScreen(animeId: anime.id, videoPath: path),
+      ),
     );
   }
 
@@ -47,7 +49,8 @@ class LeftControlPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
     final sortedEpisodes = anime.sortedEpisodes;
-    final nextEpisodePath = anime.nextEpisodeToPlay ??
+    final nextEpisodePath =
+        anime.nextEpisodeToPlay ??
         (sortedEpisodes.isNotEmpty ? sortedEpisodes.first : '');
     final nextEpisodeIndex = sortedEpisodes.isNotEmpty
         ? sortedEpisodes.indexOf(nextEpisodePath) + 1
@@ -59,19 +62,25 @@ class LeftControlPanel extends ConsumerWidget {
       children: [
         if (showPoster)
           AspectRatio(
-              aspectRatio: 2 / 3,
-              child: Hero(
-                  tag: heroTag,
-                  child: AnimeArtwork(
-                      cover: anime.coverUrl, radius: 16, cacheWidth: 560))),
+            aspectRatio: 2 / 3,
+            child: Hero(
+              tag: heroTag,
+              child: AnimeArtwork(
+                cover: anime.coverUrl,
+                radius: 16,
+                cacheWidth: 560,
+              ),
+            ),
+          ),
         if (showPoster) const SizedBox(height: AppSpacing.lg),
         if (sortedEpisodes.isNotEmpty)
           ElevatedButton(
             onPressed: () => _playEpisode(context, nextEpisodePath),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              backgroundColor:
-                  isAllWatched ? tokens.surfaceDisabled : accentColor,
+              backgroundColor: isAllWatched
+                  ? tokens.surfaceDisabled
+                  : accentColor,
               foregroundColor: isAllWatched
                   ? tokens.textPrimary
                   : Theme.of(context).colorScheme.onPrimary,
@@ -91,35 +100,82 @@ class LeftControlPanel extends ConsumerWidget {
                         ? context.l10n.detailsReplay
                         : context.l10n.detailsEpisodeNumber(nextEpisodeIndex),
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold, height: 1.1),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      height: 1.1,
+                    ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.xs)
+                const SizedBox(width: AppSpacing.xs),
               ],
             ),
           ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            Expanded(
-                flex: 2,
-                child: _StatusMenu(anime: anime, accentColor: accentColor)),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-                flex: 1,
-                child: _HoverButton(
-                  icon: AppIcons.collectionAdd,
-                  tooltip: context.l10n.detailsCollection,
-                  accentColor: accentColor,
-                  onTap: () => AnimeDialogs.showCollectionDialog(
-                      context, ref, anime, accentColor),
-                )),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-                flex: 1,
-                child: _MoreMenu(anime: anime, accentColor: accentColor)),
-          ],
-        )
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 240) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _StatusMenu(anime: anime, accentColor: accentColor),
+                  const SizedBox(height: AppSpacing.xs),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _HoverButton(
+                          icon: AppIcons.collectionAdd,
+                          tooltip: context.l10n.detailsCollection,
+                          accentColor: accentColor,
+                          onTap: () => AnimeDialogs.showCollectionDialog(
+                            context,
+                            ref,
+                            anime,
+                            accentColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: _MoreMenu(
+                          anime: anime,
+                          accentColor: accentColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: _StatusMenu(anime: anime, accentColor: accentColor),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  flex: 1,
+                  child: _HoverButton(
+                    icon: AppIcons.collectionAdd,
+                    tooltip: context.l10n.detailsCollection,
+                    accentColor: accentColor,
+                    onTap: () => AnimeDialogs.showCollectionDialog(
+                      context,
+                      ref,
+                      anime,
+                      accentColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  flex: 1,
+                  child: _MoreMenu(anime: anime, accentColor: accentColor),
+                ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
@@ -167,8 +223,10 @@ class _StatusMenu extends ConsumerWidget {
               vertical: AppSpacing.xs,
               horizontal: AppSpacing.md,
             ),
-            child: Text(context.l10n.statusWatching,
-                style: TextStyle(color: tokens.info)),
+            child: Text(
+              context.l10n.statusWatching,
+              style: TextStyle(color: tokens.info),
+            ),
           ),
         ),
         MenuItemButton(
@@ -191,8 +249,9 @@ class _StatusMenu extends ConsumerWidget {
               .read(animeRepoProvider)
               .updateStatus(anime.id, AnimeStatus.dropped),
           child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: Text(context.l10n.statusDropped)),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            child: Text(context.l10n.statusDropped),
+          ),
         ),
       ],
       builder: (context, controller, child) {
@@ -215,26 +274,27 @@ class _StatusMenu extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                      child: Text(
-                    anime.status == AnimeStatus.planned
-                        ? context.l10n.statusPlanned
-                        : anime.status == AnimeStatus.watching
-                            ? context.l10n.statusWatching
-                            : anime.status == AnimeStatus.completed
-                                ? context.l10n.statusCompleted
-                                : context.l10n.statusDropped,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: anime.status == AnimeStatus.planned
-                          ? tokens.textPrimary
+                    child: Text(
+                      anime.status == AnimeStatus.planned
+                          ? context.l10n.statusPlanned
                           : anime.status == AnimeStatus.watching
-                              ? tokens.info
-                              : anime.status == AnimeStatus.completed
-                                  ? tokens.success
-                                  : Theme.of(context).colorScheme.primary,
+                          ? context.l10n.statusWatching
+                          : anime.status == AnimeStatus.completed
+                          ? context.l10n.statusCompleted
+                          : context.l10n.statusDropped,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: anime.status == AnimeStatus.planned
+                            ? tokens.textPrimary
+                            : anime.status == AnimeStatus.watching
+                            ? tokens.info
+                            : anime.status == AnimeStatus.completed
+                            ? tokens.success
+                            : Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  )),
+                  ),
                   Icon(AppIcons.dropdown, color: tokens.textMuted),
                 ],
               ),
@@ -286,7 +346,11 @@ class _MoreMenu extends ConsumerWidget {
         offset: const Offset(0, 50),
         itemBuilder: (context) => [
           _menuItem(
-              tokens, 'stats', AppIcons.stats, context.l10n.detailsStatistics),
+            tokens,
+            'stats',
+            AppIcons.stats,
+            context.l10n.detailsStatistics,
+          ),
           _menuItem(
             tokens,
             'mark_all',
@@ -301,7 +365,11 @@ class _MoreMenu extends ConsumerWidget {
           ),
           const PopupMenuDivider(),
           _menuItem(
-              tokens, 'edit', AppIcons.edit, context.l10n.detailsEditPoster),
+            tokens,
+            'edit',
+            AppIcons.edit,
+            context.l10n.detailsEditPoster,
+          ),
         ],
         onSelected: (value) async {
           if (value == 'folder') {
@@ -318,9 +386,10 @@ class _MoreMenu extends ConsumerWidget {
           }
         },
         child: _HoverButton(
-            icon: AppIcons.more,
-            tooltip: context.l10n.detailsOptions,
-            accentColor: accentColor),
+          icon: AppIcons.more,
+          tooltip: context.l10n.detailsOptions,
+          accentColor: accentColor,
+        ),
       ),
     );
   }
@@ -332,11 +401,12 @@ class _HoverButton extends StatefulWidget {
   final Color accentColor;
   final VoidCallback? onTap;
 
-  const _HoverButton(
-      {required this.icon,
-      required this.tooltip,
-      required this.accentColor,
-      this.onTap});
+  const _HoverButton({
+    required this.icon,
+    required this.tooltip,
+    required this.accentColor,
+    this.onTap,
+  });
 
   @override
   State<_HoverButton> createState() => _HoverButtonState();
