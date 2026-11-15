@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../../../domain/anime.dart';
 import '../../../theme/app_palette.dart';
+import '../../../theme/app_motion.dart';
 import '../../../theme/app_theme_extension.dart';
 import 'skip_interval_track_shape.dart';
 
@@ -16,6 +17,8 @@ class PlaybackTimeline extends StatefulWidget {
     required this.duration,
     required this.playing,
     required this.onSeek,
+    this.onInteractionStart,
+    this.onInteractionEnd,
     this.intervals = const [],
     this.mobileStyle = false,
   });
@@ -24,6 +27,8 @@ class PlaybackTimeline extends StatefulWidget {
   final Duration duration;
   final bool playing;
   final ValueChanged<Duration> onSeek;
+  final VoidCallback? onInteractionStart;
+  final VoidCallback? onInteractionEnd;
   final List<SkipIntervalDb> intervals;
   final bool mobileStyle;
 
@@ -39,6 +44,13 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
   bool _animate = false;
   Duration? _lastSampleAt;
   int _sampleIntervalMs = 200;
+  bool _interactionActive = false;
+
+  void _finishInteraction() {
+    if (!_interactionActive) return;
+    _interactionActive = false;
+    widget.onInteractionEnd?.call();
+  }
 
   @override
   void didUpdateWidget(PlaybackTimeline oldWidget) {
@@ -67,6 +79,7 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
   @override
   void dispose() {
     _seekTimeout?.cancel();
+    _finishInteraction();
     super.dispose();
   }
 
@@ -112,7 +125,7 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
                 _animate &&
                     _dragValue == null &&
                     _pendingSeek == null &&
-                    !MediaQuery.disableAnimationsOf(context)
+                    !AppMotion.isReduced(context)
                 ? Duration(milliseconds: _sampleIntervalMs)
                 : Duration.zero,
             curve: Curves.linear,
@@ -123,6 +136,8 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
                   ? null
                   : (value) {
                       _seekTimeout?.cancel();
+                      _interactionActive = true;
+                      widget.onInteractionStart?.call();
                       setState(() {
                         _dragValue = value;
                         _pendingSeek = null;
@@ -142,6 +157,7 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
                         if (mounted) setState(() => _pendingSeek = null);
                       });
                       widget.onSeek(Duration(milliseconds: value.round()));
+                      _finishInteraction();
                     },
             ),
           ),

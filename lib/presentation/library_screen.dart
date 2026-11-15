@@ -19,6 +19,8 @@ import '../theme/app_icons.dart';
 import '../theme/app_breakpoints.dart';
 import '../domain/anime.dart';
 import '../theme/app_theme_extension.dart';
+import '../theme/app_motion.dart';
+import '../widgets/animated_state_icon.dart';
 
 Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
   if (ref.read(scanProvider).running) return;
@@ -78,8 +80,6 @@ class LibraryScreen extends ConsumerWidget {
                   ? const Drawer(child: _LibraryNavigation(expanded: true))
                   : null,
               body: SafeArea(
-                top: constraints.maxWidth < 600,
-                bottom: constraints.maxWidth < 600,
                 child: Column(
                   children: [
                     CustomTitleBar(
@@ -95,7 +95,14 @@ class LibraryScreen extends ConsumerWidget {
                           Expanded(
                             child: Column(
                               children: [
-                                _TopBar(showcaseMode: showcaseMode),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxHeight: constraints.maxHeight * .6,
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: _TopBar(showcaseMode: showcaseMode),
+                                  ),
+                                ),
                                 Expanded(child: _ContentGrid()),
                               ],
                             ),
@@ -186,54 +193,67 @@ class _LibraryNavigation extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Tooltip(
                           message: expanded ? '' : destinations[i].$1,
-                          child: Material(
-                            color: selected == i
-                                ? scheme.primary.withValues(alpha: 0.13)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                            child: ListTile(
-                              selected: selected == i,
-                              selectedColor: scheme.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: expanded ? 12 : 10,
-                              ),
-                              leading: Icon(destinations[i].$2, size: 24),
-                              title: expanded ? Text(destinations[i].$1) : null,
-                              trailing: expanded
-                                  ? Text(
-                                      '${counts[i]}',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.labelMedium,
-                                    )
-                                  : null,
-                              onTap: () {
-                                ref
-                                        .read(
-                                          selectedSidebarIndexProvider.notifier,
-                                        )
-                                        .state =
-                                    i;
-                                if (i == 5 &&
-                                    ref.read(selectedCollectionProvider) ==
-                                        null) {
-                                  final collections = ref.read(
-                                    allCollectionsProvider,
-                                  );
-                                  if (collections.isNotEmpty) {
-                                    ref
-                                        .read(
-                                          selectedCollectionProvider.notifier,
-                                        )
-                                        .state = collections
-                                        .first;
+                          child: AnimatedContainer(
+                            duration: AppMotion.resolveDuration(
+                              context,
+                              AppMotion.medium,
+                            ),
+                            curve: AppMotion.enter,
+                            decoration: BoxDecoration(
+                              color: selected == i
+                                  ? scheme.primaryContainer
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(AppRadii.lg),
+                            ),
+                            child: Material(
+                              type: MaterialType.transparency,
+                              child: ListTile(
+                                selected: selected == i,
+                                selectedColor: scheme.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: expanded ? 12 : 10,
+                                ),
+                                leading: Icon(destinations[i].$2, size: 24),
+                                title: expanded
+                                    ? Text(destinations[i].$1)
+                                    : null,
+                                trailing: expanded
+                                    ? Text(
+                                        '${counts[i]}',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelMedium,
+                                      )
+                                    : null,
+                                onTap: () {
+                                  ref
+                                          .read(
+                                            selectedSidebarIndexProvider
+                                                .notifier,
+                                          )
+                                          .state =
+                                      i;
+                                  if (i == 5 &&
+                                      ref.read(selectedCollectionProvider) ==
+                                          null) {
+                                    final collections = ref.read(
+                                      allCollectionsProvider,
+                                    );
+                                    if (collections.isNotEmpty) {
+                                      ref
+                                          .read(
+                                            selectedCollectionProvider.notifier,
+                                          )
+                                          .state = collections
+                                          .first;
+                                    }
                                   }
-                                }
-                                Scaffold.of(context).closeDrawer();
-                              },
+                                  Scaffold.of(context).closeDrawer();
+                                },
+                              ),
                             ),
                           ),
                         ),
@@ -277,7 +297,8 @@ class _LibraryNavigation extends ConsumerWidget {
                       Scaffold.of(context).closeDrawer();
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        AppMotion.pageRoute(
+                          context,
                           builder: (_) => const SettingsScreen(),
                         ),
                       );
@@ -303,6 +324,33 @@ class _TopBar extends ConsumerStatefulWidget {
 class _TopBarState extends ConsumerState<_TopBar> {
   final _debouncer = Debouncer(milliseconds: 300);
   final _searchController = TextEditingController();
+
+  Widget _buildSearch() => TextField(
+    controller: _searchController,
+    focusNode: ref.watch(librarySearchFocusProvider),
+    onChanged: (value) {
+      setState(() {});
+      _debouncer.run(() {
+        if (mounted) ref.read(searchQueryProvider.notifier).state = value;
+      });
+    },
+    decoration: InputDecoration(
+      hintText: context.l10n.librarySearchHint,
+      prefixIcon: const Icon(AppIcons.search),
+      suffixIcon: _searchController.text.isEmpty
+          ? null
+          : IconButton(
+              tooltip: context.l10n.libraryClearSearch,
+              icon: const Icon(AppIcons.close),
+              onPressed: () {
+                _debouncer.cancel();
+                _searchController.clear();
+                ref.read(searchQueryProvider.notifier).state = '';
+                setState(() {});
+              },
+            ),
+    ),
+  );
 
   @override
   void dispose() {
@@ -340,6 +388,109 @@ class _TopBarState extends ConsumerState<_TopBar> {
     final phone = MediaQuery.sizeOf(context).width < 600;
     final folders = ref.watch(savedFoldersProvider);
 
+    // In a short landscape viewport a stacked header consumes the entire
+    // library. Keep the primary actions on one line and let the cards breathe.
+    if (MediaQuery.sizeOf(context).height < 500 &&
+        MediaQuery.sizeOf(context).width >= 600) {
+      final view = ref.watch(libraryViewProvider);
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                if (MediaQuery.sizeOf(context).width < AppBreakpoints.compact)
+                  IconButton(
+                    tooltip: context.l10n.libraryNavigation,
+                    icon: const Icon(AppIcons.all),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+                Expanded(child: _buildSearch()),
+                const SizedBox(width: AppSpacing.sm),
+                IconButton.filled(
+                  tooltip: context.l10n.libraryAddFolder,
+                  onPressed: ref.watch(scanProvider).running
+                      ? null
+                      : () => _addLibraryFolder(context, ref),
+                  icon: const Icon(AppIcons.addFolder),
+                ),
+                IconButton(
+                  key: const ValueKey('library-refresh'),
+                  tooltip: context.l10n.settingsRescanLibrary,
+                  icon: const Icon(AppIcons.rescan),
+                  onPressed: folders.isEmpty || ref.watch(scanProvider).running
+                      ? null
+                      : () => ref.read(scanProvider.notifier).scan(folders),
+                ),
+                PopupMenuButton<LibrarySort>(
+                  tooltip: context.l10n.librarySort,
+                  initialValue: view.sort,
+                  onSelected: ref.read(libraryViewProvider.notifier).sortBy,
+                  itemBuilder: (_) => [
+                    for (final sort in LibrarySort.values)
+                      PopupMenuItem(
+                        value: sort,
+                        child: Text(switch (sort) {
+                          LibrarySort.title => context.l10n.librarySortTitle,
+                          LibrarySort.dateAdded =>
+                            context.l10n.librarySortAdded,
+                          LibrarySort.lastWatched =>
+                            context.l10n.librarySortWatched,
+                          LibrarySort.progress =>
+                            context.l10n.librarySortProgress,
+                        }),
+                      ),
+                  ],
+                  icon: const Icon(AppIcons.sort),
+                ),
+                IconButton(
+                  tooltip: view.list
+                      ? context.l10n.libraryGrid
+                      : context.l10n.libraryList,
+                  icon: AnimatedStateIcon(
+                    view.list ? AppIcons.all : AppIcons.list,
+                  ),
+                  onPressed: () => ref
+                      .read(libraryViewProvider.notifier)
+                      .showList(!view.list),
+                ),
+                if (ref.watch(scanProvider).running)
+                  IconButton(
+                    tooltip: context.l10n.dialogCancel,
+                    onPressed: ref.read(scanProvider.notifier).cancel,
+                    icon: const Icon(AppIcons.close),
+                  ),
+                if (index == 5)
+                  PopupMenuButton<String>(
+                    tooltip:
+                        selectedCollections ?? context.l10n.libraryCollections,
+                    initialValue: selectedCollections,
+                    onSelected: (value) =>
+                        ref.read(selectedCollectionProvider.notifier).state =
+                            value,
+                    itemBuilder: (_) => [
+                      for (final name in allCollections)
+                        PopupMenuItem(value: name, child: Text(name)),
+                    ],
+                    icon: const Icon(AppIcons.collections),
+                  ),
+              ],
+            ),
+            if (ref.watch(scanProvider).running)
+              const LinearProgressIndicator(),
+            if (ref.watch(scanProvider).errors.isNotEmpty ||
+                ref.watch(scanProvider).warnings > 0)
+              Text(
+                ref.watch(scanProvider).errors.isNotEmpty
+                    ? context.l10n.libraryScanError
+                    : context.l10n.libraryMetadataWarning,
+              ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -367,6 +518,8 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       children: [
                         Text(
                           _getTitle(context, index),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: phone
                               ? Theme.of(context).textTheme.headlineSmall
                               : Theme.of(context).textTheme.displayMedium,
@@ -387,49 +540,32 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       icon: const Icon(AppIcons.fileFormat),
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        AppMotion.pageRoute(
+                          context,
                           builder: (_) => const ShowcaseConsoleScreen(),
                         ),
                       ),
                     ),
-                  FilledButton.icon(
-                    onPressed: ref.watch(scanProvider).running
-                        ? null
-                        : () => _addLibraryFolder(context, ref),
-                    icon: const Icon(AppIcons.addFolder, size: 20),
-                    label: Text(context.l10n.libraryAddFolder),
-                  ),
+                  if (phone)
+                    IconButton.filled(
+                      tooltip: context.l10n.libraryAddFolder,
+                      onPressed: ref.watch(scanProvider).running
+                          ? null
+                          : () => _addLibraryFolder(context, ref),
+                      icon: const Icon(AppIcons.addFolder),
+                    )
+                  else
+                    FilledButton.icon(
+                      onPressed: ref.watch(scanProvider).running
+                          ? null
+                          : () => _addLibraryFolder(context, ref),
+                      icon: const Icon(AppIcons.addFolder, size: 20),
+                      label: Text(context.l10n.libraryAddFolder),
+                    ),
                 ],
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _searchController,
-                focusNode: ref.watch(librarySearchFocusProvider),
-                onChanged: (value) {
-                  setState(() {});
-                  _debouncer.run(() {
-                    if (mounted) {
-                      ref.read(searchQueryProvider.notifier).state = value;
-                    }
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: context.l10n.librarySearchHint,
-                  prefixIcon: const Icon(AppIcons.search),
-                  suffixIcon: _searchController.text.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: context.l10n.libraryClearSearch,
-                          icon: const Icon(AppIcons.close),
-                          onPressed: () {
-                            _debouncer.cancel();
-                            _searchController.clear();
-                            ref.read(searchQueryProvider.notifier).state = '';
-                            setState(() {});
-                          },
-                        ),
-                ),
-              ),
+              _buildSearch(),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -530,9 +666,10 @@ class _TopBarState extends ConsumerState<_TopBar> {
           ),
         ),
         AnimatedSwitcher(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 300),
+          duration: AppMotion.resolveDuration(
+            context,
+            const Duration(milliseconds: 300),
+          ),
           child: index == 5 && MediaQuery.sizeOf(context).width < 1200
               ? Container(
                   height: AppSpacing.s50,

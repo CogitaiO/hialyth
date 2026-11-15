@@ -6,6 +6,7 @@ import '../../../../providers/player/player_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
+import '../../../theme/app_motion.dart';
 
 class TrackSelectorDialog extends ConsumerWidget {
   const TrackSelectorDialog({super.key, this.initialIndex = 0});
@@ -152,32 +153,65 @@ class TrackSelectorDialog extends ConsumerWidget {
         final isSelected = currentTrack == track;
         final trackName = trackNames[track]!;
 
-        return ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
+        return Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
             vertical: AppSpacing.xxs,
           ),
-          title: Text(
-            trackName,
-            style: TextStyle(
+          child: AnimatedContainer(
+            duration: AppMotion.resolveDuration(context, AppMotion.medium),
+            curve: AppMotion.enter,
+            decoration: BoxDecoration(
               color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : context.appTheme.textPrimary,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+              border: Border.all(
+                color: isSelected
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: .4)
+                    : Colors.transparent,
+              ),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.xxs,
+                ),
+                title: Text(
+                  trackName,
+                  style: TextStyle(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : context.appTheme.textPrimary,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: AnimatedOpacity(
+                  opacity: isSelected ? 1 : 0,
+                  duration: AppMotion.resolveDuration(
+                    context,
+                    AppMotion.medium,
+                  ),
+                  child: Icon(
+                    AppIcons.check,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                onTap: () {
+                  onSelect(track);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
           ),
-          trailing: isSelected
-              ? Icon(
-                  AppIcons.check,
-                  color: Theme.of(context).colorScheme.primary,
-                )
-              : null,
-          onTap: () {
-            onSelect(track);
-            Navigator.pop(context);
-          },
         );
       },
     );

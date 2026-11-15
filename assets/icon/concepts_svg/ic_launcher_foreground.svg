@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <defs>
+    <!-- Верхняя световая корона (хрустальный блик) -->
+    <linearGradient id="jewel-crown" x1="36" y1="24" x2="64" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F5F3FF" />
+      <stop offset="50%" stop-color="#C4B5FD" />
+      <stop offset="100%" stop-color="#9A88FA" />
+    </linearGradient>
+
+    <!-- Левая основная плавная грань -->
+    <linearGradient id="jewel-left" x1="30" y1="36" x2="54" y2="82" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B7A6FC" />
+      <stop offset="55%" stop-color="#8B7CF6" />
+      <stop offset="100%" stop-color="#6855E0" />
+    </linearGradient>
+
+    <!-- Правая глубокая грань -->
+    <linearGradient id="jewel-right" x1="56" y1="30" x2="77" y2="68" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B7CF6" />
+      <stop offset="100%" stop-color="#5340D1" />
+    </linearGradient>
+
+    <!-- Нижняя теневая основа (глубина минерала) -->
+    <linearGradient id="jewel-base" x1="44" y1="58" x2="72" y2="83" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5E4BD8" />
+      <stop offset="100%" stop-color="#37289E" />
+    </linearGradient>
+
+    <!-- Стеклянный внутренний рефлекс (эффект прозрачности гиалита) -->
+    <linearGradient id="glass-sheen" x1="35" y1="30" x2="62" y2="66" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6" />
+      <stop offset="45%" stop-color="#DDD6FE" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.0" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Левая плавная грань (от верхней вершины до нижнего основания) -->
+  <path fill="url(#jewel-left)" d="M52.2 24.8 C50.5 25.2 48.9 26.2 47.8 27.6 L33.4 45.8 C31.6 48.1 31.2 51.2 32.4 53.9 L44.8 80.4 C45.8 82.5 48.1 83.6 50.4 83.2 C52.2 72.5 55.8 63.0 54.5 52.0 C53.4 42.5 49.5 34.0 52.2 24.8 Z" />
+
+  <!-- 2. Правая основная грань -->
+  <path fill="url(#jewel-right)" d="M52.2 24.8 C54.1 24.4 56.1 24.9 57.6 26.2 L74.2 41.2 C76.4 43.2 77.2 46.3 76.2 49.1 L69.4 68.5 C63.0 62.5 58.2 57.5 54.5 52.0 C53.4 42.5 49.5 34.0 52.2 24.8 Z" />
+
+  <!-- 3. Нижняя глубокая грань -->
+  <path fill="url(#jewel-base)" d="M54.5 52.0 C58.2 57.5 63.0 62.5 69.4 68.5 C68.6 70.8 67.0 72.7 64.9 73.9 L50.4 83.2 C52.2 72.5 55.8 63.0 54.5 52.0 Z" />
+
+  <!-- 4. Верхняя световая корона (задаёт чистый блик на макушке камня) -->
+  <path fill="url(#jewel-crown)" d="M52.2 24.8 C54.1 24.4 56.1 24.9 57.6 26.2 L65.2 33.1 C61.5 39.8 57.8 45.6 54.5 52.0 C51.2 45.8 46.5 41.2 40.6 36.7 L47.8 27.6 C48.9 26.2 50.5 25.2 52.2 24.8 Z" />
+
+  <!-- 5. Внутренний стеклянный рефлекс по линии S-излома -->
+  <path fill="url(#glass-sheen)" d="M52.2 24.8 C49.5 34.0 53.4 42.5 54.5 52.0 C55.8 63.0 52.2 72.5 50.4 83.2 L47.6 82.2 C49.6 71.8 52.8 62.6 51.6 52.2 C50.5 42.8 47.2 34.5 50.2 25.6 Z" />
+</svg>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/animated_state_icon.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nekaido_pre/providers/repositories_provider.dart';
 import 'dart:io';
@@ -7,6 +8,7 @@ import '../../../../providers/library_provider.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../../widgets/glass_surface.dart';
 
@@ -33,9 +35,10 @@ class PlayerSidebar extends ConsumerWidget {
         ignoring: !isOpen,
         child: AnimatedSlide(
           offset: isOpen ? Offset.zero : const Offset(1, 0),
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 200),
+          duration: AppMotion.resolveDuration(
+            context,
+            const Duration(milliseconds: 200),
+          ),
           curve: Curves.easeOutCubic,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -165,7 +168,7 @@ class PlayerSidebar extends ConsumerWidget {
               tileColor: isCurrent
                   ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
                   : Colors.transparent,
-              leading: Icon(
+              leading: AnimatedStateIcon(
                 isCurrent
                     ? AppIcons.playCircle
                     : (isWatched

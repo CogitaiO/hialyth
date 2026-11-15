@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,12 +9,16 @@ import 'package:nekaido_pre/data/services/file_discovery_service.dart';
 import 'package:nekaido_pre/domain/anime.dart';
 import 'package:nekaido_pre/l10n/app_localizations.dart';
 import 'package:nekaido_pre/presentation/library_screen.dart';
+import 'package:nekaido_pre/presentation/anime_details/anime_details_screen.dart';
+import 'package:nekaido_pre/providers/color_provider.dart';
+import 'package:nekaido_pre/widgets/animated_play_pause_icon.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import 'package:nekaido_pre/presentation/player/widgets/track_selector_dialog.dart';
 import 'package:nekaido_pre/presentation/player/widgets/mobile_player_overlay.dart';
 import 'package:nekaido_pre/providers/player/player_provider.dart';
 import 'package:nekaido_pre/providers/library_provider.dart';
 import 'package:nekaido_pre/theme/app_theme.dart';
+import 'package:nekaido_pre/theme/app_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'player_loading_test.dart' as player_fakes;
 
@@ -69,6 +74,24 @@ class _PlaylistNotifier extends PlayerNotifier {
   }
 }
 
+class _PlayingBackend extends _OverlayBackend {
+  final playing = StreamController<bool>.broadcast(sync: true);
+  bool active = false;
+  @override
+  Stream<bool> get playingStream => playing.stream;
+  @override
+  Future<void> playOrPause() async {
+    active = !active;
+    playing.add(active);
+  }
+
+  @override
+  Future<void> dispose() async {
+    await playing.close();
+    await super.dispose();
+  }
+}
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({'has_seen_vpn_warning': true});
@@ -91,10 +114,146 @@ void main() {
         .setMockMethodCallHandler(const MethodChannel('window_manager'), null);
   });
 
-  for (final width in [320.0, 390.0]) {
-    testWidgets('library and settings fit a $width px phone', (tester) async {
+  testWidgets('actual mobile play button crossfades on backend state changes', (
+    tester,
+  ) async {
+    final backend = _PlayingBackend();
+    final notifier = PlayerNotifier(
+      player_fakes.Repository(),
+      await SharedPreferences.getInstance(),
+      engine: backend,
+      discordService: player_fakes.Presence(),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [playerProvider.overrideWith((ref) => notifier)],
+        child: MaterialApp(
+          theme: AppTheme.dark(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: MobilePlayerOverlay(title: 'Playback')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final play = find.byKey(const ValueKey('mobile-player-play'));
+    expect(
+      find.descendant(of: play, matching: find.byType(AnimatedPlayPauseIcon)),
+      findsOneWidget,
+    );
+    await tester.tap(play);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(
+      find.descendant(of: play, matching: find.byIcon(AppIcons.transportPlay)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: play, matching: find.byIcon(AppIcons.transportPause)),
+      findsOneWidget,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: play, matching: find.byIcon(AppIcons.transportPlay)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: play, matching: find.byIcon(AppIcons.transportPause)),
+      findsOneWidget,
+    );
+    await tester.tap(play);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: play, matching: find.byIcon(AppIcons.transportPause)),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: play, matching: find.byIcon(AppIcons.transportPlay)),
+      findsOneWidget,
+    );
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  for (final size in [const Size(390, 800), const Size(800, 360)]) {
+    testWidgets(
+      'details back stays inside system insets and navigates at $size',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = size;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        const insets = EdgeInsets.fromLTRB(32, 40, 24, 28);
+        final anime = Anime()
+          ..id = 1
+          ..title = 'Test anime';
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              sharedPrefsProvider.overrideWithValue(
+                await SharedPreferences.getInstance(),
+              ),
+              animeDetailsProvider(
+                1,
+              ).overrideWith((ref) => Stream.value(anime)),
+              animeColorProvider(
+                anime,
+              ).overrideWith((ref) async => Colors.blue),
+            ],
+            child: MaterialApp(
+              theme: AppTheme.dark(),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(padding: insets, viewPadding: insets),
+                child: child!,
+              ),
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const AnimeDetailsScreen(
+                          animeId: 1,
+                          heroTag: 'insets-test',
+                        ),
+                      ),
+                    ),
+                    child: const Text('Open details'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Open details'));
+        await tester.pumpAndSettle();
+        final back = find.byKey(const ValueKey('details-back'));
+        final rect = tester.getRect(back);
+        expect(rect.top, greaterThanOrEqualTo(insets.top));
+        expect(rect.left, greaterThanOrEqualTo(insets.left));
+        expect(rect.right, lessThanOrEqualTo(size.width - insets.right));
+        expect(back.hitTestable(), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.tap(back);
+        await tester.pumpAndSettle();
+        expect(find.text('Open details'), findsOneWidget);
+        expect(find.byType(AnimeDetailsScreen), findsNothing);
+      },
+    );
+  }
+
+  for (final size in [
+    const Size(320, 800),
+    const Size(390, 800),
+    const Size(800, 360),
+    const Size(960, 400),
+  ]) {
+    testWidgets('library and settings fit a $size phone', (tester) async {
       tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = Size(width, 800);
+      tester.view.physicalSize = size;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final prefs = await SharedPreferences.getInstance();
@@ -114,7 +273,7 @@ void main() {
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(
                 context,
-              ).copyWith(padding: const EdgeInsets.only(top: 32, bottom: 24)),
+              ).copyWith(padding: const EdgeInsets.fromLTRB(24, 32, 16, 24)),
               child: child!,
             ),
             home: const LibraryScreen(),
@@ -124,23 +283,54 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(
-        find.byTooltip('Library navigation').hitTestable(),
-        findsOneWidget,
+        tester.getCenter(find.byIcon(AppIcons.close).first).dx,
+        closeTo(size.width - 16 - 23, 1),
       );
-      expect(
-        tester.getTopLeft(find.byTooltip('Library navigation')).dy,
-        greaterThanOrEqualTo(32),
-      );
-      await tester.tap(find.byTooltip('Library navigation'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Settings').last);
+      final navigation = find.byTooltip('Library navigation');
+      if (navigation.evaluate().isEmpty) {
+        await tester.tap(find.byTooltip('Settings').last);
+      } else {
+        expect(
+          find.byTooltip('Library navigation').hitTestable(),
+          findsOneWidget,
+        );
+        expect(
+          tester.getTopLeft(find.byTooltip('Library navigation')).dy,
+          greaterThanOrEqualTo(32),
+        );
+        await tester.tap(find.byTooltip('Library navigation'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Settings').last);
+      }
       await tester.pumpAndSettle();
       expect(find.byType(SettingsScreen), findsOneWidget);
-      expect(find.byType(BackButton).hitTestable(), findsOneWidget);
-      expect(
-        tester.getTopLeft(find.byType(BackButton)).dy,
-        greaterThanOrEqualTo(32),
+      if (size.width < 600) {
+        expect(find.byType(BackButton).hitTestable(), findsOneWidget);
+        expect(
+          tester.getTopLeft(find.byType(BackButton)).dy,
+          greaterThanOrEqualTo(32),
+        );
+      } else {
+        expect(
+          tester.getTopLeft(find.text('Settings').last).dy,
+          greaterThanOrEqualTo(32),
+        );
+      }
+      expect(tester.takeException(), isNull);
+      await tester.ensureVisible(find.text('Playback').last);
+      await tester.tap(find.text('Playback').last);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final selection = find.byKey(const ValueKey('settings-audio-priority'));
+      await tester.scrollUntilVisible(
+        selection.hitTestable(),
+        80,
+        scrollable: find.byType(Scrollable).last,
       );
+      await tester.pumpAndSettle();
+      await tester.tap(selection);
+      await tester.pumpAndSettle();
+      expect(find.byType(PopupMenuItem<String>), findsWidgets);
       expect(tester.takeException(), isNull);
     });
   }

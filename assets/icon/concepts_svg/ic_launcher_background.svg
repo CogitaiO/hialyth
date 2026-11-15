@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <defs>
+    <radialGradient id="obsidian-surface" cx="44" cy="40" r="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#221E3B" />
+      <stop offset="48%" stop-color="#131518" />
+      <stop offset="100%" stop-color="#0E0F11" />
+    </radialGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#obsidian-surface)" />
+</svg>

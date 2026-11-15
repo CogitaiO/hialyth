@@ -18,6 +18,7 @@ abstract final class AppTheme {
     return ThemeData(
       brightness: Brightness.dark,
       useMaterial3: true,
+      splashFactory: NoSplash.splashFactory,
       colorScheme: scheme,
       scaffoldBackgroundColor: extension.pageSurface,
       extensions: [extension],
@@ -43,6 +44,41 @@ abstract final class AppTheme {
       // Menus
       menuTheme: _menuTheme(scheme, extension),
       popupMenuTheme: _popupMenuTheme(scheme, extension),
+      menuButtonTheme: MenuButtonThemeData(
+        style: ButtonStyle(
+          animationDuration: AppMotion.medium,
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadii.md),
+            ),
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) =>
+                states.contains(WidgetState.hovered) ||
+                    states.contains(WidgetState.focused)
+                ? scheme.primaryContainer
+                : Colors.transparent,
+          ),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: ButtonStyle(
+          animationDuration: AppMotion.medium,
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? scheme.primary
+                : extension.textSecondary,
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? scheme.primaryContainer
+                : Colors.transparent,
+          ),
+        ),
+      ),
 
       // Chips
       chipTheme: _chipTheme(scheme, extension),
@@ -69,10 +105,7 @@ abstract final class AppTheme {
       listTileTheme: _listTileTheme(scheme, extension),
 
       // Icons
-      iconTheme: IconThemeData(
-        color: extension.textSecondary,
-        size: 20,
-      ),
+      iconTheme: IconThemeData(color: extension.textSecondary, size: 20),
 
       // App bar (for any legacy MaterialAppBar usage)
       appBarTheme: AppBarTheme(
@@ -92,8 +125,9 @@ abstract final class AppTheme {
         backgroundColor: extension.container,
         modalBackgroundColor: extension.container,
         shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(AppRadii.xxl)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadii.xxl),
+          ),
         ),
         elevation: 0,
       ),
@@ -102,14 +136,20 @@ abstract final class AppTheme {
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: extension.titleBarSurface,
         indicatorColor: scheme.primaryContainer,
-        selectedIconTheme:
-            IconThemeData(color: scheme.onPrimaryContainer, size: 24),
-        unselectedIconTheme:
-            IconThemeData(color: extension.textSubtle, size: 24),
-        selectedLabelTextStyle:
-            AppTypography.label.copyWith(color: scheme.onPrimaryContainer),
-        unselectedLabelTextStyle:
-            AppTypography.label.copyWith(color: extension.textSubtle),
+        selectedIconTheme: IconThemeData(
+          color: scheme.onPrimaryContainer,
+          size: 24,
+        ),
+        unselectedIconTheme: IconThemeData(
+          color: extension.textSubtle,
+          size: 24,
+        ),
+        selectedLabelTextStyle: AppTypography.label.copyWith(
+          color: scheme.onPrimaryContainer,
+        ),
+        unselectedLabelTextStyle: AppTypography.label.copyWith(
+          color: extension.textSubtle,
+        ),
         labelType: NavigationRailLabelType.all,
       ),
 
@@ -138,8 +178,9 @@ abstract final class AppTheme {
 
   static ColorScheme _buildColorScheme(Color accent, Brightness brightness) {
     final onAccent = AppPalette.onAccent(accent);
-    final base =
-        brightness == Brightness.dark ? AppSurfaces.base : Colors.white;
+    final base = brightness == Brightness.dark
+        ? AppSurfaces.base
+        : Colors.white;
 
     return ColorScheme.fromSeed(
       seedColor: accent,
@@ -171,8 +212,9 @@ abstract final class AppTheme {
       outlineVariant: AppSurfaces.borderFaint,
       shadow: Colors.black,
       scrim: AppSurfaces.scrim,
-      inverseSurface:
-          brightness == Brightness.dark ? Colors.white : AppSurfaces.base,
+      inverseSurface: brightness == Brightness.dark
+          ? Colors.white
+          : AppSurfaces.base,
       onInverseSurface: brightness == Brightness.dark
           ? Colors.black
           : AppSurfaces.contentPrimary,
@@ -189,14 +231,21 @@ abstract final class AppTheme {
   // ──────────────────────────────────────────────────────────────
 
   static ElevatedButtonThemeData _elevatedButtonTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return ElevatedButtonThemeData(
       style: ButtonStyle(
+        animationDuration: AppMotion.medium,
         minimumSize: WidgetStateProperty.all(const Size(88, 40)),
-        padding:
-            WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 16)),
-        shape: WidgetStateProperty.all(RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg))),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
+        ),
         backgroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.disabled)) return ext.surfaceDisabled;
           if (states.contains(WidgetState.hovered)) {
@@ -214,8 +263,9 @@ abstract final class AppTheme {
           if (states.contains(WidgetState.disabled)) return ext.textDisabled;
           return scheme.onPrimary;
         }),
-        overlayColor:
-            WidgetStateProperty.all(scheme.onPrimary.withValues(alpha: 0.12)),
+        overlayColor: WidgetStateProperty.all(
+          scheme.onPrimary.withValues(alpha: 0.12),
+        ),
         elevation: WidgetStateProperty.all(0),
         shadowColor: WidgetStateProperty.all(Colors.transparent),
         side: WidgetStateProperty.all(BorderSide.none),
@@ -225,14 +275,21 @@ abstract final class AppTheme {
   }
 
   static FilledButtonThemeData _filledButtonTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return FilledButtonThemeData(
       style: ButtonStyle(
+        animationDuration: AppMotion.medium,
         minimumSize: WidgetStateProperty.all(const Size(88, 40)),
-        padding:
-            WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 16)),
-        shape: WidgetStateProperty.all(RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg))),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
+        ),
         backgroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.disabled)) return ext.surfaceDisabled;
           if (states.contains(WidgetState.hovered)) {
@@ -250,8 +307,9 @@ abstract final class AppTheme {
           if (states.contains(WidgetState.disabled)) return ext.textDisabled;
           return scheme.onPrimary;
         }),
-        overlayColor:
-            WidgetStateProperty.all(scheme.onPrimary.withValues(alpha: 0.12)),
+        overlayColor: WidgetStateProperty.all(
+          scheme.onPrimary.withValues(alpha: 0.12),
+        ),
         elevation: WidgetStateProperty.all(0),
         textStyle: WidgetStateProperty.all(AppTypography.label),
       ),
@@ -259,14 +317,21 @@ abstract final class AppTheme {
   }
 
   static OutlinedButtonThemeData _outlinedButtonTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return OutlinedButtonThemeData(
       style: ButtonStyle(
+        animationDuration: AppMotion.medium,
         minimumSize: WidgetStateProperty.all(const Size(88, 40)),
-        padding:
-            WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 16)),
-        shape: WidgetStateProperty.all(RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg))),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
+        ),
         foregroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.disabled)) return ext.textDisabled;
           if (states.contains(WidgetState.hovered)) return scheme.primary;
@@ -297,22 +362,30 @@ abstract final class AppTheme {
           }
           return BorderSide(color: ext.borderStrong);
         }),
-        overlayColor:
-            WidgetStateProperty.all(scheme.primary.withValues(alpha: 0.12)),
+        overlayColor: WidgetStateProperty.all(
+          scheme.primary.withValues(alpha: 0.12),
+        ),
         textStyle: WidgetStateProperty.all(AppTypography.label),
       ),
     );
   }
 
   static TextButtonThemeData _textButtonTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return TextButtonThemeData(
       style: ButtonStyle(
+        animationDuration: AppMotion.medium,
         minimumSize: WidgetStateProperty.all(const Size(64, 36)),
-        padding:
-            WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 12)),
-        shape: WidgetStateProperty.all(RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg))),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(horizontal: 12),
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
+        ),
         foregroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.disabled)) return ext.textDisabled;
           if (states.contains(WidgetState.hovered)) return scheme.primary;
@@ -331,8 +404,9 @@ abstract final class AppTheme {
           }
           return Colors.transparent;
         }),
-        overlayColor:
-            WidgetStateProperty.all(scheme.primary.withValues(alpha: 0.12)),
+        overlayColor: WidgetStateProperty.all(
+          scheme.primary.withValues(alpha: 0.12),
+        ),
         textStyle: WidgetStateProperty.all(AppTypography.label),
       ),
     );
@@ -345,21 +419,26 @@ abstract final class AppTheme {
       elevation: 0,
       shadowColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.lg)),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        side: BorderSide(color: ext.borderSubtle),
+      ),
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
     );
   }
 
   static DialogThemeData _dialogTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return DialogThemeData(
       backgroundColor: ext.container,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       shadowColor: Colors.black.withValues(alpha: 0.38),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.xxl)),
+        borderRadius: BorderRadius.circular(AppRadii.xxl),
+      ),
       titleTextStyle: AppTypography.titleLarge.copyWith(color: ext.textPrimary),
       contentTextStyle: AppTypography.body.copyWith(color: ext.textSecondary),
       actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
@@ -373,30 +452,40 @@ abstract final class AppTheme {
         backgroundColor: WidgetStateProperty.all(ext.container),
         surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
         elevation: WidgetStateProperty.all(0),
-        shadowColor:
-            WidgetStateProperty.all(Colors.black.withValues(alpha: 0.32)),
-        shape: WidgetStateProperty.all(RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg))),
-        padding:
-            WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 8)),
+        shadowColor: WidgetStateProperty.all(
+          Colors.black.withValues(alpha: 0.32),
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            side: BorderSide(color: ext.borderSubtle),
+          ),
+        ),
+        padding: WidgetStateProperty.all(
+          const EdgeInsets.symmetric(vertical: 8),
+        ),
         maximumSize: WidgetStateProperty.all(const Size(320, double.infinity)),
       ),
     );
   }
 
   static PopupMenuThemeData _popupMenuTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return PopupMenuThemeData(
       color: ext.container,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       shadowColor: Colors.black.withValues(alpha: 0.32),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.lg)),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        side: BorderSide(color: ext.borderSubtle),
+      ),
       textStyle: AppTypography.body.copyWith(color: ext.textPrimary),
       // labelTextStyle: WidgetStateProperty.all(AppTypography.label.copyWith(color: scheme.primary)),
       iconColor: ext.textSecondary,
-      mouseCursor: WidgetStateProperty.all(SystemMouseCursors.basic),
+      mouseCursor: WidgetStateProperty.all(SystemMouseCursors.click),
     );
   }
 
@@ -409,8 +498,9 @@ abstract final class AppTheme {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       labelPadding: const EdgeInsets.symmetric(horizontal: 8),
       labelStyle: AppTypography.label.copyWith(color: ext.textPrimary),
-      secondaryLabelStyle:
-          AppTypography.label.copyWith(color: scheme.onPrimaryContainer),
+      secondaryLabelStyle: AppTypography.label.copyWith(
+        color: scheme.onPrimaryContainer,
+      ),
       brightness: Brightness.dark,
       elevation: 0,
       shadowColor: Colors.transparent,
@@ -425,15 +515,18 @@ abstract final class AppTheme {
   }
 
   static SliderThemeData _sliderTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return SliderThemeData(
       activeTrackColor: scheme.primary,
       inactiveTrackColor: ext.borderSubtle,
       thumbColor: scheme.primary,
       overlayColor: scheme.primary.withValues(alpha: 0.16),
       valueIndicatorColor: scheme.primary,
-      valueIndicatorTextStyle:
-          AppTypography.monoSmall.copyWith(color: scheme.onPrimary),
+      valueIndicatorTextStyle: AppTypography.monoSmall.copyWith(
+        color: scheme.onPrimary,
+      ),
       activeTickMarkColor: scheme.primary,
       inactiveTickMarkColor: ext.borderSubtle,
       trackHeight: 2,
@@ -448,7 +541,9 @@ abstract final class AppTheme {
   }
 
   static TooltipThemeData _tooltipTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return TooltipThemeData(
       decoration: BoxDecoration(
         color: ext.surfaceTooltip,
@@ -496,14 +591,17 @@ abstract final class AppTheme {
   }
 
   static SnackBarThemeData _snackBarTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return SnackBarThemeData(
       backgroundColor: ext.containerHigh,
       contentTextStyle: AppTypography.body.copyWith(color: ext.textPrimary),
       actionTextColor: scheme.primary,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.lg)),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
       elevation: 0,
       showCloseIcon: true,
       closeIconColor: ext.textMuted,
@@ -512,7 +610,9 @@ abstract final class AppTheme {
   }
 
   static TabBarThemeData _tabBarTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return TabBarThemeData(
       labelColor: scheme.primary,
       unselectedLabelColor: ext.textMuted,
@@ -538,7 +638,9 @@ abstract final class AppTheme {
   }
 
   static ListTileThemeData _listTileTheme(
-      ColorScheme scheme, AppThemeExtension ext) {
+    ColorScheme scheme,
+    AppThemeExtension ext,
+  ) {
     return ListTileThemeData(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       tileColor: Colors.transparent,
@@ -547,12 +649,15 @@ abstract final class AppTheme {
       iconColor: ext.textMuted,
       textColor: ext.textPrimary,
       titleTextStyle: AppTypography.title.copyWith(color: ext.textPrimary),
-      subtitleTextStyle:
-          AppTypography.bodySmall.copyWith(color: ext.textSecondary),
-      leadingAndTrailingTextStyle:
-          AppTypography.bodySmall.copyWith(color: ext.textMuted),
+      subtitleTextStyle: AppTypography.bodySmall.copyWith(
+        color: ext.textSecondary,
+      ),
+      leadingAndTrailingTextStyle: AppTypography.bodySmall.copyWith(
+        color: ext.textMuted,
+      ),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.lg)),
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
       horizontalTitleGap: 16,
       minVerticalPadding: 8,
     );

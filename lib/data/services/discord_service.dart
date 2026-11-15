@@ -52,7 +52,7 @@ class DiscordService {
           state: episode,
           details: title,
           largeImageKey: 'logo',
-          largeImageText: 'Nekaido',
+          largeImageText: 'Hialyth',
           smallImageKey: isPlaying ? 'play' : 'pause',
           smallImageText: isPlaying ? 'Watching' : 'Paused',
           endTimeStamp: endTimestamp,

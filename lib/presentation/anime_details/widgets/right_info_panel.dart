@@ -1,12 +1,14 @@
 import 'dart:io';
 import '../../../../data/services/android_documents.dart';
 import 'package:flutter/material.dart';
+import '../../../widgets/animated_state_icon.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/anime.dart';
 import '../../../../providers/repositories_provider.dart';
 import '../../../../utils/os_utils.dart';
 import '../../player/player_screen.dart';
 import '../../../theme/app_icons.dart';
+import '../../../theme/app_motion.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
 
@@ -172,7 +174,8 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
     if (!mounted) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
+      AppMotion.pageRoute(
+        context,
         builder: (_) =>
             PlayerScreen(animeId: widget.anime.id, videoPath: widget.path),
       ),
@@ -203,7 +206,7 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
               horizontal: 16,
               vertical: 8,
             ),
-            leading: Icon(
+            leading: AnimatedStateIcon(
               missing
                   ? AppIcons.imageBroken
                   : watched

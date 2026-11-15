@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/animated_state_icon.dart';
+import '../../../widgets/animated_play_pause_icon.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import '../../../../providers/player/player_provider.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../../widgets/glass_surface.dart';
 
@@ -18,16 +21,18 @@ class PipOverlay extends ConsumerWidget {
     final isPlaying = ref.watch(playerProvider.select((s) => s.isPlaying));
     final volume = ref.watch(playerProvider.select((s) => s.volume));
     final notifier = ref.read(playerProvider.notifier);
-    final reduceTransparency =
-        ref.watch(settingsProvider.select((s) => s.reduceTransparency));
+    final reduceTransparency = ref.watch(
+      settingsProvider.select((s) => s.reduceTransparency),
+    );
 
     return IgnorePointer(
       ignoring: !isVisible,
       child: AnimatedOpacity(
         opacity: isVisible ? 1.0 : 0.0,
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 200),
+        duration: AppMotion.resolveDuration(
+          context,
+          const Duration(milliseconds: 200),
+        ),
         child: Container(
           color: tokens.scrim(0.54),
           child: Stack(
@@ -47,8 +52,8 @@ class PipOverlay extends ConsumerWidget {
                   padding: const EdgeInsets.all(AppSpacing.xs),
                   child: IconButton(
                     iconSize: 48,
-                    icon: Icon(
-                      isPlaying ? AppIcons.pauseCircle : AppIcons.playCircle,
+                    icon: AnimatedPlayPauseIcon(
+                      playing: isPlaying,
                       color: tokens.textPrimary,
                     ),
                     onPressed: () => notifier.togglePlay(),
@@ -68,12 +73,12 @@ class PipOverlay extends ConsumerWidget {
                     children: [
                       IconButton(
                         iconSize: 20,
-                        icon: Icon(
+                        icon: AnimatedStateIcon(
                           volume == 0
                               ? AppIcons.volumeOff
                               : (volume < 50
-                                  ? AppIcons.volumeDown
-                                  : AppIcons.volumeUp),
+                                    ? AppIcons.volumeDown
+                                    : AppIcons.volumeUp),
                           color: tokens.textPrimary,
                         ),
                         onPressed: () => notifier.toggleMute(),
