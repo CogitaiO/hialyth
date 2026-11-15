@@ -13,6 +13,7 @@ import '../../theme/app_palette.dart';
 import '../../theme/app_theme_extension.dart';
 import '../../core/localization/l10n.dart';
 import '../../core/logger.dart';
+import '../../data/services/android_documents.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -29,92 +30,136 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final accentColor = Theme.of(context).colorScheme.primary;
     final tokens = context.appTheme;
+    final phone = MediaQuery.sizeOf(context).width < 600;
 
     return Escapable(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: Column(
-          children: [
-            CustomTitleBar(
-              leading: IconButton(
-                icon: Icon(AppIcons.back, color: tokens.textPrimary),
-                onPressed: () => Navigator.pop(context),
-              ),
-              title: Text(context.l10n.settingsTitle,
+        body: SafeArea(
+          top: phone,
+          bottom: phone,
+          child: Column(
+            children: [
+              if (phone)
+                Row(
+                  children: [
+                    BackButton(color: tokens.textPrimary),
+                    Text(
+                      context.l10n.settingsTitle,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+              CustomTitleBar(
+                leading: IconButton(
+                  icon: Icon(AppIcons.back, color: tokens.textPrimary),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                title: Text(
+                  context.l10n.settingsTitle,
                   style: TextStyle(
-                      color: tokens.textPrimary, fontWeight: FontWeight.bold)),
-            ),
-            Expanded(
-              child: LayoutBuilder(builder: (context, constraints) {
-                final compact = constraints.maxWidth < 900;
-                final destinations = [
-                  (context.l10n.settingsAppearance, AppIcons.appearance),
-                  (context.l10n.settingsPlayback, AppIcons.playback),
-                  (context.l10n.settingsLibrary, AppIcons.library),
-                  (context.l10n.settingsIntegrations, AppIcons.settings),
-                  (context.l10n.settingsAdvanced, AppIcons.advancedSettings),
-                ];
-                final content = AnimatedSwitcher(
-                  duration: MediaQuery.disableAnimationsOf(context)
-                      ? Duration.zero
-                      : const Duration(milliseconds: 200),
-                  child: _buildContent(_selectedIndex, accentColor, ref),
-                );
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 960),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: compact
-                          ? Column(children: [
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(children: [
-                                  for (var i = 0; i < destinations.length; i++)
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: ChoiceChip(
-                                        avatar:
-                                            Icon(destinations[i].$2, size: 18),
-                                        label: Text(destinations[i].$1),
-                                        selected: _selectedIndex == i,
-                                        onSelected: (_) =>
-                                            setState(() => _selectedIndex = i),
+                    color: tokens.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 900;
+                    final destinations = [
+                      (context.l10n.settingsAppearance, AppIcons.appearance),
+                      (context.l10n.settingsPlayback, AppIcons.playback),
+                      (context.l10n.settingsLibrary, AppIcons.library),
+                      (context.l10n.settingsIntegrations, AppIcons.settings),
+                      (
+                        context.l10n.settingsAdvanced,
+                        AppIcons.advancedSettings,
+                      ),
+                    ];
+                    final content = AnimatedSwitcher(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 200),
+                      child: _buildContent(_selectedIndex, accentColor, ref),
+                    );
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 960),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: compact
+                              ? Column(
+                                  children: [
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: [
+                                          for (
+                                            var i = 0;
+                                            i < destinations.length;
+                                            i++
+                                          )
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                right: 8,
+                                              ),
+                                              child: ChoiceChip(
+                                                avatar: Icon(
+                                                  destinations[i].$2,
+                                                  size: 18,
+                                                ),
+                                                label: Text(destinations[i].$1),
+                                                selected: _selectedIndex == i,
+                                                onSelected: (_) => setState(
+                                                  () => _selectedIndex = i,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                     ),
-                                ]),
-                              ),
-                              const SizedBox(height: 24),
-                              Expanded(child: content),
-                            ])
-                          : Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                  SizedBox(
+                                    const SizedBox(height: 24),
+                                    Expanded(child: content),
+                                  ],
+                                )
+                              : Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
                                       width: 220,
-                                      child: Column(children: [
-                                        for (var i = 0;
+                                      child: Column(
+                                        children: [
+                                          for (
+                                            var i = 0;
                                             i < destinations.length;
-                                            i++)
-                                          _MenuTab(
-                                            title: destinations[i].$1,
-                                            icon: destinations[i].$2,
-                                            index: i,
-                                            currentIndex: _selectedIndex,
-                                            accentColor: accentColor,
-                                            onTap: () => setState(
-                                                () => _selectedIndex = i),
-                                          ),
-                                      ])),
-                                  const SizedBox(width: 32),
-                                  Expanded(child: content),
-                                ]),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ],
+                                            i++
+                                          )
+                                            _MenuTab(
+                                              title: destinations[i].$1,
+                                              icon: destinations[i].$2,
+                                              index: i,
+                                              currentIndex: _selectedIndex,
+                                              accentColor: accentColor,
+                                              onTap: () => setState(
+                                                () => _selectedIndex = i,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 32),
+                                    Expanded(child: content),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -124,18 +169,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     switch (index) {
       case 0:
         return _AppearanceSettings(
-            key: const ValueKey(0), accentColor: accentColor);
+          key: const ValueKey(0),
+          accentColor: accentColor,
+        );
       case 1:
         return _PlayerSettings(
-            key: const ValueKey(1), accentColor: accentColor);
+          key: const ValueKey(1),
+          accentColor: accentColor,
+        );
       case 2:
         return _LibrarySettings(
-            key: const ValueKey(2), accentColor: accentColor);
+          key: const ValueKey(2),
+          accentColor: accentColor,
+        );
       case 3:
         return const _IntegrationsSettings(key: ValueKey(3));
       case 4:
         return _AdvancedSettings(
-            key: const ValueKey(4), accentColor: accentColor);
+          key: const ValueKey(4),
+          accentColor: accentColor,
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -153,100 +206,125 @@ class _AppearanceSettings extends ConsumerWidget {
     final tokens = context.appTheme;
     final currentColor = Color(settings.accentColorValue);
 
-    return ListView(children: [
-      _SectionHeader(title: context.l10n.settingsAccessibility),
-      _SettingsCard(
-          child: Column(children: [
-        SwitchListTile(
-          key: const ValueKey('reduce-transparency'),
-          title: Text(context.l10n.settingsReducedTransparency),
-          subtitle: Text(context.l10n.settingsReduceTransparencyDescription),
-          value: settings.reduceTransparency,
-          onChanged: notifier.toggleReduceTransparency,
-        ),
-        const Divider(height: 1),
-        SwitchListTile(
-          key: const ValueKey('reduce-motion'),
-          title: Text(context.l10n.settingsReducedMotion),
-          subtitle: Text(context.l10n.settingsReduceMotionDescription),
-          value: settings.reduceMotion,
-          onChanged: notifier.toggleReduceMotion,
-        ),
-      ])),
-      const SizedBox(height: AppSpacing.lg),
-      _SectionHeader(title: context.l10n.settingsThemeColors),
-      _SettingsCard(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+    return ListView(
+      children: [
+        _SectionHeader(title: context.l10n.settingsAccessibility),
+        _SettingsCard(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(context.l10n.settingsAppAccentColor,
-                  style: TextStyle(color: tokens.textPrimary, fontSize: 16)),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  ...AppPalette.accentPresets.map((c) {
-                    final isSelected =
-                        settings.accentColorValue == c.toARGB32();
-                    return GestureDetector(
-                      onTap: () => notifier.updateAccentColor(c),
-                      child: Container(
-                        margin: const EdgeInsets.only(right: AppSpacing.sm),
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: c,
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(color: tokens.textPrimary, width: 3)
-                              : null,
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                      color: c.withValues(alpha: 0.5),
-                                      blurRadius: 10)
-                                ]
-                              : [],
-                        ),
-                        child: isSelected
-                            ? Icon(AppIcons.selected,
-                                color: AppPalette.onAccent(c), size: 20)
-                            : null,
-                      ),
-                    );
-                  }),
-                  GestureDetector(
-                    onTap: () =>
-                        _showColorPickerDialog(context, currentColor, notifier),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const SweepGradient(
-                          colors: AppPalette.accentSpectrum,
-                        ),
-                        border: Border.all(color: tokens.textMuted, width: 2),
-                      ),
-                      child: Icon(AppIcons.colorPicker,
-                          color: tokens.textPrimary, size: 20),
-                    ),
-                  )
-                ],
+              SwitchListTile(
+                key: const ValueKey('reduce-transparency'),
+                title: Text(context.l10n.settingsReducedTransparency),
+                subtitle: Text(
+                  context.l10n.settingsReduceTransparencyDescription,
+                ),
+                value: settings.reduceTransparency,
+                onChanged: notifier.toggleReduceTransparency,
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                key: const ValueKey('reduce-motion'),
+                title: Text(context.l10n.settingsReducedMotion),
+                subtitle: Text(context.l10n.settingsReduceMotionDescription),
+                value: settings.reduceMotion,
+                onChanged: notifier.toggleReduceMotion,
               ),
             ],
           ),
         ),
-      ),
-      const SizedBox(height: AppSpacing.lg),
-    ]);
+        const SizedBox(height: AppSpacing.lg),
+        _SectionHeader(title: context.l10n.settingsThemeColors),
+        _SettingsCard(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.settingsAppAccentColor,
+                  style: TextStyle(color: tokens.textPrimary, fontSize: 16),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [
+                    ...AppPalette.accentPresets.map((c) {
+                      final isSelected =
+                          settings.accentColorValue == c.toARGB32();
+                      return GestureDetector(
+                        onTap: () => notifier.updateAccentColor(c),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: AppSpacing.sm),
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(
+                                    color: tokens.textPrimary,
+                                    width: 3,
+                                  )
+                                : null,
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: c.withValues(alpha: 0.5),
+                                      blurRadius: 10,
+                                    ),
+                                  ]
+                                : [],
+                          ),
+                          child: isSelected
+                              ? Icon(
+                                  AppIcons.selected,
+                                  color: AppPalette.onAccent(c),
+                                  size: 20,
+                                )
+                              : null,
+                        ),
+                      );
+                    }),
+                    GestureDetector(
+                      onTap: () => _showColorPickerDialog(
+                        context,
+                        currentColor,
+                        notifier,
+                      ),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const SweepGradient(
+                            colors: AppPalette.accentSpectrum,
+                          ),
+                          border: Border.all(color: tokens.textMuted, width: 2),
+                        ),
+                        child: Icon(
+                          AppIcons.colorPicker,
+                          color: tokens.textPrimary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+      ],
+    );
   }
 
   void _showColorPickerDialog(
-      BuildContext context, Color initialColor, AppSettingsNotifier notifier) {
+    BuildContext context,
+    Color initialColor,
+    AppSettingsNotifier notifier,
+  ) {
     Color tempColor = initialColor;
     final tokens = context.appTheme;
 
@@ -254,8 +332,10 @@ class _AppearanceSettings extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: tokens.cardSurface,
-        title: Text(context.l10n.settingsCustomColor,
-            style: TextStyle(color: tokens.textPrimary)),
+        title: Text(
+          context.l10n.settingsCustomColor,
+          style: TextStyle(color: tokens.textPrimary),
+        ),
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: tempColor,
@@ -268,19 +348,24 @@ class _AppearanceSettings extends ConsumerWidget {
             displayThumbColor: true,
             hexInputBar: true,
             hexInputController: TextEditingController(
-                text: '#${initialColor.toHexString().substring(2)}'),
+              text: '#${initialColor.toHexString().substring(2)}',
+            ),
           ),
         ),
         actions: [
           TextButton(
-            child: Text(context.l10n.dialogCancel,
-                style: TextStyle(color: tokens.textMuted)),
+            child: Text(
+              context.l10n.dialogCancel,
+              style: TextStyle(color: tokens.textMuted),
+            ),
             onPressed: () => Navigator.pop(ctx),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: initialColor),
-            child: Text(context.l10n.settingsApply,
-                style: TextStyle(color: tokens.textPrimary)),
+            child: Text(
+              context.l10n.settingsApply,
+              style: TextStyle(color: tokens.textPrimary),
+            ),
             onPressed: () {
               notifier.updateAccentColor(tempColor);
               Navigator.pop(ctx);
@@ -295,17 +380,20 @@ class _AppearanceSettings extends ConsumerWidget {
 class _IntegrationsSettings extends ConsumerWidget {
   const _IntegrationsSettings({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) => ListView(children: [
-        _SectionHeader(title: context.l10n.settingsIntegrations),
-        _SettingsCard(
-            child: SwitchListTile(
+  Widget build(BuildContext context, WidgetRef ref) => ListView(
+    children: [
+      _SectionHeader(title: context.l10n.settingsIntegrations),
+      _SettingsCard(
+        child: SwitchListTile(
           key: const ValueKey('discord-rpc'),
           title: Text(context.l10n.settingsDiscordRpc),
           subtitle: Text(context.l10n.settingsDiscordRpcDescription),
           value: ref.watch(settingsProvider).discordRpcEnabled,
           onChanged: ref.read(settingsProvider.notifier).toggleDiscordRpc,
-        )),
-      ]);
+        ),
+      ),
+    ],
+  );
 }
 
 class _PlayerSettings extends ConsumerWidget {
@@ -322,40 +410,54 @@ class _PlayerSettings extends ConsumerWidget {
       children: [
         _SectionHeader(title: context.l10n.settingsPlayback),
         _SettingsCard(
-            child: Column(
-          children: [
-            SwitchListTile(
-              activeThumbColor: accentColor,
-              title: Text(context.l10n.settingsAutoSkip,
-                  style: TextStyle(color: tokens.textPrimary)),
-              subtitle: Text(context.l10n.settingsAutoSkipDescription,
-                  style: TextStyle(color: tokens.textSubtle)),
-              value: settings.autoSkipEnabled,
-              onChanged: (val) => notifier.toggleAutoSkip(val),
-            ),
-          ],
-        )),
+          child: Column(
+            children: [
+              SwitchListTile(
+                activeThumbColor: accentColor,
+                title: Text(
+                  context.l10n.settingsAutoSkip,
+                  style: TextStyle(color: tokens.textPrimary),
+                ),
+                subtitle: Text(
+                  context.l10n.settingsAutoSkipDescription,
+                  style: TextStyle(color: tokens.textSubtle),
+                ),
+                value: settings.autoSkipEnabled,
+                onChanged: (val) => notifier.toggleAutoSkip(val),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: AppSpacing.lg),
         _SectionHeader(title: context.l10n.settingsLanguagePriority),
         _SettingsCard(
           child: Column(
             children: [
               ListTile(
-                title: Text(context.l10n.settingsAudioPriority,
-                    style: TextStyle(color: tokens.textPrimary)),
+                title: Text(
+                  context.l10n.settingsAudioPriority,
+                  style: TextStyle(color: tokens.textPrimary),
+                ),
                 trailing: DropdownButton<String>(
                   dropdownColor: tokens.cardSurface,
-                  value:
-                      settings.audioLanguage.startsWith('jpn') ? 'jpn' : 'eng',
+                  value: settings.audioLanguage.startsWith('jpn')
+                      ? 'jpn'
+                      : 'eng',
                   items: [
                     DropdownMenuItem(
-                        value: 'jpn',
-                        child: Text(context.l10n.settingsAudioJapaneseOriginal,
-                            style: TextStyle(color: tokens.textPrimary))),
+                      value: 'jpn',
+                      child: Text(
+                        context.l10n.settingsAudioJapaneseOriginal,
+                        style: TextStyle(color: tokens.textPrimary),
+                      ),
+                    ),
                     DropdownMenuItem(
-                        value: 'eng',
-                        child: Text(context.l10n.settingsAudioEnglishDub,
-                            style: TextStyle(color: tokens.textPrimary))),
+                      value: 'eng',
+                      child: Text(
+                        context.l10n.settingsAudioEnglishDub,
+                        style: TextStyle(color: tokens.textPrimary),
+                      ),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val == 'jpn') {
@@ -369,20 +471,28 @@ class _PlayerSettings extends ConsumerWidget {
               ),
               Divider(color: tokens.borderSubtle, height: 1),
               ListTile(
-                title: Text(context.l10n.settingsSubtitlePriority,
-                    style: TextStyle(color: tokens.textPrimary)),
+                title: Text(
+                  context.l10n.settingsSubtitlePriority,
+                  style: TextStyle(color: tokens.textPrimary),
+                ),
                 trailing: DropdownButton<String>(
                   dropdownColor: tokens.cardSurface,
                   value: settings.subLanguage.startsWith('eng') ? 'eng' : 'rus',
                   items: [
                     DropdownMenuItem(
-                        value: 'eng',
-                        child: Text(context.l10n.settingsLanguageEnglish,
-                            style: TextStyle(color: tokens.textPrimary))),
+                      value: 'eng',
+                      child: Text(
+                        context.l10n.settingsLanguageEnglish,
+                        style: TextStyle(color: tokens.textPrimary),
+                      ),
+                    ),
                     DropdownMenuItem(
-                        value: 'rus',
-                        child: Text(context.l10n.settingsLanguageRussian,
-                            style: TextStyle(color: tokens.textPrimary)))
+                      value: 'rus',
+                      child: Text(
+                        context.l10n.settingsLanguageRussian,
+                        style: TextStyle(color: tokens.textPrimary),
+                      ),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val == 'eng') notifier.updateSubLang('eng,en,rus,ru');
@@ -397,31 +507,47 @@ class _PlayerSettings extends ConsumerWidget {
         _SectionHeader(title: context.l10n.settingsVideoDecoder),
         _SettingsCard(
           child: ListTile(
-            title: Text(context.l10n.settingsHardwareAcceleration,
-                style: TextStyle(color: tokens.textPrimary)),
-            subtitle: Text(context.l10n.settingsHardwareAccelerationDescription,
-                style: TextStyle(color: tokens.textSubtle)),
+            title: Text(
+              context.l10n.settingsHardwareAcceleration,
+              style: TextStyle(color: tokens.textPrimary),
+            ),
+            subtitle: Text(
+              context.l10n.settingsHardwareAccelerationDescription,
+              style: TextStyle(color: tokens.textSubtle),
+            ),
             trailing: DropdownButton<String>(
               dropdownColor: tokens.cardSurface,
               value: settings.hwdec,
               items: [
                 DropdownMenuItem(
-                    value: 'auto',
-                    child: Text(context.l10n.settingsDecoderAuto,
-                        style: TextStyle(color: tokens.textPrimary))),
+                  value: 'auto',
+                  child: Text(
+                    context.l10n.settingsDecoderAuto,
+                    style: TextStyle(color: tokens.textPrimary),
+                  ),
+                ),
                 DropdownMenuItem(
-                    value: 'auto-safe',
-                    child: Text(context.l10n.settingsDecoderAutoSafe,
-                        style: TextStyle(color: tokens.textPrimary))),
+                  value: 'auto-safe',
+                  child: Text(
+                    context.l10n.settingsDecoderAutoSafe,
+                    style: TextStyle(color: tokens.textPrimary),
+                  ),
+                ),
                 if (Platform.isWindows)
                   DropdownMenuItem(
-                      value: 'd3d11va',
-                      child: Text(context.l10n.settingsDecoderWindowsD3d11va,
-                          style: TextStyle(color: tokens.textPrimary))),
+                    value: 'd3d11va',
+                    child: Text(
+                      context.l10n.settingsDecoderWindowsD3d11va,
+                      style: TextStyle(color: tokens.textPrimary),
+                    ),
+                  ),
                 DropdownMenuItem(
-                    value: 'no',
-                    child: Text(context.l10n.settingsDecoderDisabledCpu,
-                        style: TextStyle(color: tokens.destructive))),
+                  value: 'no',
+                  child: Text(
+                    context.l10n.settingsDecoderDisabledCpu,
+                    style: TextStyle(color: tokens.destructive),
+                  ),
+                ),
               ],
               onChanged: (val) {
                 if (val != null) notifier.updateHwdec(val);
@@ -442,13 +568,14 @@ class _MenuTab extends StatelessWidget {
   final Color accentColor;
   final VoidCallback onTap;
 
-  const _MenuTab(
-      {required this.title,
-      required this.icon,
-      required this.index,
-      required this.currentIndex,
-      required this.accentColor,
-      required this.onTap});
+  const _MenuTab({
+    required this.title,
+    required this.icon,
+    required this.index,
+    required this.currentIndex,
+    required this.accentColor,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -474,15 +601,20 @@ class _MenuTab extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon,
-                color: isSelected ? accentColor : tokens.textMuted, size: 22),
+            Icon(
+              icon,
+              color: isSelected ? accentColor : tokens.textMuted,
+              size: 22,
+            ),
             const SizedBox(width: AppSpacing.md),
-            Text(title,
-                style: TextStyle(
-                    color: isSelected ? accentColor : tokens.textSecondary,
-                    fontSize: 16,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.w500)),
+            Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? accentColor : tokens.textSecondary,
+                fontSize: 16,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ),
@@ -509,15 +641,20 @@ class _LibrarySettings extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Center(
-                      child: Text(context.l10n.settingsNoFolders,
-                          style: TextStyle(color: tokens.textSubtle))),
+                    child: Text(
+                      context.l10n.settingsNoFolders,
+                      style: TextStyle(color: tokens.textSubtle),
+                    ),
+                  ),
                 )
               else
                 ...folders.map(
                   (folder) => ListTile(
                     leading: Icon(AppIcons.folder, color: tokens.textMuted),
-                    title: Text(folder,
-                        style: TextStyle(color: tokens.textPrimary)),
+                    title: Text(
+                      folder,
+                      style: TextStyle(color: tokens.textPrimary),
+                    ),
                     trailing: IconButton(
                       icon: Icon(AppIcons.close, color: tokens.textSubtle),
                       onPressed: () => ref
@@ -532,18 +669,39 @@ class _LibrarySettings extends ConsumerWidget {
                 onTap: ref.watch(scanProvider).running
                     ? null
                     : () async {
-                        final String? folderPath =
-                            await FilePicker.getDirectoryPath();
-                        if (folderPath != null) {
-                          ref
-                              .read(savedFoldersProvider.notifier)
-                              .addFolder(folderPath);
-                          ref.read(scanProvider.notifier).scan([folderPath]);
+                        try {
+                          final folderPath = Platform.isAndroid
+                              ? await AndroidDocuments.pickFolder()
+                              : await FilePicker.getDirectoryPath();
+                          if (folderPath != null && context.mounted) {
+                            final result = await ref
+                                .read(scanProvider.notifier)
+                                .scan([folderPath]);
+                            if (!result.cancelled && result.errors.isEmpty) {
+                              ref
+                                  .read(savedFoldersProvider.notifier)
+                                  .addFolder(folderPath);
+                            }
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  result.errors.isNotEmpty
+                                      ? context.l10n.libraryScanError
+                                      : result.cancelled
+                                      ? context.l10n.libraryScanCancelled
+                                      : context.l10n.libraryFolderAdded,
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (_) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(context.l10n.settingsFolderQueued),
-                              backgroundColor: tokens.success,
-                            ));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(context.l10n.libraryScanError),
+                              ),
+                            );
                           }
                         }
                       },
@@ -554,9 +712,13 @@ class _LibrarySettings extends ConsumerWidget {
                     children: [
                       Icon(AppIcons.add, color: accentColor),
                       const SizedBox(width: AppSpacing.xs),
-                      Text(context.l10n.settingsAddNewFolder,
-                          style: TextStyle(
-                              color: accentColor, fontWeight: FontWeight.bold)),
+                      Text(
+                        context.l10n.settingsAddNewFolder,
+                        style: TextStyle(
+                          color: accentColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -571,25 +733,31 @@ class _LibrarySettings extends ConsumerWidget {
             foregroundColor: tokens.textPrimary,
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.lg)),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+            ),
           ),
           onPressed: folders.isEmpty || ref.watch(scanProvider).running
               ? null
               : () async {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(context.l10n.settingsScanStarted),
-                  ));
-                  final result =
-                      await ref.read(scanProvider.notifier).scan(folders);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(context.l10n.settingsScanStarted)),
+                  );
+                  final result = await ref
+                      .read(scanProvider.notifier)
+                      .scan(folders);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(result.errors.isNotEmpty
-                          ? context.l10n.libraryScanError
-                          : result.warnings > 0
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          result.errors.isNotEmpty
+                              ? context.l10n.libraryScanError
+                              : result.warnings > 0
                               ? context.l10n.libraryMetadataWarning
-                              : context.l10n.settingsScanCompleted),
-                      backgroundColor: tokens.success,
-                    ));
+                              : context.l10n.settingsScanCompleted,
+                        ),
+                        backgroundColor: tokens.success,
+                      ),
+                    );
                   }
                 },
           icon: const Icon(AppIcons.rescan),
@@ -616,10 +784,14 @@ class _AdvancedSettings extends ConsumerWidget {
             textColor: Theme.of(context).colorScheme.error,
             leading: Icon(AppIcons.delete),
             key: const ValueKey('clear-library-action'),
-            title: Text(context.l10n.settingsClearDatabase,
-                style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(context.l10n.settingsClearDatabaseDescription,
-                style: TextStyle(color: tokens.textSubtle)),
+            title: Text(
+              context.l10n.settingsClearDatabase,
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              context.l10n.settingsClearDatabaseDescription,
+              style: TextStyle(color: tokens.textSubtle),
+            ),
             onTap: ref.watch(scanProvider).running
                 ? null
                 : () => _confirmClear(context, ref),
@@ -627,12 +799,15 @@ class _AdvancedSettings extends ConsumerWidget {
         ),
         const SizedBox(height: 24),
         _SettingsCard(
-            child: ListTile(
-          leading: const Icon(AppIcons.notes),
-          title: Text(context.l10n.settingsViewLogs),
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => TalkerScreen(talker: talker))),
-        )),
+          child: ListTile(
+            leading: const Icon(AppIcons.notes),
+            title: Text(context.l10n.settingsViewLogs),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => TalkerScreen(talker: talker)),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -641,7 +816,9 @@ class _AdvancedSettings extends ConsumerWidget {
 Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
   try {
     final confirmed = await showDialog<bool>(
-        context: context, builder: (_) => const _ClearLibraryDialog());
+      context: context,
+      builder: (_) => const _ClearLibraryDialog(),
+    );
     if (confirmed != true || !context.mounted) return;
     if (ref.read(scanProvider).running) {
       throw StateError('A scan is in progress');
@@ -650,7 +827,8 @@ Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
   } catch (_) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.commonOperationFailed)));
+        SnackBar(content: Text(context.l10n.commonOperationFailed)),
+      );
     }
   }
 }
@@ -671,34 +849,43 @@ class _ClearLibraryDialogState extends State<_ClearLibraryDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: Text(context.l10n.settingsClearDatabaseConfirmTitle),
-        content: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
+    title: Text(context.l10n.settingsClearDatabaseConfirmTitle),
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
           Text(context.l10n.settingsClearDatabaseConfirmBody),
           const SizedBox(height: 16),
           TextField(
-              key: const ValueKey('clear-library-confirm'),
-              controller: controller,
-              autofocus: true,
-              decoration: InputDecoration(
-                  labelText: context.l10n.settingsClearConfirmation),
-              onChanged: (_) => setState(() {})),
-        ])),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(context.l10n.dialogCancel)),
-          FilledButton(
-              key: const ValueKey('clear-library-submit'),
-              style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  foregroundColor: Theme.of(context).colorScheme.onError),
-              onPressed: controller.text == 'DELETE'
-                  ? () => Navigator.pop(context, true)
-                  : null,
-              child: Text(context.l10n.dialogDelete)),
+            key: const ValueKey('clear-library-confirm'),
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: context.l10n.settingsClearConfirmation,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
         ],
-      );
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context, false),
+        child: Text(context.l10n.dialogCancel),
+      ),
+      FilledButton(
+        key: const ValueKey('clear-library-submit'),
+        style: FilledButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.error,
+          foregroundColor: Theme.of(context).colorScheme.onError,
+        ),
+        onPressed: controller.text == 'DELETE'
+            ? () => Navigator.pop(context, true)
+            : null,
+        child: Text(context.l10n.dialogDelete),
+      ),
+    ],
+  );
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -709,14 +896,19 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.appTheme;
     return Padding(
-      padding:
-          const EdgeInsets.only(bottom: AppSpacing.sm, left: AppSpacing.xxs),
-      child: Text(title,
-          style: TextStyle(
-              color: tokens.textMuted,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2)),
+      padding: const EdgeInsets.only(
+        bottom: AppSpacing.sm,
+        left: AppSpacing.xxs,
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: tokens.textMuted,
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+        ),
+      ),
     );
   }
 }
@@ -735,10 +927,11 @@ class _SettingsCard extends StatelessWidget {
         border: Border.all(color: tokens.borderSubtle),
       ),
       child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(AppRadii.xl),
-          clipBehavior: Clip.antiAlias,
-          child: child),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      ),
     );
   }
 }
