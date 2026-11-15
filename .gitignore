@@ -33,6 +33,8 @@ migrate_working_dir/
 /build/
 /build_showcase/
 /coverage/
+/dist/
+/tool/__pycache__/
 /test/failures/
 
 # Generated iOS configuration contains machine-specific SDK and checkout paths.
@@ -51,6 +53,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android release signing material must stay outside version control.
+*.jks
+*.keystore
+key.properties
 
 /nekaido_lib.txt
 
