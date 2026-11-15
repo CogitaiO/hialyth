@@ -17,6 +17,7 @@ import 'external_media_discovery.dart';
 import 'playback_progress_tracker.dart';
 import 'player_lifecycle.dart';
 import 'player_state.dart';
+import 'anime_track_preferences.dart';
 import '../../core/logger.dart';
 import '../library_provider.dart';
 import '../settings_provider.dart';
@@ -56,6 +57,10 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   Future<void> _loadQueue = Future.value();
   Timer? _volumeSaveTimer;
   double? _pendingVolume;
+  bool _audioRestored = false;
+  bool _subtitleRestored = false;
+  bool _acceptTrackEvents = false;
+  bool _mediaOpened = false;
   bool _current(int generation) => mounted && generation == _loadGeneration;
 
   int _lastStateSeconds = -1; // Throttle UI updates to one per second.
@@ -207,15 +212,60 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   void _handleTracks(Tracks tracks) {
+    if (!_acceptTrackEvents) return;
     state = state.copyWith(
       tracks: state.tracks.copyWith(
         audioTracks: tracks.audio,
         subtitleTracks: tracks.subtitle,
       ),
     );
+    if (_mediaOpened) _restoreTrackPreferences();
+  }
+
+  void _restoreTrackPreferences() {
+    final animeId = state.animeId;
+    if (animeId == null) return;
+    final preferences = AnimeTrackPreferences(_prefs);
+    if (!_audioRestored) {
+      final index = preferences.match(animeId, 'audio', [
+        for (final t in state.audioTracks)
+          (id: t.id, title: t.title, language: t.language),
+      ]);
+      if (index != null) {
+        _audioRestored = true;
+        unawaited(
+          _applySavedTrack(
+            () => _engine.setAudioTrack(state.audioTracks[index]),
+          ),
+        );
+      }
+    }
+    if (!_subtitleRestored) {
+      final index = preferences.match(animeId, 'subtitle', [
+        for (final t in state.subtitleTracks)
+          (id: t.id, title: t.title, language: t.language),
+      ]);
+      if (index != null) {
+        _subtitleRestored = true;
+        unawaited(
+          _applySavedTrack(
+            () => _engine.setSubtitleTrack(state.subtitleTracks[index]),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _applySavedTrack(Future<void> Function() apply) async {
+    try {
+      await apply();
+    } catch (error, stack) {
+      talker.handle(error, stack, 'Failed to restore track preference');
+    }
   }
 
   void _handleTrack(Track track) {
+    if (!_acceptTrackEvents) return;
     state = state.copyWith(
       tracks: state.tracks.copyWith(
         currentAudio: track.audio,
@@ -316,6 +366,10 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   Future<void> loadVideo(int animeId, String path) {
+    _acceptTrackEvents = false;
+    _mediaOpened = false;
+    _audioRestored = false;
+    _subtitleRestored = false;
     final previous = state;
     final generation = ++_loadGeneration;
     _lifecycle.cancelNextEpisode();
@@ -392,8 +446,14 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
           externalSubsMap: subsMap,
         ),
       );
+      // Do not let mpv carry another title's explicit track IDs into this file.
+      _engine.setProperty('aid', 'auto');
+      _engine.setProperty('sid', 'auto');
+      _acceptTrackEvents = true;
       await _engine.open(path).timeout(const Duration(seconds: 10));
       if (!_current(generation)) return;
+      _mediaOpened = true;
+      _restoreTrackPreferences();
       if (savedSeconds > 0) {
         await _engine.waitForDuration();
         if (!_current(generation)) return;
@@ -586,11 +646,57 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   void setAudioTrack(AudioTrack track) {
-    _engine.setAudioTrack(track);
+    _audioRestored = true;
+    unawaited(
+      _selectTrack(
+        'audio',
+        track.id,
+        track.title,
+        track.language,
+        state.audioTracks.indexOf(track),
+        () => _engine.setAudioTrack(track),
+      ),
+    );
   }
 
   void setSubtitleTrack(SubtitleTrack track) {
-    _engine.setSubtitleTrack(track);
+    _subtitleRestored = true;
+    unawaited(
+      _selectTrack(
+        'subtitle',
+        track.id,
+        track.title,
+        track.language,
+        state.subtitleTracks.indexOf(track),
+        () => _engine.setSubtitleTrack(track),
+      ),
+    );
+  }
+
+  Future<void> _selectTrack(
+    String kind,
+    String id,
+    String? title,
+    String? language,
+    int index,
+    Future<void> Function() apply,
+  ) async {
+    final animeId = state.animeId;
+    if (animeId == null || state.isLoading || state.errorCode != null) return;
+    try {
+      await apply();
+      final saved = await AnimeTrackPreferences(_prefs).save(
+        animeId,
+        kind,
+        id: id,
+        title: title,
+        language: language,
+        index: index,
+      );
+      if (!saved) talker.warning('Track preference was not persisted');
+    } catch (error, stack) {
+      talker.handle(error, stack, 'Failed to select/save track preference');
+    }
   }
 
   @override

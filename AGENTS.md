@@ -10,6 +10,7 @@ Desktop Flutter media player for managing and watching anime. Built with Flutter
 
 - Create a new branch for each reasonably significant, distinct task; use judgment for minor work.
 - Before switching branches, ensure all existing changes are committed so they cannot carry over into another branch. Never commit, stash, discard, or otherwise move existing changes without the user's explicit authorization. If the working tree is not clean, ask the user how to proceed before switching.
+- The user authorizes the agent to create commits in this project without asking for separate confirmation for each commit. This standing authorization does not authorize pushing; push only when the user explicitly requests it.
 
 ## Essential Commands
 

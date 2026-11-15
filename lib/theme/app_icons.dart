@@ -1,4 +1,5 @@
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:flutter/material.dart' show Icons;
 
 /// Semantic icon names keep the UI independent of the icon family.
 ///
@@ -37,6 +38,9 @@ abstract final class AppIcons {
 
   static const play = Iconsax.play;
   static const pause = Iconsax.pause;
+  // Simple rounded silhouettes keep transport fades visually quiet.
+  static const transportPlay = Icons.play_arrow_rounded;
+  static const transportPause = Icons.pause_rounded;
   static const replay = Iconsax.repeat_circle;
   static const next = Iconsax.next;
   static const skipForward = Iconsax.forward;

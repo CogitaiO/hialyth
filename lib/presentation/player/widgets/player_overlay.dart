@@ -120,17 +120,15 @@ class PlayerOverlay extends ConsumerWidget {
                       const SizedBox(width: AppSpacing.xs),
                     ],
                   ),
-                  title: Expanded(
-                    child: Text(
-                      displayTitle,
-                      style: TextStyle(
-                        color: tokens.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  title: Text(
+                    displayTitle,
+                    style: TextStyle(
+                      color: tokens.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),

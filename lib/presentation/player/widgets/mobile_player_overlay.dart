@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../providers/player/player_provider.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../widgets/animated_state_icon.dart';
+import '../../../widgets/play_pause_button.dart';
 import 'player_progress_bar.dart';
 import 'track_selector_dialog.dart';
 
@@ -236,14 +238,10 @@ class MobilePlayerOverlay extends ConsumerWidget {
                                       : null,
                                 ),
                                 SizedBox(width: wide ? 40 : 24),
-                                _TransportButton(
-                                  controlKey: const ValueKey(
-                                    'mobile-player-play',
-                                  ),
+                                PlayPauseButton(
+                                  key: const ValueKey('mobile-player-play'),
                                   tooltip: context.l10n.playerPlayPause,
-                                  icon: playing
-                                      ? Icons.pause
-                                      : Icons.play_arrow,
+                                  playing: playing,
                                   size: 80,
                                   iconSize: 52,
                                   onPressed: notifier.togglePlay,
@@ -344,29 +342,28 @@ class _TransportButton extends StatelessWidget {
     required this.tooltip,
     required this.icon,
     required this.onPressed,
-    this.size = 56,
-    this.iconSize = 32,
   });
 
   final Key controlKey;
   final String tooltip;
   final IconData icon;
   final VoidCallback onPressed;
-  final double size;
-  final double iconSize;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    key: controlKey,
-    tooltip: tooltip,
-    onPressed: onPressed,
-    iconSize: iconSize,
-    style: IconButton.styleFrom(
-      fixedSize: Size.square(size),
-      backgroundColor: Colors.black38,
-      foregroundColor: Colors.white,
-      shape: const CircleBorder(),
-    ),
-    icon: Icon(icon),
-  );
+  Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+    return IconButton(
+      key: controlKey,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      iconSize: 32,
+      style: IconButton.styleFrom(
+        fixedSize: const Size.square(56),
+        backgroundColor: tokens.scrim(.38),
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+      ),
+      icon: AnimatedStateIcon(icon),
+    );
+  }
 }

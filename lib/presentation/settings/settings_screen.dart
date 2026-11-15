@@ -14,6 +14,8 @@ import '../../theme/app_theme_extension.dart';
 import '../../core/localization/l10n.dart';
 import '../../core/logger.dart';
 import '../../data/services/android_documents.dart';
+import '../../widgets/selection_field.dart';
+import '../../theme/app_motion.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -30,14 +32,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final accentColor = Theme.of(context).colorScheme.primary;
     final tokens = context.appTheme;
-    final phone = MediaQuery.sizeOf(context).width < 600;
+    final phone =
+        MediaQuery.sizeOf(context).width < 600 ||
+        Platform.isAndroid ||
+        Platform.isIOS;
 
     return Escapable(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
-          top: phone,
-          bottom: phone,
           child: Column(
             children: [
               if (phone)
@@ -128,7 +131,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   children: [
                                     SizedBox(
                                       width: 220,
-                                      child: Column(
+                                      child: ListView(
                                         children: [
                                           for (
                                             var i = 0;
@@ -252,21 +255,25 @@ class _AppearanceSettings extends ConsumerWidget {
                     ...AppPalette.accentPresets.map((c) {
                       final isSelected =
                           settings.accentColorValue == c.toARGB32();
-                      return GestureDetector(
+                      return InkResponse(
                         onTap: () => notifier.updateAccentColor(c),
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: MediaQuery.disableAnimationsOf(context)
+                              ? Duration.zero
+                              : AppMotion.medium,
+                          curve: AppMotion.enter,
                           margin: const EdgeInsets.only(right: AppSpacing.sm),
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
                             color: c,
                             shape: BoxShape.circle,
-                            border: isSelected
-                                ? Border.all(
-                                    color: tokens.textPrimary,
-                                    width: 3,
-                                  )
-                                : null,
+                            border: Border.all(
+                              color: isSelected
+                                  ? tokens.textPrimary
+                                  : Colors.transparent,
+                              width: 3,
+                            ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
@@ -276,13 +283,17 @@ class _AppearanceSettings extends ConsumerWidget {
                                   ]
                                 : [],
                           ),
-                          child: isSelected
-                              ? Icon(
-                                  AppIcons.selected,
-                                  color: AppPalette.onAccent(c),
-                                  size: 20,
-                                )
-                              : null,
+                          child: AnimatedOpacity(
+                            opacity: isSelected ? 1 : 0,
+                            duration: MediaQuery.disableAnimationsOf(context)
+                                ? Duration.zero
+                                : AppMotion.medium,
+                            child: Icon(
+                              AppIcons.selected,
+                              color: AppPalette.onAccent(c),
+                              size: 20,
+                            ),
+                          ),
                         ),
                       );
                     }),
@@ -438,8 +449,8 @@ class _PlayerSettings extends ConsumerWidget {
                   context.l10n.settingsAudioPriority,
                   style: TextStyle(color: tokens.textPrimary),
                 ),
-                trailing: DropdownButton<String>(
-                  dropdownColor: tokens.cardSurface,
+                subtitle: SelectionField<String>(
+                  key: const ValueKey('settings-audio-priority'),
                   value: settings.audioLanguage.startsWith('jpn')
                       ? 'jpn'
                       : 'eng',
@@ -475,8 +486,7 @@ class _PlayerSettings extends ConsumerWidget {
                   context.l10n.settingsSubtitlePriority,
                   style: TextStyle(color: tokens.textPrimary),
                 ),
-                trailing: DropdownButton<String>(
-                  dropdownColor: tokens.cardSurface,
+                subtitle: SelectionField<String>(
                   value: settings.subLanguage.startsWith('eng') ? 'eng' : 'rus',
                   items: [
                     DropdownMenuItem(
@@ -511,47 +521,49 @@ class _PlayerSettings extends ConsumerWidget {
               context.l10n.settingsHardwareAcceleration,
               style: TextStyle(color: tokens.textPrimary),
             ),
-            subtitle: Text(
-              context.l10n.settingsHardwareAccelerationDescription,
-              style: TextStyle(color: tokens.textSubtle),
-            ),
-            trailing: DropdownButton<String>(
-              dropdownColor: tokens.cardSurface,
-              value: settings.hwdec,
-              items: [
-                DropdownMenuItem(
-                  value: 'auto',
-                  child: Text(
-                    context.l10n.settingsDecoderAuto,
-                    style: TextStyle(color: tokens.textPrimary),
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: 'auto-safe',
-                  child: Text(
-                    context.l10n.settingsDecoderAutoSafe,
-                    style: TextStyle(color: tokens.textPrimary),
-                  ),
-                ),
-                if (Platform.isWindows)
-                  DropdownMenuItem(
-                    value: 'd3d11va',
-                    child: Text(
-                      context.l10n.settingsDecoderWindowsD3d11va,
-                      style: TextStyle(color: tokens.textPrimary),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(context.l10n.settingsHardwareAccelerationDescription),
+                const SizedBox(height: AppSpacing.sm),
+                SelectionField<String>(
+                  value: settings.hwdec,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'auto',
+                      child: Text(
+                        context.l10n.settingsDecoderAuto,
+                        style: TextStyle(color: tokens.textPrimary),
+                      ),
                     ),
-                  ),
-                DropdownMenuItem(
-                  value: 'no',
-                  child: Text(
-                    context.l10n.settingsDecoderDisabledCpu,
-                    style: TextStyle(color: tokens.destructive),
-                  ),
+                    DropdownMenuItem(
+                      value: 'auto-safe',
+                      child: Text(
+                        context.l10n.settingsDecoderAutoSafe,
+                        style: TextStyle(color: tokens.textPrimary),
+                      ),
+                    ),
+                    if (Platform.isWindows)
+                      DropdownMenuItem(
+                        value: 'd3d11va',
+                        child: Text(
+                          context.l10n.settingsDecoderWindowsD3d11va,
+                          style: TextStyle(color: tokens.textPrimary),
+                        ),
+                      ),
+                    DropdownMenuItem(
+                      value: 'no',
+                      child: Text(
+                        context.l10n.settingsDecoderDisabledCpu,
+                        style: TextStyle(color: tokens.destructive),
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) notifier.updateHwdec(val);
+                  },
                 ),
               ],
-              onChanged: (val) {
-                if (val != null) notifier.updateHwdec(val);
-              },
             ),
           ),
         ),
@@ -607,12 +619,16 @@ class _MenuTab extends StatelessWidget {
               size: 22,
             ),
             const SizedBox(width: AppSpacing.md),
-            Text(
-              title,
-              style: TextStyle(
-                color: isSelected ? accentColor : tokens.textSecondary,
-                fontSize: 16,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isSelected ? accentColor : tokens.textSecondary,
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                ),
               ),
             ),
           ],

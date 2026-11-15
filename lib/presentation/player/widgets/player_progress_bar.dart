@@ -8,6 +8,7 @@ import '../../../theme/app_typography.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
+import '../../../widgets/animated_play_pause_icon.dart';
 
 class PlayerProgressBar extends StatelessWidget {
   const PlayerProgressBar({
@@ -56,17 +57,9 @@ class _TransportControls extends ConsumerWidget {
           IconButton(
             iconSize: 32,
             tooltip: context.l10n.playerPlayPause,
-            icon: AnimatedSwitcher(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : const Duration(milliseconds: 150),
-              transitionBuilder: (child, animation) =>
-                  FadeTransition(opacity: animation, child: child),
-              child: Icon(
-                isPlaying ? AppIcons.pause : AppIcons.play,
-                key: ValueKey(isPlaying),
-                color: tokens.textPrimary,
-              ),
+            icon: AnimatedPlayPauseIcon(
+              playing: isPlaying,
+              color: tokens.textPrimary,
             ),
             onPressed: () => notifier.togglePlay(),
           ),
