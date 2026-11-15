@@ -8,6 +8,7 @@ import '../../../../providers/repositories_provider.dart';
 import '../../../../utils/os_utils.dart';
 import '../../player/player_screen.dart';
 import '../../../theme/app_icons.dart';
+import '../../../theme/app_motion.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
 
@@ -173,7 +174,8 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
     if (!mounted) return;
     Navigator.push(
       context,
-      MaterialPageRoute(
+      AppMotion.pageRoute(
+        context,
         builder: (_) =>
             PlayerScreen(animeId: widget.anime.id, videoPath: widget.path),
       ),

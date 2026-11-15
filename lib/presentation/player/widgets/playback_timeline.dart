@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../../../domain/anime.dart';
 import '../../../theme/app_palette.dart';
+import '../../../theme/app_motion.dart';
 import '../../../theme/app_theme_extension.dart';
 import 'skip_interval_track_shape.dart';
 
@@ -124,7 +125,7 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
                 _animate &&
                     _dragValue == null &&
                     _pendingSeek == null &&
-                    !MediaQuery.disableAnimationsOf(context)
+                    !AppMotion.isReduced(context)
                 ? Duration(milliseconds: _sampleIntervalMs)
                 : Duration.zero,
             curve: Curves.linear,

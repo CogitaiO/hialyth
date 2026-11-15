@@ -24,9 +24,10 @@ class AnimatedPlayPauseIcon extends StatelessWidget {
       size: size,
       color: color,
     );
-    if (MediaQuery.disableAnimationsOf(context)) return glyph;
+    final duration = AppMotion.resolveDuration(context, AppMotion.medium);
+    if (duration == Duration.zero) return glyph;
     return AnimatedSwitcher(
-      duration: AppMotion.medium,
+      duration: duration,
       // Each outgoing fade keeps its own identity during rapid toggles.
       transitionBuilder: (child, opacity) => FadeTransition(
         key: ObjectKey(opacity),

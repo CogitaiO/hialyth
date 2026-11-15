@@ -11,19 +11,16 @@ class AnimatedStateIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) {
+    final duration = AppMotion.resolveDuration(context, AppMotion.medium);
+    if (duration == Duration.zero) {
       return Icon(icon, size: size, color: color);
     }
     return TweenAnimationBuilder<Color?>(
       tween: ColorTween(end: color ?? IconTheme.of(context).color),
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : AppMotion.medium,
+      duration: duration,
       curve: AppMotion.enter,
       builder: (context, value, _) => AnimatedSwitcher(
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : AppMotion.medium,
+        duration: duration,
         switchInCurve: AppMotion.enter,
         switchOutCurve: AppMotion.exit,
         child: Icon(icon, key: ValueKey(icon), size: size, color: value),

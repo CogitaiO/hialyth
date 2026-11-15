@@ -17,6 +17,7 @@ import 'presentation/library_screen.dart';
 import 'providers/library_provider.dart';
 import 'providers/settings_provider.dart';
 import 'theme/app_theme.dart';
+import 'theme/app_motion.dart';
 import 'l10n/app_localizations.dart';
 import 'presentation/debug/design_system_gallery.dart';
 import 'core/app_features.dart';
@@ -129,11 +130,11 @@ class MyApp extends ConsumerWidget {
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(
           disableAnimations:
-              settings.reduceMotion || MediaQuery.disableAnimationsOf(context),
+              settings.reduceMotion || AppMotion.isReduced(context),
         ),
         child: HeroMode(
           enabled: !(settings.reduceMotion ||
-              MediaQuery.disableAnimationsOf(context)),
+              AppMotion.isReduced(context)),
           child: child!,
         ),
       ),

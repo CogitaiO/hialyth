@@ -185,9 +185,7 @@ class _WindowButtonState extends State<_WindowButton> {
         onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : AppMotion.medium,
+          duration: AppMotion.resolveDuration(context, AppMotion.medium),
           curve: AppMotion.enter,
           width: 46,
           height: double.infinity,

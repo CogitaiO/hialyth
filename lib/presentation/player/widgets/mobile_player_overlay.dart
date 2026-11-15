@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../providers/player/player_provider.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../widgets/animated_state_icon.dart';
 import '../../../widgets/play_pause_button.dart';
 import 'player_progress_bar.dart';
@@ -134,9 +135,10 @@ class MobilePlayerOverlay extends ConsumerWidget {
     final notifier = ref.read(playerProvider.notifier);
     return PlayerControlFade(
       visible: visible,
-      duration: MediaQuery.disableAnimationsOf(context)
-          ? Duration.zero
-          : const Duration(milliseconds: 140),
+      duration: AppMotion.resolveDuration(
+        context,
+        const Duration(milliseconds: 140),
+      ),
       child: IconButtonTheme(
         data: IconButtonThemeData(
           style: IconButton.styleFrom(foregroundColor: Colors.white),

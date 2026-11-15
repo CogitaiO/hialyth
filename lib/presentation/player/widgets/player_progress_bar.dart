@@ -7,6 +7,7 @@ import 'playback_timeline.dart';
 import '../../../theme/app_typography.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../widgets/animated_play_pause_icon.dart';
 
@@ -91,9 +92,10 @@ class _TransportControls extends ConsumerWidget {
                 iconSize: 24,
                 tooltip: context.l10n.playerMute,
                 icon: AnimatedSwitcher(
-                  duration: MediaQuery.disableAnimationsOf(context)
-                      ? Duration.zero
-                      : const Duration(milliseconds: 150),
+                  duration: AppMotion.resolveDuration(
+                    context,
+                    const Duration(milliseconds: 150),
+                  ),
                   transitionBuilder: (child, animation) =>
                       FadeTransition(opacity: animation, child: child),
                   child: Icon(

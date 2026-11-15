@@ -194,9 +194,10 @@ class _LibraryNavigation extends ConsumerWidget {
                         child: Tooltip(
                           message: expanded ? '' : destinations[i].$1,
                           child: AnimatedContainer(
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : AppMotion.medium,
+                            duration: AppMotion.resolveDuration(
+                              context,
+                              AppMotion.medium,
+                            ),
                             curve: AppMotion.enter,
                             decoration: BoxDecoration(
                               color: selected == i
@@ -296,7 +297,8 @@ class _LibraryNavigation extends ConsumerWidget {
                       Scaffold.of(context).closeDrawer();
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        AppMotion.pageRoute(
+                          context,
                           builder: (_) => const SettingsScreen(),
                         ),
                       );
@@ -538,7 +540,8 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       icon: const Icon(AppIcons.fileFormat),
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(
+                        AppMotion.pageRoute(
+                          context,
                           builder: (_) => const ShowcaseConsoleScreen(),
                         ),
                       ),
@@ -663,9 +666,10 @@ class _TopBarState extends ConsumerState<_TopBar> {
           ),
         ),
         AnimatedSwitcher(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 300),
+          duration: AppMotion.resolveDuration(
+            context,
+            const Duration(milliseconds: 300),
+          ),
           child: index == 5 && MediaQuery.sizeOf(context).width < 1200
               ? Container(
                   height: AppSpacing.s50,

@@ -26,11 +26,13 @@ class AnimeCard extends ConsumerStatefulWidget {
 class _AnimeCardState extends ConsumerState<AnimeCard> {
   bool _isHovered = false;
   bool _isFocused = false;
+  bool _isPressed = false;
 
   void _openDetails() {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      AppMotion.pageRoute(
+        context,
         builder: (_) => AnimeDetailsScreen(
           animeId: widget.anime.id,
           heroTag: 'poster_${widget.anime.id}_library',
@@ -46,7 +48,8 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
     if (path != null) {
       Navigator.push(
         context,
-        MaterialPageRoute(
+        AppMotion.pageRoute(
+          context,
           builder: (_) =>
               PlayerScreen(animeId: widget.anime.id, videoPath: path),
         ),
@@ -84,9 +87,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
     showMenu<String>(
       context: context,
       popUpAnimationStyle: AnimationStyle(
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : AppMotion.medium,
+        duration: AppMotion.resolveDuration(context, AppMotion.medium),
         curve: AppMotion.enter,
         reverseCurve: AppMotion.exit,
       ),
@@ -175,16 +176,21 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
+          onTapDown: (_) => setState(() => _isPressed = true),
+          onTapUp: (_) => setState(() => _isPressed = false),
+          onTapCancel: () => setState(() => _isPressed = false),
           onTap: _openDetails,
           onSecondaryTapDown: (details) =>
               _showContextMenu(context, ref, details.globalPosition),
           onLongPressStart: (details) =>
               _showContextMenu(context, ref, details.globalPosition),
-          child: AnimatedContainer(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : AppMotion.normal,
+          child: AnimatedScale(
+            scale: _isPressed ? 0.985 : (active ? 1.015 : 1),
+            duration: AppMotion.resolveDuration(context, AppMotion.normal),
             curve: AppMotion.enter,
+            child: AnimatedContainer(
+              duration: AppMotion.resolveDuration(context, AppMotion.normal),
+              curve: AppMotion.enter,
             padding: const EdgeInsets.all(AppSpacing.xs),
             decoration: BoxDecoration(
               color: active ? tokens.containerHigh : tokens.cardSurface,
@@ -268,9 +274,10 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                                 child: AnimatedOpacity(
                                   opacity: active ? 1 : 0,
                                   duration:
-                                      MediaQuery.disableAnimationsOf(context)
-                                      ? Duration.zero
-                                      : AppMotion.medium,
+                                      AppMotion.resolveDuration(
+                                        context,
+                                        AppMotion.medium,
+                                      ),
                                   curve: AppMotion.enter,
                                   child: Stack(
                                     fit: StackFit.expand,
@@ -398,6 +405,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),

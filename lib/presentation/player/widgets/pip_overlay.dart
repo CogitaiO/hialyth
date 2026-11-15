@@ -7,6 +7,7 @@ import '../../../../providers/player/player_provider.dart';
 import '../../../../providers/settings_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../../widgets/glass_surface.dart';
 
@@ -28,9 +29,10 @@ class PipOverlay extends ConsumerWidget {
       ignoring: !isVisible,
       child: AnimatedOpacity(
         opacity: isVisible ? 1.0 : 0.0,
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 200),
+        duration: AppMotion.resolveDuration(
+          context,
+          const Duration(milliseconds: 200),
+        ),
         child: Container(
           color: tokens.scrim(0.54),
           child: Stack(

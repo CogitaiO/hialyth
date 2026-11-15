@@ -52,7 +52,7 @@ class _PlayPauseButtonState extends State<PlayPauseButton>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final reduced = MediaQuery.disableAnimationsOf(context);
+    final reduced = AppMotion.isReduced(context);
     if (reduced != _reduceMotion) {
       _reduceMotion = reduced;
       _release?.cancel();

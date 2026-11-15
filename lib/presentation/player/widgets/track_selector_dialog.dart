@@ -159,9 +159,7 @@ class TrackSelectorDialog extends ConsumerWidget {
             vertical: AppSpacing.xxs,
           ),
           child: AnimatedContainer(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : AppMotion.medium,
+            duration: AppMotion.resolveDuration(context, AppMotion.medium),
             curve: AppMotion.enter,
             decoration: BoxDecoration(
               color: isSelected
@@ -198,9 +196,10 @@ class TrackSelectorDialog extends ConsumerWidget {
                 ),
                 trailing: AnimatedOpacity(
                   opacity: isSelected ? 1 : 0,
-                  duration: MediaQuery.disableAnimationsOf(context)
-                      ? Duration.zero
-                      : AppMotion.medium,
+                  duration: AppMotion.resolveDuration(
+                    context,
+                    AppMotion.medium,
+                  ),
                   child: Icon(
                     AppIcons.check,
                     color: Theme.of(context).colorScheme.primary,

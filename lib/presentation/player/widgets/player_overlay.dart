@@ -8,6 +8,7 @@ import '../../../../widgets/custom_title_bar.dart';
 import 'player_progress_bar.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../core/localization/l10n.dart';
 import '../../../../widgets/glass_surface.dart';
 import 'mobile_player_overlay.dart';
@@ -60,9 +61,10 @@ class PlayerOverlay extends ConsumerWidget {
       }
     }
 
-    final fadeDuration = MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : const Duration(milliseconds: 300);
+    final fadeDuration = AppMotion.resolveDuration(
+      context,
+      const Duration(milliseconds: 300),
+    );
 
     if (mobile) return MobilePlayerOverlay(title: displayTitle);
 
@@ -169,9 +171,10 @@ class PlayerOverlay extends ConsumerWidget {
             visible: isVisible,
             duration: fadeDuration,
             child: AnimatedSwitcher(
-              duration: MediaQuery.disableAnimationsOf(context)
-                  ? Duration.zero
-                  : const Duration(milliseconds: 300),
+              duration: AppMotion.resolveDuration(
+                context,
+                const Duration(milliseconds: 300),
+              ),
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               transitionBuilder: (child, animation) {

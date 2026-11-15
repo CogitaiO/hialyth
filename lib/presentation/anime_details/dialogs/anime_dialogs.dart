@@ -8,6 +8,7 @@ import '../../../../domain/anime.dart';
 import '../../../../providers/repositories_provider.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
+import '../../../theme/app_motion.dart';
 import '../../../core/localization/l10n.dart';
 import 'collection_dialog.dart';
 
@@ -192,7 +193,7 @@ class AnimeDialogs {
     final repository = ref.read(animeRepoProvider);
     showDialog<void>(
       context: context,
-      animationStyle: MediaQuery.disableAnimationsOf(context)
+      animationStyle: AppMotion.isReduced(context)
           ? AnimationStyle.noAnimation
           : null,
       builder: (_) => CollectionDialog(

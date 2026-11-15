@@ -41,7 +41,8 @@ class LeftControlPanel extends ConsumerWidget {
     }
     Navigator.push(
       context,
-      MaterialPageRoute(
+      AppMotion.pageRoute(
+        context,
         builder: (context) => PlayerScreen(animeId: anime.id, videoPath: path),
       ),
     );
@@ -284,9 +285,10 @@ class _StatusMenu extends ConsumerWidget {
                         alignment: Alignment.centerLeft,
                         children: [...previous, ?current],
                       ),
-                      duration: MediaQuery.disableAnimationsOf(context)
-                          ? Duration.zero
-                          : AppMotion.medium,
+                      duration: AppMotion.resolveDuration(
+                        context,
+                        AppMotion.medium,
+                      ),
                       switchInCurve: AppMotion.enter,
                       child: Text(
                         key: ValueKey(anime.status),
@@ -313,9 +315,10 @@ class _StatusMenu extends ConsumerWidget {
                   ),
                   AnimatedRotation(
                     turns: controller.isOpen ? .5 : 0,
-                    duration: MediaQuery.disableAnimationsOf(context)
-                        ? Duration.zero
-                        : AppMotion.medium,
+                    duration: AppMotion.resolveDuration(
+                      context,
+                      AppMotion.medium,
+                    ),
                     curve: AppMotion.enter,
                     child: Icon(AppIcons.dropdown, color: tokens.textMuted),
                   ),
@@ -450,9 +453,10 @@ class _HoverButtonState extends State<_HoverButton> {
         child: GestureDetector(
           onTap: widget.onTap,
           child: AnimatedContainer(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 200),
+            duration: AppMotion.resolveDuration(
+              context,
+              const Duration(milliseconds: 200),
+            ),
             height: AppSpacing.s48,
             decoration: BoxDecoration(
               color: isHovered ? widget.accentColor : tokens.surfaceSubtle,
