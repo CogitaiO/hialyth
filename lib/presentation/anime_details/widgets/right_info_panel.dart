@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../../../../data/services/android_documents.dart';
 import 'package:flutter/material.dart';
+import '../../../widgets/animated_state_icon.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/anime.dart';
 import '../../../../providers/repositories_provider.dart';
@@ -203,7 +204,7 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
               horizontal: 16,
               vertical: 8,
             ),
-            leading: Icon(
+            leading: AnimatedStateIcon(
               missing
                   ? AppIcons.imageBroken
                   : watched

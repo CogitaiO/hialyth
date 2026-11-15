@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/animated_state_icon.dart';
+import '../../../theme/app_motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/anime.dart';
@@ -92,7 +94,10 @@ class LeftControlPanel extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(isAllWatched ? AppIcons.replay : AppIcons.play, size: 26),
+                AnimatedStateIcon(
+                  isAllWatched ? AppIcons.replay : AppIcons.play,
+                  size: 26,
+                ),
                 Transform.translate(
                   offset: const Offset(0, -1.5),
                   child: Text(
@@ -274,28 +279,46 @@ class _StatusMenu extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      anime.status == AnimeStatus.planned
-                          ? context.l10n.statusPlanned
-                          : anime.status == AnimeStatus.watching
-                          ? context.l10n.statusWatching
-                          : anime.status == AnimeStatus.completed
-                          ? context.l10n.statusCompleted
-                          : context.l10n.statusDropped,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: anime.status == AnimeStatus.planned
-                            ? tokens.textPrimary
+                    child: AnimatedSwitcher(
+                      layoutBuilder: (current, previous) => Stack(
+                        alignment: Alignment.centerLeft,
+                        children: [...previous, ?current],
+                      ),
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : AppMotion.medium,
+                      switchInCurve: AppMotion.enter,
+                      child: Text(
+                        key: ValueKey(anime.status),
+                        anime.status == AnimeStatus.planned
+                            ? context.l10n.statusPlanned
                             : anime.status == AnimeStatus.watching
-                            ? tokens.info
+                            ? context.l10n.statusWatching
                             : anime.status == AnimeStatus.completed
-                            ? tokens.success
-                            : Theme.of(context).colorScheme.primary,
+                            ? context.l10n.statusCompleted
+                            : context.l10n.statusDropped,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: anime.status == AnimeStatus.planned
+                              ? tokens.textPrimary
+                              : anime.status == AnimeStatus.watching
+                              ? tokens.info
+                              : anime.status == AnimeStatus.completed
+                              ? tokens.success
+                              : Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
-                  Icon(AppIcons.dropdown, color: tokens.textMuted),
+                  AnimatedRotation(
+                    turns: controller.isOpen ? .5 : 0,
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : AppMotion.medium,
+                    curve: AppMotion.enter,
+                    child: Icon(AppIcons.dropdown, color: tokens.textMuted),
+                  ),
                 ],
               ),
             ),

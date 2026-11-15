@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/animated_state_icon.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nekaido_pre/providers/repositories_provider.dart';
 import 'dart:io';
@@ -165,7 +166,7 @@ class PlayerSidebar extends ConsumerWidget {
               tileColor: isCurrent
                   ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
                   : Colors.transparent,
-              leading: Icon(
+              leading: AnimatedStateIcon(
                 isCurrent
                     ? AppIcons.playCircle
                     : (isWatched

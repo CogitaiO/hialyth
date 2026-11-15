@@ -19,6 +19,11 @@ abstract final class AppMotion {
   /// 300 ms — hero transitions, poster expand.
   static const Duration slow = Duration(milliseconds: 300);
 
+  /// Transport press feedback is independent from the playback icon fade.
+  static const Duration pressIn = Duration(milliseconds: 100);
+  static const Duration pressHold = Duration(milliseconds: 100);
+  static const Duration pressOut = Duration(milliseconds: 320);
+
   /// 5000 ms — episode autonext countdown.
   static const Duration countdown = Duration(seconds: 5);
 
@@ -37,16 +42,20 @@ abstract final class AppMotion {
   /// Returns the effective duration respecting `reduceMotion`.
   /// Decorative animations (scale, slide, bounce) become 0 ms.
   /// Structural transitions (fade, page) become a short fade.
-  static Duration effective(Duration base,
-      {bool decorative = false, bool reduceMotion = false}) {
+  static Duration effective(
+    Duration base, {
+    bool decorative = false,
+    bool reduceMotion = false,
+  }) {
     if (!reduceMotion) return base;
     if (decorative) return Duration.zero;
     return base.inMilliseconds > 150 ? const Duration(milliseconds: 80) : base;
   }
 
   /// Standard page transition: fade + slide 8px.
-  static PageTransitionsBuilder pageTransitionsBuilder(
-      {bool reduceMotion = false}) {
+  static PageTransitionsBuilder pageTransitionsBuilder({
+    bool reduceMotion = false,
+  }) {
     return _AppPageTransitionsBuilder(reduceMotion: reduceMotion);
   }
 }
@@ -64,17 +73,13 @@ class _AppPageTransitionsBuilder extends PageTransitionsBuilder {
     Widget child,
   ) {
     if (reduceMotion || MediaQuery.disableAnimationsOf(context)) {
-      return FadeTransition(
-        opacity: animation,
-        child: child,
-      );
+      return FadeTransition(opacity: animation, child: child);
     }
     return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(0, 0.02),
-        end: Offset.zero,
-      ).animate(
-          CurvedAnimation(parent: animation, curve: AppMotion.emphasized)),
+      position: Tween<Offset>(begin: const Offset(0, 0.02), end: Offset.zero)
+          .animate(
+            CurvedAnimation(parent: animation, curve: AppMotion.emphasized),
+          ),
       child: FadeTransition(opacity: animation, child: child),
     );
   }

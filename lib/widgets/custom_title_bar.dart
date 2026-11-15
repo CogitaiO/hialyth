@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_theme_extension.dart';
+import '../theme/app_motion.dart';
+import 'animated_state_icon.dart';
 
 class CustomTitleBar extends StatefulWidget {
   final Color? backgroundColor;
@@ -83,30 +85,42 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
             widget.leading!
           else ...[
             const SizedBox(width: AppSpacing.md),
-            Icon(AppIcons.appLogo,
-                color: Theme.of(context).colorScheme.primary, size: 18),
+            Icon(
+              AppIcons.appLogo,
+              color: Theme.of(context).colorScheme.primary,
+              size: 18,
+            ),
             const SizedBox(width: AppSpacing.xs),
           ],
 
-          if (widget.title != null)
-            widget.title!
-          else
-            Text(
-              widget.appName ?? 'Nekaido',
-              style: TextStyle(
-                  color: tokens.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1),
-            ),
-
-          // Leave the drag area empty in fullscreen.
           Expanded(
-            child: _isFullScreen
-                ? const SizedBox.shrink()
-                : DragToMoveArea(
-                    child: Container(color: Colors.transparent),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: DefaultTextStyle.merge(
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    child:
+                        widget.title ??
+                        Text(
+                          widget.appName ?? 'Nekaido',
+                          style: TextStyle(
+                            color: tokens.textSecondary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
                   ),
+                ),
+                if (!_isFullScreen)
+                  DragToMoveArea(
+                    child: const ColoredBox(color: Colors.transparent),
+                  ),
+              ],
+            ),
           ),
 
           // Window controls are hidden in fullscreen.
@@ -170,11 +184,15 @@ class _WindowButtonState extends State<_WindowButton> {
       child: GestureDetector(
         onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
-        child: Container(
+        child: AnimatedContainer(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : AppMotion.medium,
+          curve: AppMotion.enter,
           width: 46,
           height: double.infinity,
           color: _isHovered ? hoverColor : Colors.transparent,
-          child: Icon(
+          child: AnimatedStateIcon(
             widget.icon,
             color: _isHovered && widget.hoverColor != null
                 ? tokens.textPrimary
