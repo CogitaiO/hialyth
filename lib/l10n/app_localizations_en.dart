@@ -365,6 +365,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerNextEpisode => 'Next episode';
 
   @override
+  String get playerPreviousEpisode => 'Previous episode';
+
+  @override
   String get playerEpisodeComplete => 'Episode complete';
 
   @override

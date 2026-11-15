@@ -102,6 +102,7 @@
   "playerWatchNow": "Watch now",
   "playerCancel": "Cancel",
   "playerNextEpisode": "Next episode",
+  "playerPreviousEpisode": "Previous episode",
   "playerEpisodeComplete": "Episode complete",
   "playerSeriesComplete": "You've watched the last episode",
   "playerReturnToTitle": "Return to title",

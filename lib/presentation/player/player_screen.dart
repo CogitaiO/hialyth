@@ -21,14 +21,18 @@ class PlayerScreen extends ConsumerStatefulWidget {
   final int animeId;
   final String videoPath;
 
-  const PlayerScreen(
-      {super.key, required this.animeId, required this.videoPath});
+  const PlayerScreen({
+    super.key,
+    required this.animeId,
+    required this.videoPath,
+  });
 
   @override
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
 }
 
 class _PlayerScreenState extends ConsumerState<PlayerScreen> {
+  static const _playerUi = MethodChannel('hialyth/player_ui');
   late final VideoController _videoController;
   late final AppLifecycleListener _lifecycleListener;
   final FocusNode _playerFocusNode = FocusNode();
@@ -40,26 +44,36 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   void initState() {
     super.initState();
+    if (Platform.isAndroid) {
+      unawaited(_playerUi.invokeMethod<void>('enterImmersive'));
+    }
     talker.info('PlayerScreen: Initializing screen');
     final playerNotifier = ref.read(playerProvider.notifier);
     final hwdecMode = ref.read(settingsProvider).hwdec;
     final isHardwareDisabled = (hwdecMode == 'no');
 
     talker.debug(
-        'PlayerScreen: Create VideoController (hwdec: $hwdecMode, enableHardwareAcceleration: ${!isHardwareDisabled})');
+      'PlayerScreen: Create VideoController (hwdec: $hwdecMode, enableHardwareAcceleration: ${!isHardwareDisabled})',
+    );
 
-    _videoController = VideoController(playerNotifier.player,
-        configuration: VideoControllerConfiguration(
-          hwdec: hwdecMode,
-          enableHardwareAcceleration: !isHardwareDisabled,
-        ));
+    _videoController = VideoController(
+      playerNotifier.player,
+      configuration: VideoControllerConfiguration(
+        hwdec: hwdecMode,
+        enableHardwareAcceleration: !isHardwareDisabled,
+      ),
+    );
 
-    (playerNotifier.player.platform as dynamic)
-        ?.setProperty('hwdec', hwdecMode);
+    (playerNotifier.player.platform as dynamic)?.setProperty(
+      'hwdec',
+      hwdecMode,
+    );
 
-    _lifecycleListener = AppLifecycleListener(onHide: () {
-      talker.info('App minimized. Continuing playback in background');
-    });
+    _lifecycleListener = AppLifecycleListener(
+      onHide: () {
+        talker.info('App minimized. Continuing playback in background');
+      },
+    );
 
     Future.microtask(() {
       talker.info('PlayerScreen: Invoke loadVideo');
@@ -69,6 +83,9 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
 
   @override
   void dispose() {
+    if (Platform.isAndroid) {
+      unawaited(_playerUi.invokeMethod<void>('exitImmersive'));
+    }
     talker.info('PlayerScreen: Closing screen (dispose)');
     _lifecycleListener.dispose();
     try {
@@ -83,14 +100,18 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final notifier = ref.read(playerProvider.notifier);
-    final playerState = ref.watch(playerProvider.select((s) => (
+    final playerState = ref.watch(
+      playerProvider.select(
+        (s) => (
           isSidebarOpen: s.isSidebarOpen,
           isPiP: s.isPiP,
           isUiVisible: s.isUiVisible,
           isVideoCompleted: s.isVideoCompleted,
           isLoading: s.isLoading,
           errorCode: s.errorCode,
-        )));
+        ),
+      ),
+    );
     final tokens = context.appTheme;
 
     return Scaffold(
@@ -105,10 +126,12 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
               const EscapeIntent(),
           const SingleActivator(LogicalKeyboardKey.arrowRight):
               const SeekIntent(5),
-          const SingleActivator(LogicalKeyboardKey.arrowLeft):
-              const SeekIntent(-5),
-          const SingleActivator(LogicalKeyboardKey.arrowUp):
-              const VolumeIntent(5.0),
+          const SingleActivator(LogicalKeyboardKey.arrowLeft): const SeekIntent(
+            -5,
+          ),
+          const SingleActivator(LogicalKeyboardKey.arrowUp): const VolumeIntent(
+            5.0,
+          ),
           const SingleActivator(LogicalKeyboardKey.arrowDown):
               const VolumeIntent(-5.0),
           const SingleActivator(LogicalKeyboardKey.keyP): const PiPIntent(),
@@ -116,18 +139,28 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         child: Actions(
           actions: <Type, Action<Intent>>{
             PlayPauseIntent: _PlayerShortcutAction<PlayPauseIntent>(
-                _playerFocusNode, (_) => notifier.togglePlay()),
-            FullScreenIntent:
-                _PlayerShortcutAction<FullScreenIntent>(_playerFocusNode, (_) {
-              notifier.toggleFullscreen();
-              _playerFocusNode.requestFocus();
-            }),
+              _playerFocusNode,
+              (_) => notifier.togglePlay(),
+            ),
+            FullScreenIntent: _PlayerShortcutAction<FullScreenIntent>(
+              _playerFocusNode,
+              (_) {
+                notifier.toggleFullscreen();
+                _playerFocusNode.requestFocus();
+              },
+            ),
             PiPIntent: _PlayerShortcutAction<PiPIntent>(
-                _playerFocusNode, (_) => notifier.togglePiP()),
-            SeekIntent: _PlayerShortcutAction<SeekIntent>(_playerFocusNode,
-                (intent) => notifier.seekRelative(intent.seconds)),
-            VolumeIntent: _PlayerShortcutAction<VolumeIntent>(_playerFocusNode,
-                (intent) => notifier.changeVolume(intent.delta)),
+              _playerFocusNode,
+              (_) => notifier.togglePiP(),
+            ),
+            SeekIntent: _PlayerShortcutAction<SeekIntent>(
+              _playerFocusNode,
+              (intent) => notifier.seekRelative(intent.seconds),
+            ),
+            VolumeIntent: _PlayerShortcutAction<VolumeIntent>(
+              _playerFocusNode,
+              (intent) => notifier.changeVolume(intent.delta),
+            ),
             EscapeIntent: CallbackAction<EscapeIntent>(
               onInvoke: (_) async {
                 if (!_playerFocusNode.hasPrimaryFocus) {
@@ -145,9 +178,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   return null;
                 }
 
-                final isDesktop = Platform.isWindows ||
-                    Platform.isLinux ||
-                    Platform.isMacOS;
+                final isDesktop =
+                    Platform.isWindows || Platform.isLinux || Platform.isMacOS;
                 if (isDesktop && await windowManager.isFullScreen()) {
                   await windowManager.setFullScreen(false);
                 } else {
@@ -180,53 +212,69 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           notifier.toggleSideBar();
                           return;
                         }
-                      },
-                      onDoubleTapDown: (TapDownDetails details) {
-                        final screenWidth = MediaQuery.of(context).size.width;
-                        final tapX = details.globalPosition.dx;
-                        _seekHideTimer?.cancel();
-
-                        if (tapX < screenWidth * 0.3) {
-                          notifier.seekRelative(-10);
-                          setState(() {
-                            _showRightRipple = false;
-                            _showLeftRipple = true;
-                            _seekAccumulator = _seekAccumulator > 0
-                                ? -10
-                                : _seekAccumulator - 10;
-                          });
-                        } else if (tapX > screenWidth * 0.7) {
-                          notifier.seekRelative(10);
-                          setState(() {
-                            _showRightRipple = true;
-                            _showLeftRipple = false;
-                            _seekAccumulator = _seekAccumulator < 0
-                                ? 10
-                                : _seekAccumulator + 10;
-                          });
-                        } else {
-                          notifier.toggleFullscreen();
-                          return;
+                        if (Platform.isAndroid || Platform.isIOS) {
+                          notifier.toggleUi();
                         }
-
-                        _seekHideTimer =
-                            Timer(const Duration(milliseconds: 600), () {
-                          if (mounted) {
-                            setState(() {
-                              _showLeftRipple = false;
-                              _showRightRipple = false;
-                            });
-                            Future.delayed(const Duration(milliseconds: 200),
-                                () {
-                              if (mounted &&
-                                  !_showLeftRipple &&
-                                  !_showRightRipple) {
-                                setState(() => _seekAccumulator = 0);
-                              }
-                            });
-                          }
-                        });
                       },
+                      onDoubleTapDown: (Platform.isAndroid || Platform.isIOS)
+                          ? null
+                          : (TapDownDetails details) {
+                              final screenWidth = MediaQuery.of(
+                                context,
+                              ).size.width;
+                              final tapX = details.globalPosition.dx;
+                              _seekHideTimer?.cancel();
+
+                              if (tapX < screenWidth * 0.3) {
+                                notifier.seekRelative(-10);
+                                setState(() {
+                                  _showRightRipple = false;
+                                  _showLeftRipple = true;
+                                  _seekAccumulator = _seekAccumulator > 0
+                                      ? -10
+                                      : _seekAccumulator - 10;
+                                });
+                              } else if (tapX > screenWidth * 0.7) {
+                                notifier.seekRelative(10);
+                                setState(() {
+                                  _showRightRipple = true;
+                                  _showLeftRipple = false;
+                                  _seekAccumulator = _seekAccumulator < 0
+                                      ? 10
+                                      : _seekAccumulator + 10;
+                                });
+                              } else if (Platform.isWindows ||
+                                  Platform.isLinux ||
+                                  Platform.isMacOS) {
+                                notifier.toggleFullscreen();
+                                return;
+                              } else {
+                                notifier.togglePlay();
+                                return;
+                              }
+
+                              _seekHideTimer = Timer(
+                                const Duration(milliseconds: 600),
+                                () {
+                                  if (mounted) {
+                                    setState(() {
+                                      _showLeftRipple = false;
+                                      _showRightRipple = false;
+                                    });
+                                    Future.delayed(
+                                      const Duration(milliseconds: 200),
+                                      () {
+                                        if (mounted &&
+                                            !_showLeftRipple &&
+                                            !_showRightRipple) {
+                                          setState(() => _seekAccumulator = 0);
+                                        }
+                                      },
+                                    );
+                                  }
+                                },
+                              );
+                            },
                       child: Stack(
                         children: [
                           Positioned.fill(
@@ -244,17 +292,19 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           if (playerState.isLoading ||
                               playerState.errorCode != null)
                             Positioned.fill(
-                                child: PlayerStatusOverlay(
-                              loading: playerState.isLoading,
-                              errorCode: playerState.errorCode,
-                              onBack: () => Navigator.pop(context),
-                              onRetry: () {
-                                final current = ref.read(playerProvider);
-                                notifier.loadVideo(
+                              child: PlayerStatusOverlay(
+                                loading: playerState.isLoading,
+                                errorCode: playerState.errorCode,
+                                onBack: () => Navigator.pop(context),
+                                onRetry: () {
+                                  final current = ref.read(playerProvider);
+                                  notifier.loadVideo(
                                     current.animeId ?? widget.animeId,
-                                    current.videoPath ?? widget.videoPath);
-                              },
-                            )),
+                                    current.videoPath ?? widget.videoPath,
+                                  );
+                                },
+                              ),
+                            ),
                           if (!MediaQuery.disableAnimationsOf(context))
                             Positioned.fill(
                               child: SeekRippleOverlay(
@@ -314,34 +364,35 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
               width: 120,
               height: 120,
               child: TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 1.0, end: 0.0),
-                  duration: const Duration(seconds: 5),
-                  curve: Curves.linear,
-                  builder: (context, value, child) {
-                    int secondsLeft = (value * 5).ceil();
+                tween: Tween<double>(begin: 1.0, end: 0.0),
+                duration: const Duration(seconds: 5),
+                curve: Curves.linear,
+                builder: (context, value, child) {
+                  int secondsLeft = (value * 5).ceil();
 
-                    return Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        CircularProgressIndicator(
-                          value: value,
-                          color: Theme.of(context).colorScheme.primary,
-                          backgroundColor: tokens.borderSubtle,
-                          strokeWidth: 8,
-                        ),
-                        Center(
-                          child: Text(
-                            "$secondsLeft",
-                            style: TextStyle(
-                              color: tokens.textPrimary,
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: value,
+                        color: Theme.of(context).colorScheme.primary,
+                        backgroundColor: tokens.borderSubtle,
+                        strokeWidth: 8,
+                      ),
+                      Center(
+                        child: Text(
+                          "$secondsLeft",
+                          style: TextStyle(
+                            color: tokens.textPrimary,
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                    );
-                  }),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
             const SizedBox(height: AppSpacing.s50),
             Row(
@@ -357,8 +408,10 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                       vertical: AppSpacing.md,
                     ),
                   ),
-                  child: Text(context.l10n.playerCancel,
-                      style: const TextStyle(fontSize: 16)),
+                  child: Text(
+                    context.l10n.playerCancel,
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 ElevatedButton(
@@ -376,7 +429,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
