@@ -1,0 +1,74 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#171B27"/>
+      <stop offset="0.55" stop-color="#0D0F16"/>
+      <stop offset="1" stop-color="#07080B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="46%" r="58%">
+      <stop offset="0" stop-color="#8B7CF6" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#8B7CF6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="wing" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.92"/>
+      <stop offset="0.34" stop-color="#E2E8FF" stop-opacity="0.72"/>
+      <stop offset="0.72" stop-color="#A7B5F1" stop-opacity="0.44"/>
+      <stop offset="1" stop-color="#6472C4" stop-opacity="0.26"/>
+    </linearGradient>
+    <linearGradient id="wing2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.86"/>
+      <stop offset="0.45" stop-color="#DCE4FF" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#7C8BDA" stop-opacity="0.30"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.96"/>
+      <stop offset="0.45" stop-color="#C9D4FF" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#5B68B8" stop-opacity="0.40"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="220" fill="url(#glow)"/>
+
+  <ellipse cx="512" cy="690" rx="270" ry="120" fill="#8B7CF6" fill-opacity="0.10"/>
+
+  <!-- Antennae -->
+  <path d="M512 352 C478 286 448 244 414 214" fill="none" stroke="#FFFFFF" stroke-opacity="0.42" stroke-width="8" stroke-linecap="round"/>
+  <path d="M512 352 C546 286 576 244 610 214" fill="none" stroke="#FFFFFF" stroke-opacity="0.42" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="414" cy="214" r="10" fill="#FFFFFF" fill-opacity="0.55"/>
+  <circle cx="610" cy="214" r="10" fill="#FFFFFF" fill-opacity="0.55"/>
+
+  <!-- Upper wings -->
+  <g stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="5" stroke-linejoin="round">
+    <path d="M500 370 L330 250 L230 330 L300 470 L440 510 Z" fill="url(#wing)"/>
+    <path d="M524 370 L694 250 L794 330 L724 470 L584 510 Z" fill="url(#wing2)"/>
+  </g>
+  <!-- Upper wing facets -->
+  <g opacity="0.8">
+    <path d="M500 370 L330 250 L300 470 Z" fill="#FFFFFF" fill-opacity="0.08"/>
+    <path d="M330 250 L230 330 L300 470 Z" fill="#0B1024" fill-opacity="0.10"/>
+    <path d="M500 370 L300 470 L440 510 Z" fill="#FFFFFF" fill-opacity="0.12"/>
+    <path d="M524 370 L694 250 L724 470 Z" fill="#FFFFFF" fill-opacity="0.08"/>
+    <path d="M694 250 L794 330 L724 470 Z" fill="#0B1024" fill-opacity="0.10"/>
+    <path d="M524 370 L724 470 L584 510 Z" fill="#FFFFFF" fill-opacity="0.12"/>
+  </g>
+
+  <!-- Lower wings -->
+  <g stroke="#FFFFFF" stroke-opacity="0.34" stroke-width="5" stroke-linejoin="round">
+    <path d="M474 540 L350 590 L300 714 L410 780 L500 660 Z" fill="url(#wing2)"/>
+    <path d="M550 540 L674 590 L724 714 L614 780 L524 660 Z" fill="url(#wing)"/>
+  </g>
+  <!-- Lower wing facets -->
+  <g opacity="0.8">
+    <path d="M474 540 L350 590 L500 660 Z" fill="#FFFFFF" fill-opacity="0.10"/>
+    <path d="M350 590 L300 714 L410 780 Z" fill="#0B1024" fill-opacity="0.10"/>
+    <path d="M474 540 L410 780 L500 660 Z" fill="#FFFFFF" fill-opacity="0.08"/>
+    <path d="M550 540 L674 590 L524 660 Z" fill="#FFFFFF" fill-opacity="0.10"/>
+    <path d="M674 590 L724 714 L614 780 Z" fill="#0B1024" fill-opacity="0.10"/>
+    <path d="M550 540 L614 780 L524 660 Z" fill="#FFFFFF" fill-opacity="0.08"/>
+  </g>
+
+  <!-- Body -->
+  <path d="M512 318 L544 520 L512 770 L480 520 Z" fill="url(#body)" stroke="#FFFFFF" stroke-opacity="0.52" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M512 332 L526 520 L512 748 L498 520 Z" fill="#FFFFFF" fill-opacity="0.36"/>
+</svg>

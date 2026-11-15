@@ -1,0 +1,46 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151927"/>
+      <stop offset="0.55" stop-color="#0C0E15"/>
+      <stop offset="1" stop-color="#07080B"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="44%" r="52%">
+      <stop offset="0" stop-color="#8B7CF6" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#8B7CF6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="crystal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.90"/>
+      <stop offset="0.45" stop-color="#DCE4FF" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#7887D6" stop-opacity="0.34"/>
+    </linearGradient>
+    <linearGradient id="facet" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.34"/>
+      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#0B1024" stop-opacity="0.16"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="220" fill="url(#glow)"/>
+
+  <!-- Faceted H -->
+  <g stroke="#FFFFFF" stroke-opacity="0.38" stroke-width="4" stroke-linejoin="round">
+    <path d="M292 320 L344 288 L396 320 L396 704 L344 736 L292 704 Z" fill="url(#crystal)"/>
+    <path d="M628 320 L680 288 L732 320 L732 704 L680 736 L628 704 Z" fill="url(#crystal)"/>
+    <path d="M396 480 L628 480 L628 544 L396 544 Z" fill="url(#crystal)"/>
+  </g>
+
+  <!-- Facets -->
+  <g opacity="0.75">
+    <path d="M292 320 L344 288 L344 736 L292 704 Z" fill="url(#facet)"/>
+    <path d="M344 288 L396 320 L396 704 L344 736 Z" fill="#FFFFFF" fill-opacity="0.10"/>
+    <path d="M628 320 L680 288 L680 736 L628 704 Z" fill="url(#facet)"/>
+    <path d="M680 288 L732 320 L732 704 L680 736 Z" fill="#FFFFFF" fill-opacity="0.10"/>
+    <path d="M396 480 L628 480 L628 508 L396 508 Z" fill="#FFFFFF" fill-opacity="0.18"/>
+  </g>
+
+  <!-- Refracted light edge -->
+  <path d="M396 320 L396 704" stroke="#B9A7FF" stroke-opacity="0.55" stroke-width="8"/>
+  <path d="M732 320 L732 704" stroke="#6EE7F9" stroke-opacity="0.22" stroke-width="8"/>
+</svg>

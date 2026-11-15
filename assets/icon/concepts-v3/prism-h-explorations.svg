@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="600" viewBox="0 0 1200 600">
+  <title>Hialyth Prism H — explorations</title>
+  <g id="Layer_1" data-name="Layer 1">
+    <rect id="Background" x="0" y="0" width="1200" height="600" fill="#0b0d14"/>
+    <path id="Concept_panel_1" data-name="Concept panel 1" d="M74 80 L366 80 C379.255 80 390 90.745 390 104 L390 486 C390 499.255 379.255 510 366 510 L74 510 C60.745 510 50 499.255 50 486 L50 104 C50 90.745 60.745 80 74 80 Z" fill="#121521" stroke="#292d3d" stroke-width="1.5" stroke-miterlimit="10"/>
+    <path id="Concept_panel_2" data-name="Concept panel 2" d="M454 80 L746 80 C759.255 80 770 90.745 770 104 L770 486 C770 499.255 759.255 510 746 510 L454 510 C440.745 510 430 499.255 430 486 L430 104 C430 90.745 440.745 80 454 80 Z" fill="#121521" stroke="#292d3d" stroke-width="1.5" stroke-miterlimit="10"/>
+    <path id="Concept_panel_3" data-name="Concept panel 3" d="M834 80 L1126 80 C1139.255 80 1150 90.745 1150 104 L1150 486 C1150 499.255 1139.255 510 1126 510 L834 510 C820.745 510 810 499.255 810 486 L810 104 C810 90.745 820.745 80 834 80 Z" fill="#121521" stroke="#292d3d" stroke-width="1.5" stroke-miterlimit="10"/>
+    <polygon id="Prism_H_1___left_facet" data-name="Prism H 1 — left facet" points="157,204 178,190 202,204 202,369 178,383 157,369" stroke="#ffffff" stroke-width="1.5" fill="#dce4ff"/><polygon id="Prism_H_1___inner_facet" data-name="Prism H 1 — inner facet" points="178,190 202,204 202,369 178,383" fill="#8b7cf6"/>
+    <polygon id="Prism_H_1___right_facet" data-name="Prism H 1 — right facet" points="238,204 262,190 283,204 283,369 262,383 238,369" fill="#dce4ff" stroke="#ffffff" stroke-width="1.5"/>
+    <polygon id="Prism_H_1__right_inner_facet" data-name="Prism H 1 — right inner facet" points="238,204 262,190 262,383 238,369" fill="#9da9e8"/>
+    <rect id="Prism_H_1___bridge" data-name="Prism H 1 — bridge" x="202" y="266" width="36" height="42" fill="#c8c9ff" stroke="#ffffff" stroke-miterlimit="10"/>
+    <polygon id="Prism_H_2___left_column" data-name="Prism H 2 — left column" points="532,209 554,195 576,209 576,364 554,379 532,364" fill="#aaa3fa" stroke="#e6e2ff" stroke-width="1.5"/>
+    <polygon id="Prism_H_2___left_light_facet" data-name="Prism H 2 — left light facet" points="532,209 554,195 554,379 532,364" fill="#f1f2ff"/>
+    <polygon id="Prism_H_2___right_column" data-name="Prism H 2 — right column" points="624,209 646,195 668,209 668,364 646,379 624,364" fill="#8b7cf6" stroke="#e6e2ff" stroke-width="1.5"/>
+    <polygon id="Prism_H_2___right_light_facet" data-name="Prism H 2 — right light facet" points="624,209 646,195 646,379 624,364" fill="#b9b5ff"/>
+    <path id="Prism_H_2___luminous_bridge" data-name="Prism H 2 — luminous bridge" d="M583 267 L617 267 C620.866 267 624 270.134 624 274 L624 300 C624 303.866 620.866 307 617 307 L583 307 C579.134 307 576 303.866 576 300 L576 274 C576 270.134 579.134 267 583 267 Z" fill="#f4f5ff"/>
+    <circle id="Prism_H_3___aperture_ring" data-name="Prism H 3 — iris-aperture" cx="980" cy="270" r="88" fill="none" stroke="#7568d8" stroke-width="3"/>
+    <polygon id="Prism_H_3___left_facet" data-name="Prism H 3 — left facet" points="925,218 941,208 958,218 958,322 941,332 925,322" fill="#dce4ff" stroke="#ffffff"/>
+    <polygon id="Prism_H_3___right_facet" data-name="Prism H 3 — right facet" points="1002,218 1019,208 1035,218 1035,322 1019,332 1002,322" fill="#b7b5ff" stroke="#ffffff"/>
+    <path id="Prism_H_3___bridge" data-name="Prism H 3 — bridge" d="M963 260 L997 260 C999.761 260 1002 262.239 1002 265 L1002 283 C1002 285.761 999.761 288 997 288 L963 288 C960.239 288 958 285.761 958 283 L958 265 C958 262.239 960.239 260 963 260 Z" fill="#f3f4ff"/>
+    <text transform="matrix(1 0 0 1 220 445)" x="0" y="0" xml:space="preserve" font-family="Inter, sans-serif" font-size="18" fill="#e3e5f2" text-anchor="middle"><tspan x="0" y="0">PRISM / PURE</tspan></text>
+    <text transform="matrix(1 0 0 1 600 445)" x="0" y="0" xml:space="preserve" font-family="Inter, sans-serif" font-size="18" fill="#e3e5f2" text-anchor="middle"><tspan x="0" y="0">PRISM / FACET</tspan></text>
+    <text transform="matrix(1 0 0 1 980 445)" x="0" y="0" xml:space="preserve" font-family="Inter, sans-serif" font-size="18" fill="#e3e5f2" text-anchor="middle"><tspan x="0" y="0">PRISM / HALO</tspan></text>
+    <text transform="matrix(1 0 0 1 220 478)" x="0" y="0" xml:space="preserve" font-family="Inter, sans-serif" font-size="22" fill="#f4f4fa" text-anchor="middle"><tspan x="0" y="0">Hialyth</tspan></text>
+    <text transform="matrix(1 0 0 1 600 478)" x="0" y="0" xml:space="preserve" font-family="Inter, sans-serif" font-size="22" fill="#f4f4fa" text-anchor="middle"><tspan x="0" y="0">Hialyth</tspan></text>
+    <text transform="matrix(1 0 0 1 980 478)" x="0" y="0" xml:space="preserve" font-family="Inter, sans-serif" font-size="22" fill="#f4f4fa" text-anchor="middle"><tspan x="0" y="0">Hialyth</tspan></text>
+  </g>
+</svg>
