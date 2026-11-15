@@ -117,7 +117,9 @@ class MyApp extends ConsumerWidget {
     final accentColor = Color(accentColorValue);
 
     return MaterialApp(
-      title: showcaseMode ? 'Hialyth Showcase' : 'Nekaido',
+      onGenerateTitle: (context) => showcaseMode
+          ? 'Hialyth Showcase'
+          : AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppFeatures.designV2
           ? AppTheme.dark(accent: accentColor)

@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Nekaido';
+  String get appTitle => 'Hialyth';
 
   @override
   String get libraryTitle => 'Library';

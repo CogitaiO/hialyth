@@ -105,7 +105,7 @@ class _CustomTitleBarState extends State<CustomTitleBar> with WindowListener {
                     child:
                         widget.title ??
                         Text(
-                          widget.appName ?? 'Nekaido',
+                          widget.appName ?? 'Hialyth',
                           style: TextStyle(
                             color: tokens.textSecondary,
                             fontSize: 13,
