@@ -15,8 +15,9 @@ void main() {
   setUpAll(_initializeIsarCore);
 
   setUp(() async {
-    databaseDirectory =
-        await Directory.systemTemp.createTemp('nekaido_anime_repository_');
+    databaseDirectory = await Directory.systemTemp.createTemp(
+      'nekaido_anime_repository_',
+    );
     isar = await Isar.open(
       [AnimeSchema],
       directory: databaseDirectory.path,
@@ -38,8 +39,17 @@ void main() {
 
     expect(
       AnimeSchema.properties.keys,
-      isNot(contains(anyOf('sortedEpisodes', 'nextEpisodeToPlay',
-          'watchProgress', 'progressFraction', 'progressPercentage'))),
+      isNot(
+        contains(
+          anyOf(
+            'sortedEpisodes',
+            'nextEpisodeToPlay',
+            'watchProgress',
+            'progressFraction',
+            'progressPercentage',
+          ),
+        ),
+      ),
     );
     await repository.saveAnime(anime);
 
@@ -51,22 +61,24 @@ void main() {
   });
 
   test(
-      'marks all episodes watched in natural order and preserves existing ones',
-      () async {
-    final anime = Anime()
-      ..title = 'Repository test'
-      ..episodePaths = ['/anime/10.mkv', '/anime/2.mkv', '/anime/1.mkv']
-      ..watchedEpisodes = ['/anime/2.mkv'];
-    await repository.saveAnime(anime);
+    'marks all episodes watched in natural order and preserves existing ones',
+    () async {
+      final anime = Anime()
+        ..title = 'Repository test'
+        ..episodePaths = ['/anime/10.mkv', '/anime/2.mkv', '/anime/1.mkv']
+        ..watchedEpisodes = ['/anime/2.mkv'];
+      await repository.saveAnime(anime);
 
-    await repository.markAllEpisodesWatched(anime.id);
+      await repository.markAllEpisodesWatched(anime.id);
 
-    final savedAnime = await repository.getAnimeById(anime.id);
-    expect(
-      savedAnime?.watchedEpisodes,
-      ['/anime/2.mkv', '/anime/1.mkv', '/anime/10.mkv'],
-    );
-  });
+      final savedAnime = await repository.getAnimeById(anime.id);
+      expect(savedAnime?.watchedEpisodes, [
+        '/anime/2.mkv',
+        '/anime/1.mkv',
+        '/anime/10.mkv',
+      ]);
+    },
+  );
 
   test('is idempotent when all episodes are already watched', () async {
     final anime = Anime()
@@ -85,38 +97,61 @@ void main() {
     await expectLater(repository.markAllEpisodesWatched(999), completes);
   });
 
-  test('unchanged rescan preserves records and does not notify watchers',
-      () async {
-    final root = databaseDirectory.path;
-    final one = '$root/one.mkv';
-    final two = '$root/two.mkv';
+  test('Android folder rescan preserves progress and other sources', () async {
+    const root = 'content://provider/tree/primary%3AAnime';
+    const other = 'content://provider/tree/primary%3AOther';
+    const first = '$root/document/primary%3AAnime%2Fshow%2F01.mkv';
+    const second = '$root/document/primary%3AAnime%2Fshow%2F02.mkv';
+    const third = '$other/document/primary%3AOther%2F03.mkv';
     final anime = (await repository.reconcileScan(root, {
-      'Example': [one, two]
-    }))
-        .single;
-    await repository.addNote(anime.id, one, 5, 'keep');
-    var notifications = 0;
-    final subscription = isar.animes.watchObject(anime.id).listen((_) {
-      notifications++;
+      'Show': [first, second],
+    })).single;
+    await repository.reconcileScan(other, {
+      'Show': [third],
     });
-    addTearDown(subscription.cancel);
-    final affected = await repository.reconcileScan(root, {
-      'Example': [two, one]
-    });
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(notifications, 0);
-    expect(affected.single.notes.single.text, 'keep');
-    expect(affected.single.episodePaths, [one, two]);
-
+    await repository.addNote(anime.id, first, 5, 'keep');
     await repository.reconcileScan(root, {
-      'Example': [two]
+      'Show': [second],
     });
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(notifications, 1);
-    final updated = await repository.getAnimeById(anime.id);
-    expect(updated!.episodePaths, [two]);
-    expect(updated.notes.single.text, 'keep');
+    final saved = await repository.getAnimeById(anime.id);
+    expect(saved!.episodePaths, containsAll([second, third]));
+    expect(saved.episodePaths, isNot(contains(first)));
+    expect(saved.notes.single.text, 'keep');
   });
+
+  test(
+    'unchanged rescan preserves records and does not notify watchers',
+    () async {
+      final root = databaseDirectory.path;
+      final one = '$root/one.mkv';
+      final two = '$root/two.mkv';
+      final anime = (await repository.reconcileScan(root, {
+        'Example': [one, two],
+      })).single;
+      await repository.addNote(anime.id, one, 5, 'keep');
+      var notifications = 0;
+      final subscription = isar.animes.watchObject(anime.id).listen((_) {
+        notifications++;
+      });
+      addTearDown(subscription.cancel);
+      final affected = await repository.reconcileScan(root, {
+        'Example': [two, one],
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(notifications, 0);
+      expect(affected.single.notes.single.text, 'keep');
+      expect(affected.single.episodePaths, [one, two]);
+
+      await repository.reconcileScan(root, {
+        'Example': [two],
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(notifications, 1);
+      final updated = await repository.getAnimeById(anime.id);
+      expect(updated!.episodePaths, [two]);
+      expect(updated.notes.single.text, 'keep');
+    },
+  );
 }
 
 class _AnimeWithGuardedGetters extends Anime {
@@ -143,10 +178,11 @@ Future<void> _initializeIsarCore() async {
       jsonDecode(await packageConfigFile.readAsString()) as Map;
   final packages = packageConfig['packages'] as List;
   final isarFlutterLibs = packages.cast<Map>().firstWhere(
-        (package) => package['name'] == 'isar_community_flutter_libs',
-      );
-  final packageRoot =
-      Directory.fromUri(Uri.parse(isarFlutterLibs['rootUri'] as String));
+    (package) => package['name'] == 'isar_community_flutter_libs',
+  );
+  final packageRoot = Directory.fromUri(
+    Uri.parse(isarFlutterLibs['rootUri'] as String),
+  );
   final libraryRelativePath = switch (Abi.current()) {
     Abi.linuxX64 || Abi.linuxArm64 => 'linux/libisar.so',
     Abi.macosX64 || Abi.macosArm64 => 'macos/libisar.dylib',
