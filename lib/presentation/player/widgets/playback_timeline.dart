@@ -16,6 +16,8 @@ class PlaybackTimeline extends StatefulWidget {
     required this.duration,
     required this.playing,
     required this.onSeek,
+    this.onInteractionStart,
+    this.onInteractionEnd,
     this.intervals = const [],
     this.mobileStyle = false,
   });
@@ -24,6 +26,8 @@ class PlaybackTimeline extends StatefulWidget {
   final Duration duration;
   final bool playing;
   final ValueChanged<Duration> onSeek;
+  final VoidCallback? onInteractionStart;
+  final VoidCallback? onInteractionEnd;
   final List<SkipIntervalDb> intervals;
   final bool mobileStyle;
 
@@ -39,6 +43,13 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
   bool _animate = false;
   Duration? _lastSampleAt;
   int _sampleIntervalMs = 200;
+  bool _interactionActive = false;
+
+  void _finishInteraction() {
+    if (!_interactionActive) return;
+    _interactionActive = false;
+    widget.onInteractionEnd?.call();
+  }
 
   @override
   void didUpdateWidget(PlaybackTimeline oldWidget) {
@@ -67,6 +78,7 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
   @override
   void dispose() {
     _seekTimeout?.cancel();
+    _finishInteraction();
     super.dispose();
   }
 
@@ -123,6 +135,8 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
                   ? null
                   : (value) {
                       _seekTimeout?.cancel();
+                      _interactionActive = true;
+                      widget.onInteractionStart?.call();
                       setState(() {
                         _dragValue = value;
                         _pendingSeek = null;
@@ -142,6 +156,7 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
                         if (mounted) setState(() => _pendingSeek = null);
                       });
                       widget.onSeek(Duration(milliseconds: value.round()));
+                      _finishInteraction();
                     },
             ),
           ),

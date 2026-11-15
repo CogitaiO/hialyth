@@ -65,6 +65,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   int _lastStateSeconds = -1; // Throttle UI updates to one per second.
   bool _isAutoSkipping = false;
+  int _activeUiInteractions = 0;
   bool _wasFullScreen = false;
   bool _wasMaximized = false;
   Size _previousSize = const Size(1280, 720);
@@ -366,6 +367,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   Future<void> loadVideo(int animeId, String path) {
+    showUi();
     _acceptTrackEvents = false;
     _mediaOpened = false;
     _audioRestored = false;
@@ -588,6 +590,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   void togglePlay() {
     if (state.isLoading || state.errorCode != null) return;
+    showUi();
     _engine.playOrPause();
     unawaited(
       _progress.saveNow(
@@ -596,8 +599,6 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
         position: state.position,
       ),
     );
-    _startUiHider();
-
     final isGoingToPlay = !state.isPlaying;
 
     String epString = "Watching";
@@ -615,7 +616,10 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
     );
   }
 
-  void seek(Duration position) => _engine.seek(position);
+  void seek(Duration position) {
+    _engine.seek(position);
+    showUi();
+  }
 
   void toggleUi() {
     state = state.copyWith(
@@ -636,13 +640,29 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
 
   void _startUiHider() {
     _lifecycle.cancelUiHide();
-    if (!state.isUiVisible) return;
+    if (!state.isUiVisible || _activeUiInteractions > 0) return;
 
     _lifecycle.scheduleUiHide(const Duration(seconds: 3), () {
       if (mounted && state.isPlaying && !state.isSidebarOpen) {
         state = state.copyWith(ui: state.ui.copyWith(isUiVisible: false));
       }
     });
+  }
+
+  /// Keeps controls visible while a continuous control such as the timeline
+  /// is actively being dragged.
+  void beginUiInteraction() {
+    if (!mounted) return;
+    _activeUiInteractions++;
+    showUi();
+  }
+
+  /// Resumes the normal hide delay after a continuous interaction ends.
+  void endUiInteraction() {
+    if (!mounted) return;
+    if (_activeUiInteractions == 0) return;
+    _activeUiInteractions--;
+    if (_activeUiInteractions == 0) _startUiHider();
   }
 
   void setAudioTrack(AudioTrack track) {
@@ -761,6 +781,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   Future<void> toggleFullscreen() async {
+    showUi();
     // windowManager is desktop-only; calling it on mobile would crash.
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       final isFull = await windowManager.isFullScreen();
@@ -780,6 +801,7 @@ class PlayerNotifier extends StateNotifier<AppPlayerState> {
   }
 
   Future<void> togglePiP() async {
+    showUi();
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       if (state.isPiP) {
         // Exit PiP.
