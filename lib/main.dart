@@ -14,6 +14,7 @@ import 'domain/anime.dart';
 import 'data/repositories/anime_repository.dart';
 import 'providers/repositories_provider.dart';
 import 'presentation/library_screen.dart';
+import 'presentation/mobile_navigation_gesture.dart';
 import 'providers/library_provider.dart';
 import 'providers/settings_provider.dart';
 import 'theme/app_theme.dart';
@@ -106,18 +107,27 @@ Future<void> runHialyth({bool showcaseMode = false}) async {
   }
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key, this.showcaseMode = false});
   final bool showcaseMode;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  final _mobileNavigation = MobileNavigationController();
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final accentColorValue = settings.accentColorValue;
     final accentColor = Color(accentColorValue);
 
     return MaterialApp(
-      onGenerateTitle: (context) => showcaseMode
+      navigatorKey: _mobileNavigation.key,
+      navigatorObservers: [_mobileNavigation],
+      onGenerateTitle: (context) => widget.showcaseMode
           ? 'Hialyth Showcase'
           : AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
@@ -137,10 +147,13 @@ class MyApp extends ConsumerWidget {
         child: HeroMode(
           enabled: !(settings.reduceMotion ||
               AppMotion.isReduced(context)),
-          child: child!,
+          child: MobileNavigationGesture(
+            controller: _mobileNavigation,
+            child: child!,
+          ),
         ),
       ),
-      home: LibraryScreen(showcaseMode: showcaseMode),
+      home: LibraryScreen(showcaseMode: widget.showcaseMode),
     );
   }
 }

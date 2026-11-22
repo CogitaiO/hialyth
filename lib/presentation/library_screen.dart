@@ -77,7 +77,7 @@ class LibraryScreen extends ConsumerWidget {
             final compact = constraints.maxWidth < AppBreakpoints.compact;
             return Scaffold(
               drawer: compact
-                  ? const Drawer(child: _LibraryNavigation(expanded: true))
+                  ? const Drawer(child: LibraryNavigation(expanded: true))
                   : null,
               body: SafeArea(
                 child: Column(
@@ -89,7 +89,7 @@ class LibraryScreen extends ConsumerWidget {
                       child: Row(
                         children: [
                           if (!compact)
-                            _LibraryNavigation(
+                            LibraryNavigation(
                               expanded: constraints.maxWidth >= 1200,
                             ),
                           Expanded(
@@ -121,9 +121,24 @@ class LibraryScreen extends ConsumerWidget {
   }
 }
 
-class _LibraryNavigation extends ConsumerWidget {
+class LibraryNavigation extends ConsumerWidget {
   final bool expanded;
-  const _LibraryNavigation({required this.expanded});
+  final VoidCallback? onLibrarySelected;
+  final VoidCallback? onSettingsSelected;
+  const LibraryNavigation({
+    super.key,
+    required this.expanded,
+    this.onLibrarySelected,
+    this.onSettingsSelected,
+  });
+
+  void _openLibrary(BuildContext context) {
+    if (onLibrarySelected case final callback?) {
+      callback();
+    } else {
+      Scaffold.of(context).closeDrawer();
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -251,7 +266,7 @@ class _LibraryNavigation extends ConsumerWidget {
                                           .first;
                                     }
                                   }
-                                  Scaffold.of(context).closeDrawer();
+                                  _openLibrary(context);
                                 },
                               ),
                             ),
@@ -278,7 +293,7 @@ class _LibraryNavigation extends ConsumerWidget {
                                     .read(selectedCollectionProvider.notifier)
                                     .state =
                                 collection;
-                            Scaffold.of(context).closeDrawer();
+                            _openLibrary(context);
                           },
                         ),
                   ],
@@ -293,16 +308,18 @@ class _LibraryNavigation extends ConsumerWidget {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                     leading: const Icon(AppIcons.settings, size: 24),
                     title: expanded ? Text(context.l10n.settingsTitle) : null,
-                    onTap: () {
-                      Scaffold.of(context).closeDrawer();
-                      Navigator.push(
-                        context,
-                        AppMotion.pageRoute(
-                          context,
-                          builder: (_) => const SettingsScreen(),
-                        ),
-                      );
-                    },
+                    onTap:
+                        onSettingsSelected ??
+                        () {
+                          Scaffold.of(context).closeDrawer();
+                          Navigator.push(
+                            context,
+                            AppMotion.pageRoute(
+                              context,
+                              builder: (_) => const SettingsScreen(),
+                            ),
+                          );
+                        },
                   ),
                 ),
               ),
