@@ -44,13 +44,13 @@ class AppThemeExtension extends ThemeExtension<AppThemeExtension> {
   const AppThemeExtension.dark()
       : pageSurface = AppSurfaces.base, // AppSurfaces.base
         titleBarSurface = AppSurfaces.raised, // AppSurfaces.raised
-        cardSurface = AppSurfaces.container, // AppSurfaces.container
+        cardSurface = AppSurfaces.quiet,
         container = AppSurfaces.container, // AppSurfaces.container
         containerHigh = AppSurfaces.containerHigh, // AppSurfaces.containerHigh
-        hover = AppSurfaces.borderSubtle, // AppSurfaces.hover
+        hover = AppSurfaces.hover,
         surfaceSubtle = const Color(0x0DFFFFFF), // white 0.05
         surfaceFaint = const Color(0x08FFFFFF), // white 0.03
-        surfaceHover = AppSurfaces.borderSubtle, // AppSurfaces.hover
+        surfaceHover = AppSurfaces.hover,
         surfaceDisabled = const Color(0x33FFFFFF), // white 0.2
         surfaceTooltip = AppSurfaces.base, // AppSurfaces.base
         surfaceOverlay = AppSurfaces.overlay, // AppSurfaces.overlay 0.88

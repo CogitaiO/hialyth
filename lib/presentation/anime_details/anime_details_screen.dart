@@ -63,7 +63,11 @@ class AnimeDetailsScreen extends ConsumerWidget {
                     final accent = Theme.of(context).colorScheme.primary;
                     return Stack(
                       children: [
-                        Positioned.fill(
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: 440,
                           child: AmbientBackground(color: ambient),
                         ),
                         Center(
@@ -131,7 +135,12 @@ class AnimeDetailsScreen extends ConsumerWidget {
                                                           anime.title,
                                                           style: Theme.of(context)
                                                               .textTheme
-                                                              .headlineMedium,
+                                                              .headlineLarge
+                                                              ?.copyWith(
+                                                                height: 1.12,
+                                                                letterSpacing:
+                                                                    -.5,
+                                                              ),
                                                           maxLines: 3,
                                                           overflow: TextOverflow
                                                               .ellipsis,

@@ -352,6 +352,15 @@ class _TopBarState extends ConsumerState<_TopBar> {
     ),
   );
 
+  Widget _refresh(BuildContext context, List<String> folders) => IconButton(
+    key: const ValueKey('library-refresh'),
+    tooltip: context.l10n.settingsRescanLibrary,
+    icon: const Icon(AppIcons.rescan),
+    onPressed: folders.isEmpty || ref.watch(scanProvider).running
+        ? null
+        : () => ref.read(scanProvider.notifier).scan(folders),
+  );
+
   @override
   void dispose() {
     _debouncer.cancel();
@@ -415,14 +424,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       : () => _addLibraryFolder(context, ref),
                   icon: const Icon(AppIcons.addFolder),
                 ),
-                IconButton(
-                  key: const ValueKey('library-refresh'),
-                  tooltip: context.l10n.settingsRescanLibrary,
-                  icon: const Icon(AppIcons.rescan),
-                  onPressed: folders.isEmpty || ref.watch(scanProvider).running
-                      ? null
-                      : () => ref.read(scanProvider.notifier).scan(folders),
-                ),
+                _refresh(context, folders),
                 PopupMenuButton<LibrarySort>(
                   tooltip: context.l10n.librarySort,
                   initialValue: view.sort,
@@ -495,12 +497,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(
-            phone ? 16 : 24,
-            phone ? 8 : 16,
-            phone ? 16 : 24,
-            8,
-          ),
+          padding: EdgeInsets.fromLTRB(24, phone ? 8 : 16, 24, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -521,7 +518,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: phone
-                              ? Theme.of(context).textTheme.headlineSmall
+                              ? Theme.of(context).textTheme.headlineLarge
                               : Theme.of(context).textTheme.displayMedium,
                         ),
                         const SizedBox(height: 4),
@@ -546,9 +543,14 @@ class _TopBarState extends ConsumerState<_TopBar> {
                         ),
                       ),
                     ),
+                  if (phone) _refresh(context, folders),
                   if (phone)
-                    IconButton.filled(
+                    IconButton(
                       tooltip: context.l10n.libraryAddFolder,
+                      style: IconButton.styleFrom(
+                        backgroundColor: tokens.container,
+                        foregroundColor: tokens.textPrimary,
+                      ),
                       onPressed: ref.watch(scanProvider).running
                           ? null
                           : () => _addLibraryFolder(context, ref),
@@ -565,27 +567,21 @@ class _TopBarState extends ConsumerState<_TopBar> {
                 ],
               ),
               const SizedBox(height: 12),
-              _buildSearch(),
-              const SizedBox(height: 12),
+              if (!phone) ...[_buildSearch(), const SizedBox(height: 12)],
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      context.l10n.libraryBrowse,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    child: phone
+                        ? _buildSearch()
+                        : Text(
+                            context.l10n.libraryBrowse,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                   ),
-                  IconButton(
-                    key: const ValueKey('library-refresh'),
-                    tooltip: context.l10n.settingsRescanLibrary,
-                    icon: const Icon(AppIcons.rescan),
-                    onPressed:
-                        folders.isEmpty || ref.watch(scanProvider).running
-                        ? null
-                        : () => ref.read(scanProvider.notifier).scan(folders),
-                  ),
+                  if (phone) const SizedBox(width: AppSpacing.xxs),
+                  if (!phone) _refresh(context, folders),
                   PopupMenuButton<LibrarySort>(
                     tooltip: context.l10n.librarySort,
                     initialValue: ref.watch(libraryViewProvider).sort,
@@ -607,20 +603,37 @@ class _TopBarState extends ConsumerState<_TopBar> {
                     ],
                     icon: const Icon(AppIcons.sort),
                   ),
-                  IconButton(
-                    isSelected: !ref.watch(libraryViewProvider).list,
-                    tooltip: context.l10n.libraryGrid,
-                    icon: const Icon(AppIcons.all),
-                    onPressed: () =>
-                        ref.read(libraryViewProvider.notifier).showList(false),
-                  ),
-                  IconButton(
-                    isSelected: ref.watch(libraryViewProvider).list,
-                    tooltip: context.l10n.libraryList,
-                    icon: const Icon(AppIcons.list),
-                    onPressed: () =>
-                        ref.read(libraryViewProvider.notifier).showList(true),
-                  ),
+                  if (phone)
+                    IconButton(
+                      tooltip: ref.watch(libraryViewProvider).list
+                          ? context.l10n.libraryGrid
+                          : context.l10n.libraryList,
+                      icon: AnimatedStateIcon(
+                        ref.watch(libraryViewProvider).list
+                            ? AppIcons.all
+                            : AppIcons.list,
+                      ),
+                      onPressed: () => ref
+                          .read(libraryViewProvider.notifier)
+                          .showList(!ref.read(libraryViewProvider).list),
+                    )
+                  else ...[
+                    IconButton(
+                      isSelected: !ref.watch(libraryViewProvider).list,
+                      tooltip: context.l10n.libraryGrid,
+                      icon: const Icon(AppIcons.all),
+                      onPressed: () => ref
+                          .read(libraryViewProvider.notifier)
+                          .showList(false),
+                    ),
+                    IconButton(
+                      isSelected: ref.watch(libraryViewProvider).list,
+                      tooltip: context.l10n.libraryList,
+                      icon: const Icon(AppIcons.list),
+                      onPressed: () =>
+                          ref.read(libraryViewProvider.notifier).showList(true),
+                    ),
+                  ],
                 ],
               ),
               if (!ref.watch(scanProvider).running &&

@@ -197,7 +197,7 @@ class _StatusMenu extends ConsumerWidget {
     final tokens = context.appTheme;
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStateProperty.all(tokens.cardSurface),
+        backgroundColor: WidgetStateProperty.all(tokens.containerHigh),
         shape: WidgetStateProperty.all(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.lg),
@@ -262,10 +262,9 @@ class _StatusMenu extends ConsumerWidget {
       ],
       builder: (context, controller, child) {
         return Material(
-          color: tokens.surfaceSubtle,
+          color: tokens.container,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.lg),
-            side: BorderSide(color: tokens.borderSubtle),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -301,7 +300,7 @@ class _StatusMenu extends ConsumerWidget {
                             : context.l10n.statusDropped,
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: anime.status == AnimeStatus.planned
                               ? tokens.textPrimary
                               : anime.status == AnimeStatus.watching

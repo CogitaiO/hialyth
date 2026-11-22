@@ -286,6 +286,23 @@ void main() {
         tester.getCenter(find.byIcon(AppIcons.close).first).dx,
         closeTo(size.width - 16 - 23, 1),
       );
+      if (size.width < 600) {
+        final search = find.byType(TextField);
+        final sort = find.byTooltip('Sort library');
+        final list = find.byTooltip('List view');
+        expect(
+          tester.getCenter(search).dy,
+          closeTo(tester.getCenter(sort).dy, 1),
+        );
+        await tester.tap(list);
+        await tester.pumpAndSettle();
+        expect(find.byTooltip('Grid view').hitTestable(), findsOneWidget);
+        await tester.enterText(search, 'Frieren');
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Clear search'));
+        await tester.pumpAndSettle();
+        tester.testTextInput.hide();
+      }
       final navigation = find.byTooltip('Library navigation');
       if (navigation.evaluate().isEmpty) {
         await tester.tap(find.byTooltip('Settings').last);

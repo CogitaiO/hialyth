@@ -143,8 +143,21 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
   @override
   Widget build(BuildContext context) {
     final tokens = context.appTheme;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final titleStyle = theme.textTheme.titleMedium!.copyWith(
+      color: tokens.textPrimary,
+      height: 1.25,
+    );
+    final titleHeight =
+        MediaQuery.textScalerOf(context).scale(titleStyle.fontSize!) *
+        titleStyle.height! *
+        2;
     final active = _isHovered || _isFocused;
+    final watched = widget.anime.episodePaths
+        .toSet()
+        .intersection(widget.anime.watchedEpisodes.toSet())
+        .length;
     final cover = widget.anime.coverUrl;
     final (statusLabel, statusColor) = switch (widget.anime.status) {
       AnimeStatus.planned => (context.l10n.statusPlanned, tokens.statusPlanned),
@@ -193,12 +206,12 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
               curve: AppMotion.enter,
             padding: const EdgeInsets.all(AppSpacing.xs),
             decoration: BoxDecoration(
-              color: active ? tokens.containerHigh : tokens.cardSurface,
+               color: active ? tokens.cardSurface : Colors.transparent,
               borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(
                 color: _isFocused
                     ? scheme.primary
-                    : (active ? tokens.borderStrong : tokens.borderSubtle),
+                     : (active ? tokens.borderSubtle : Colors.transparent),
                 width: 1,
               ),
             ),
@@ -382,27 +395,41 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(
-                  widget.anime.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(color: tokens.textPrimary),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  context.l10n.detailsWatched(
-                    widget.anime.episodePaths.length,
-                    widget.anime.episodePaths
-                        .toSet()
-                        .intersection(widget.anime.watchedEpisodes.toSet())
-                        .length,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                 SizedBox(
+                   height: titleHeight,
+                   child: Text(
+                     widget.anime.title,
+                     maxLines: 2,
+                     overflow: TextOverflow.ellipsis,
+                     style: titleStyle,
+                   ),
+                 ),
+                 const SizedBox(height: AppSpacing.xxs),
+                 Semantics(
+                   label: context.l10n.detailsWatched(
+                     widget.anime.episodePaths.length,
+                     watched,
+                   ),
+                   excludeSemantics: true,
+                   child: Row(
+                     children: [
+                       Icon(
+                         AppIcons.checkCircle,
+                         size: 14,
+                         color: tokens.textMuted,
+                       ),
+                       const SizedBox(width: AppSpacing.xxs),
+                       Flexible(
+                         child: Text(
+                           widget.anime.progressFraction,
+                           maxLines: 1,
+                           overflow: TextOverflow.ellipsis,
+                           style: theme.textTheme.bodySmall,
+                         ),
+                       ),
+                     ],
+                   ),
+                 ),
               ],
             ),
           ),
@@ -416,7 +443,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.appTheme.cardSurface,
+        backgroundColor: context.appTheme.containerHigh,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.xl),
         ),

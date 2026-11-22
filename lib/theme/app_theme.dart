@@ -122,8 +122,8 @@ abstract final class AppTheme {
 
       // Bottom sheets
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: extension.container,
-        modalBackgroundColor: extension.container,
+        backgroundColor: extension.containerHigh,
+        modalBackgroundColor: extension.containerHigh,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(AppRadii.xxl),
@@ -203,6 +203,8 @@ abstract final class AppTheme {
           ? AppSurfaces.contentPrimary
           : Colors.black,
       surfaceContainer: AppSurfaces.container,
+      surfaceContainerLow: AppSurfaces.quiet,
+      surfaceContainerLowest: AppSurfaces.base,
       surfaceContainerHigh: AppSurfaces.containerHigh,
       surfaceContainerHighest: AppSurfaces.hover,
       onSurfaceVariant: brightness == Brightness.dark
@@ -432,9 +434,9 @@ abstract final class AppTheme {
     AppThemeExtension ext,
   ) {
     return DialogThemeData(
-      backgroundColor: ext.container,
+      backgroundColor: ext.containerHigh,
       surfaceTintColor: Colors.transparent,
-      elevation: 0,
+      elevation: 8,
       shadowColor: Colors.black.withValues(alpha: 0.38),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.xxl),
@@ -449,9 +451,9 @@ abstract final class AppTheme {
   static MenuThemeData _menuTheme(ColorScheme scheme, AppThemeExtension ext) {
     return MenuThemeData(
       style: MenuStyle(
-        backgroundColor: WidgetStateProperty.all(ext.container),
+        backgroundColor: WidgetStateProperty.all(ext.containerHigh),
         surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
-        elevation: WidgetStateProperty.all(0),
+        elevation: WidgetStateProperty.all(6),
         shadowColor: WidgetStateProperty.all(
           Colors.black.withValues(alpha: 0.32),
         ),
@@ -474,9 +476,9 @@ abstract final class AppTheme {
     AppThemeExtension ext,
   ) {
     return PopupMenuThemeData(
-      color: ext.container,
+      color: ext.containerHigh,
       surfaceTintColor: Colors.transparent,
-      elevation: 0,
+      elevation: 6,
       shadowColor: Colors.black.withValues(alpha: 0.32),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.lg),
