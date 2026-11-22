@@ -6,10 +6,12 @@ import '../../widgets/escapable.dart';
 import '../../widgets/custom_title_bar.dart';
 import '../../widgets/anime_artwork.dart';
 import '../../theme/app_icons.dart';
+import '../../theme/app_theme_extension.dart';
 import '../../core/localization/l10n.dart';
 import 'widgets/ambient_background.dart';
 import 'widgets/left_control_panel.dart';
 import 'widgets/right_info_panel.dart';
+import 'widgets/sticker_poster.dart';
 
 class AnimeDetailsScreen extends ConsumerWidget {
   const AnimeDetailsScreen({
@@ -91,7 +93,15 @@ class AnimeDetailsScreen extends ConsumerWidget {
                                             accentColor: accent,
                                             showTitle: false,
                                             header: Padding(
-                                              padding: const EdgeInsets.only(
+                                              padding: EdgeInsets.only(
+                                                // Leave room for the lifted
+                                                // corners inside the viewport.
+                                                top:
+                                                    StickerPoster.supportsPlatform(
+                                                      context,
+                                                    )
+                                                    ? AppSpacing.lg
+                                                    : 0,
                                                 bottom: 24,
                                               ),
                                               child: Row(
@@ -103,8 +113,10 @@ class AnimeDetailsScreen extends ConsumerWidget {
                                                     height: 240,
                                                     child: Hero(
                                                       tag: heroTag,
-                                                      child: AnimeArtwork(
-                                                        cover: anime.coverUrl,
+                                                      child: StickerPoster(
+                                                        child: AnimeArtwork(
+                                                          cover: anime.coverUrl,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),

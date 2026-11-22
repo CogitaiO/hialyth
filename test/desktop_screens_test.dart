@@ -174,14 +174,14 @@ void main() {
                 'A journey through memories, friendships, and the passage of time.')
             .join(' ');
       final prefs = await SharedPreferences.getInstance();
-      Widget app(double scale) => ProviderScope(
+       Widget app(double scale) => ProviderScope(
               overrides: [
                 sharedPrefsProvider.overrideWithValue(prefs),
                 animeDetailsProvider(1)
                     .overrideWith((ref) => Stream.value(anime)),
               ],
-              child: MaterialApp(
-                theme: AppTheme.dark(),
+               child: MaterialApp(
+                 theme: AppTheme.dark().copyWith(platform: TargetPlatform.linux),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 builder: (context, child) => MediaQuery(
