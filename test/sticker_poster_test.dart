@@ -44,7 +44,13 @@ void main() {
         final gesture = await tester.startGesture(
           tester.getTopRight(poster) + const Offset(-12, 12),
         );
-        for (var step = 0; step < 9; step++) {
+        await gesture.moveBy(const Offset(0, -4));
+        await tester.pump();
+        expect(
+          tester.widget<Transform>(_transform).transform,
+          isNot(Matrix4.identity()),
+        );
+        for (var step = 0; step < 8; step++) {
           await gesture.moveBy(const Offset(0, -4));
         }
         await tester.pump();

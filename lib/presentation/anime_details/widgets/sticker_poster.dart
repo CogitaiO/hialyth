@@ -153,7 +153,7 @@ class _PeelGestureState extends State<_PeelGesture>
                       },
                     ),
               },
-              child: const SizedBox.square(dimension: 36),
+              child: const SizedBox.square(dimension: 44),
             ),
           ),
       ],
@@ -167,13 +167,12 @@ class _CornerDragRecognizer extends PanGestureRecognizer {
     dragStartBehavior = DragStartBehavior.down;
   }
 
-  // Use the same touch threshold as the enclosing scroll view. A regular pan
-  // has a larger threshold and loses gradual, mostly vertical corner pulls.
+  // A touch on a corner is an explicit grab. Claim it before the enclosing
+  // vertical scroll can turn it into page stretch. Other touches never reach
+  // this recognizer, so normal scrolling and overscroll keep their behavior.
   @override
-  bool hasSufficientGlobalDistanceToAccept(
-    PointerDeviceKind pointerDeviceKind,
-    double? deviceTouchSlop,
-  ) =>
-      globalDistanceMoved.abs() >
-      computeHitSlop(pointerDeviceKind, gestureSettings);
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    resolve(GestureDisposition.accepted);
+  }
 }
