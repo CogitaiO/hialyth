@@ -6,23 +6,23 @@ import 'package:flutter/material.dart';
 abstract final class AppSurfaces {
   // ── Dark base surfaces ──
 
-  /// Ink backdrop; leaves the brightest values to the artwork and text.
-  static const Color base = Color(0xFF15121B);
+  /// Unlit space between content and around the system bars.
+  static const Color base = Colors.black;
 
   /// Navigation chrome, one step above the backdrop.
-  static const Color raised = Color(0xFF1D1825);
+  static const Color raised = Color(0xFF0C0D0E);
 
   /// Recessed/quiet content surfaces, beneath interactive controls.
-  static const Color quiet = Color(0xFF211B29);
+  static const Color quiet = Color(0xFF121415);
 
   /// Fields and control groups.
-  static const Color container = Color(0xFF2A2233);
+  static const Color container = Color(0xFF191B1C);
 
   /// Floating menus and dialogs should remain legible over the content below.
-  static const Color containerHigh = Color(0xFF373043);
+  static const Color containerHigh = Color(0xFF222526);
 
   /// Hover and active surfaces.
-  static const Color hover = Color(0xFF41354D);
+  static const Color hover = Color(0xFF303436);
 
   /// Opaque fallback for overlays when glass is disabled — rgba(10,11,13,0.88)
   static const Color overlay = Color(0xE10A0B0D); // 0.88 alpha
@@ -42,10 +42,10 @@ abstract final class AppSurfaces {
   static const Color borderFaint = Color(0x1AFFFFFF);
 
   /// Subtle dividers.
-  static const Color borderSubtle = Color(0xFF382E44);
+  static const Color borderSubtle = Color(0xFF242729);
 
   /// Outlines that convey focus or a control boundary.
-  static const Color borderStrong = Color(0xFF685B78);
+  static const Color borderStrong = Color(0xFF565C60);
 
   /// Focus ring — accent color (resolved at runtime)
   static Color borderFocus(Color accent) => accent;
@@ -53,16 +53,28 @@ abstract final class AppSurfaces {
   // ── Content ──
 
   /// Primary text.
-  static const Color contentPrimary = Color(0xFFF7F2FA);
+  static const Color contentPrimary = Color(0xFFF1F2F2);
 
   /// Secondary text.
-  static const Color contentSecondary = Color(0xFFCBC1D3);
+  static const Color contentSecondary = Color(0xFFC2C7C9);
 
   /// Metadata and input hints.
-  static const Color contentMuted = Color(0xFFA89BB5);
+  static const Color contentMuted = Color(0xFFA0A8AC);
 
   /// Disabled text — #58606B
   static const Color contentDisabled = Color(0xFF58606B);
+
+  /// A pale ink of the same hue for icons and text on tinted dark controls.
+  static Color accentInk(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    return hsl
+        .withSaturation(hsl.saturation.clamp(0.0, .46))
+        .withLightness(.77)
+        .toColor();
+  }
+
+  static Color controlSurface(Color color, Color background) =>
+      artworkWash(color, background, strength: .31);
 
   /// Lifts a surface with the artwork's hue without competing with white text.
   static Color artworkWash(

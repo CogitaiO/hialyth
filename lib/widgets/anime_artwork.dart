@@ -22,10 +22,12 @@ class AnimeArtwork extends StatelessWidget {
         child: cover == null || cover!.isEmpty
             ? placeholder
             : cover!.startsWith('http')
-                ? CachedNetworkImage(
-                    imageUrl: cover!,
-                    fit: BoxFit.cover,
-                    memCacheWidth: cacheWidth,
+                 ? CachedNetworkImage(
+                     imageUrl: cover!,
+                     fit: BoxFit.cover,
+                     memCacheWidth: cacheWidth,
+                     fadeInDuration: Duration.zero,
+                     fadeOutDuration: Duration.zero,
                     placeholder: (_, _) => placeholder,
                     errorWidget: (_, _, _) => placeholder)
                 : cover!.startsWith('asset:')

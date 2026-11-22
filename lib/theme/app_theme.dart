@@ -12,8 +12,21 @@ abstract final class AppTheme {
   /// Builds the dark theme with the given accent color.
   /// [accent] defaults to [AppPalette.fallbackAccent] (Iris).
   static ThemeData dark({Color accent = AppPalette.fallbackAccent}) {
-    final scheme = _buildColorScheme(accent, Brightness.dark);
-    final extension = AppThemeExtension.dark();
+    const base = AppThemeExtension.dark();
+    final extension = base.copyWith(
+      cardSurface: AppSurfaces.artworkWash(
+        accent,
+        base.cardSurface,
+        strength: .04,
+      ),
+      container: AppSurfaces.artworkWash(accent, base.container, strength: .07),
+      containerHigh: AppSurfaces.artworkWash(
+        accent,
+        base.containerHigh,
+        strength: .10,
+      ),
+    );
+    final scheme = _buildColorScheme(accent, Brightness.dark, extension);
 
     return ThemeData(
       brightness: Brightness.dark,
@@ -82,6 +95,20 @@ abstract final class AppTheme {
 
       // Chips
       chipTheme: _chipTheme(scheme, extension),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) return null;
+          return states.contains(WidgetState.selected)
+              ? AppSurfaces.accentInk(accent)
+              : extension.textMuted;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) return null;
+          return states.contains(WidgetState.selected)
+              ? AppSurfaces.controlSurface(accent, extension.containerHigh)
+              : extension.container;
+        }),
+      ),
 
       // Sliders
       sliderTheme: _sliderTheme(scheme, extension),
@@ -176,7 +203,11 @@ abstract final class AppTheme {
   // ColorScheme construction
   // ──────────────────────────────────────────────────────────────
 
-  static ColorScheme _buildColorScheme(Color accent, Brightness brightness) {
+  static ColorScheme _buildColorScheme(
+    Color accent,
+    Brightness brightness,
+    AppThemeExtension surfaces,
+  ) {
     final onAccent = AppPalette.onAccent(accent);
     final base = brightness == Brightness.dark
         ? AppSurfaces.base
@@ -202,10 +233,10 @@ abstract final class AppTheme {
       onSurface: brightness == Brightness.dark
           ? AppSurfaces.contentPrimary
           : Colors.black,
-      surfaceContainer: AppSurfaces.container,
+      surfaceContainer: surfaces.container,
       surfaceContainerLow: AppSurfaces.quiet,
       surfaceContainerLowest: AppSurfaces.base,
-      surfaceContainerHigh: AppSurfaces.containerHigh,
+      surfaceContainerHigh: surfaces.containerHigh,
       surfaceContainerHighest: AppSurfaces.hover,
       onSurfaceVariant: brightness == Brightness.dark
           ? AppSurfaces.contentMuted
@@ -495,13 +526,19 @@ abstract final class AppTheme {
     return ChipThemeData(
       backgroundColor: ext.container,
       disabledColor: ext.surfaceDisabled,
-      selectedColor: scheme.primaryContainer,
-      secondarySelectedColor: scheme.primaryContainer,
+      selectedColor: AppSurfaces.controlSurface(
+        scheme.primary,
+        ext.cardSurface,
+      ),
+      secondarySelectedColor: AppSurfaces.controlSurface(
+        scheme.primary,
+        ext.cardSurface,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       labelPadding: const EdgeInsets.symmetric(horizontal: 8),
       labelStyle: AppTypography.label.copyWith(color: ext.textPrimary),
       secondaryLabelStyle: AppTypography.label.copyWith(
-        color: scheme.onPrimaryContainer,
+        color: AppSurfaces.accentInk(scheme.primary),
       ),
       brightness: Brightness.dark,
       elevation: 0,

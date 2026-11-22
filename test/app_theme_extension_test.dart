@@ -4,6 +4,7 @@ import 'package:nekaido_pre/theme/app_palette.dart';
 import 'package:nekaido_pre/theme/app_breakpoints.dart';
 import 'package:nekaido_pre/theme/app_motion.dart';
 import 'package:nekaido_pre/theme/app_surfaces.dart';
+import 'package:nekaido_pre/theme/app_theme.dart';
 import 'package:nekaido_pre/theme/app_theme_extension.dart';
 import 'package:nekaido_pre/theme/app_typography.dart';
 
@@ -104,6 +105,28 @@ void main() {
           (theme.textSecondary.computeLuminance() + .05) /
               (wash.computeLuminance() + .05),
           greaterThanOrEqualTo(4.5),
+        );
+      }
+    });
+
+    test('an accent only tints controls; the page remains pure black', () {
+      final teal = AppTheme.dark(accent: Colors.teal);
+      final plum = AppTheme.dark(accent: Colors.purple);
+      expect(teal.scaffoldBackgroundColor, Colors.black);
+      expect(plum.scaffoldBackgroundColor, Colors.black);
+      expect(
+        teal.colorScheme.surfaceContainer,
+        isNot(plum.colorScheme.surfaceContainer),
+      );
+      for (final states in [
+        <WidgetState>{},
+        {WidgetState.selected},
+      ]) {
+        final thumb = teal.switchTheme.thumbColor!.resolve(states)!;
+        final track = teal.switchTheme.trackColor!.resolve(states)!;
+        expect(
+          (thumb.computeLuminance() + .05) / (track.computeLuminance() + .05),
+          greaterThan(3),
         );
       }
     });

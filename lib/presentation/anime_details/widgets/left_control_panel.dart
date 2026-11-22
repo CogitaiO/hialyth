@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/animated_state_icon.dart';
 import '../../../theme/app_motion.dart';
+import '../../../theme/app_surfaces.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/anime.dart';
@@ -51,6 +52,7 @@ class LeftControlPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
+    final ink = AppSurfaces.accentInk(accentColor);
     final sortedEpisodes = anime.sortedEpisodes;
     final nextEpisodePath =
         anime.nextEpisodeToPlay ??
@@ -83,10 +85,17 @@ class LeftControlPanel extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               backgroundColor: isAllWatched
                   ? tokens.surfaceDisabled
-                  : accentColor,
-              foregroundColor: isAllWatched
-                  ? tokens.textPrimary
-                  : Theme.of(context).colorScheme.onPrimary,
+                  : AppSurfaces.controlSurface(accentColor, tokens.cardSurface),
+              foregroundColor: isAllWatched ? tokens.textPrimary : ink,
+              side: isAllWatched
+                  ? BorderSide.none
+                  : BorderSide(
+                      color: AppSurfaces.artworkWash(
+                        accentColor,
+                        tokens.borderStrong,
+                        strength: .22,
+                      ),
+                    ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppRadii.lg),
               ),
@@ -136,7 +145,7 @@ class LeftControlPanel extends ConsumerWidget {
                             context,
                             ref,
                             anime,
-                            accentColor,
+                            ink,
                           ),
                         ),
                       ),
@@ -169,7 +178,7 @@ class LeftControlPanel extends ConsumerWidget {
                       context,
                       ref,
                       anime,
-                      accentColor,
+                      ink,
                     ),
                   ),
                 ),
@@ -262,7 +271,11 @@ class _StatusMenu extends ConsumerWidget {
       ],
       builder: (context, controller, child) {
         return Material(
-          color: tokens.container,
+          color: AppSurfaces.artworkWash(
+            accentColor,
+            tokens.cardSurface,
+            strength: .12,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.lg),
           ),
@@ -401,10 +414,19 @@ class _MoreMenu extends ConsumerWidget {
             AnimeDialogs.openFolderInOs(anime.folderPath);
           }
           if (value == 'edit') {
-            AnimeDialogs.showEditDialog(context, ref, anime, accentColor);
+            AnimeDialogs.showEditDialog(
+              context,
+              ref,
+              anime,
+              AppSurfaces.accentInk(accentColor),
+            );
           }
           if (value == 'stats') {
-            AnimeDialogs.showAnimeStatsDialog(context, anime, accentColor);
+            AnimeDialogs.showAnimeStatsDialog(
+              context,
+              anime,
+              AppSurfaces.accentInk(accentColor),
+            );
           }
           if (value == 'mark_all') {
             await ref.read(animeRepoProvider).markAllEpisodesWatched(anime.id);
@@ -458,7 +480,12 @@ class _HoverButtonState extends State<_HoverButton> {
             ),
             height: AppSpacing.s48,
             decoration: BoxDecoration(
-              color: isHovered ? widget.accentColor : tokens.surfaceSubtle,
+              color: isHovered
+                  ? AppSurfaces.controlSurface(
+                      widget.accentColor,
+                      tokens.cardSurface,
+                    )
+                  : tokens.surfaceSubtle,
               borderRadius: BorderRadius.circular(AppRadii.lg),
               border: Border.all(
                 color: isHovered ? widget.accentColor : tokens.borderSubtle,
@@ -466,7 +493,7 @@ class _HoverButtonState extends State<_HoverButton> {
             ),
             child: Icon(
               widget.icon,
-              color: isHovered ? tokens.textPrimary : tokens.textSecondary,
+              color: AppSurfaces.accentInk(widget.accentColor),
               size: 24,
             ),
           ),

@@ -244,7 +244,9 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                             CachedNetworkImage(
                               imageUrl: cover,
                               fit: BoxFit.cover,
-                              memCacheWidth: 440,
+                               memCacheWidth: 440,
+                               fadeInDuration: Duration.zero,
+                               fadeOutDuration: Duration.zero,
                               placeholder: (_, _) => placeholder,
                               errorWidget: (_, _, _) => placeholder,
                             )

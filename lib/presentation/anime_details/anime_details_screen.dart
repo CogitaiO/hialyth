@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/app_features.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/color_provider.dart';
 import '../../widgets/escapable.dart';
@@ -57,19 +58,25 @@ class AnimeDetailsScreen extends ConsumerWidget {
                         child: Text(context.l10n.detailsTitleNotFound),
                       );
                     }
-                    final ambient =
-                        ref.watch(animeColorProvider(anime)).valueOrNull ??
-                        Theme.of(context).colorScheme.primary;
-                    final accent = Theme.of(context).colorScheme.primary;
+                    final ambient = AppFeatures.designV2
+                        ? ref.watch(
+                            animeColorProvider(
+                              anime,
+                            ).select((color) => color.valueOrNull),
+                          )
+                        : null;
+                    final accent =
+                        ambient ?? Theme.of(context).colorScheme.primary;
                     return Stack(
                       children: [
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          height: 440,
-                          child: AmbientBackground(color: ambient),
-                        ),
+                        if (ambient != null)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 440,
+                            child: AmbientBackground(color: ambient),
+                          ),
                         Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 1200),

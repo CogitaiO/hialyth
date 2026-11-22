@@ -9,6 +9,7 @@ import '../../../../utils/os_utils.dart';
 import '../../player/player_screen.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_motion.dart';
+import '../../../theme/app_surfaces.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
 
@@ -101,6 +102,9 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           minimumSize: const Size(0, 44),
+                          foregroundColor: AppSurfaces.accentInk(
+                            widget.accentColor,
+                          ),
                         ),
                         onPressed: () => setState(() => expanded = !expanded),
                         child: Text(
@@ -133,6 +137,7 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
             anime: anime,
             path: paths[index],
             number: index + 1,
+            accentColor: widget.accentColor,
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -169,10 +174,12 @@ class EpisodeRow extends ConsumerStatefulWidget {
     required this.anime,
     required this.path,
     required this.number,
+    required this.accentColor,
   });
   final Anime anime;
   final String path;
   final int number;
+  final Color accentColor;
   @override
   ConsumerState<EpisodeRow> createState() => _EpisodeRowState();
 }
@@ -247,7 +254,7 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
                   ? context.appTheme.warning
                   : watched
                   ? context.appTheme.success
-                  : Theme.of(context).colorScheme.primary,
+                  : AppSurfaces.accentInk(widget.accentColor),
             ),
             title: Text(context.l10n.detailsEpisodeNumber(widget.number)),
             subtitle: Column(

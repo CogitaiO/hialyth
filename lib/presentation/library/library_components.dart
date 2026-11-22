@@ -81,8 +81,10 @@ class ContinueWatchingCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final ambient = anime.ambientColorValue;
+    final accent = ambient == null ? scheme.primary : Color(ambient);
+    final ink = AppSurfaces.accentInk(accent);
     final printColor = AppSurfaces.artworkWash(
-      ambient == null ? scheme.primary : Color(ambient),
+      accent,
       colors.cardSurface,
       strength: .32,
     );
@@ -151,6 +153,7 @@ class ContinueWatchingCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 3,
+                          color: ink,
                           backgroundColor: colors.borderSubtle,
                         ),
                       ),
@@ -184,8 +187,11 @@ class ContinueWatchingCard extends StatelessWidget {
                             ),
                             style: FilledButton.styleFrom(
                               minimumSize: Size.zero,
-                              backgroundColor: colors.containerHigh,
-                              foregroundColor: colors.textPrimary,
+                              backgroundColor: AppSurfaces.controlSurface(
+                                accent,
+                                colors.cardSurface,
+                              ),
+                              foregroundColor: ink,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
                               ),
