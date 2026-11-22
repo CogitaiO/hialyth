@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_surfaces.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
@@ -145,6 +146,10 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
     final tokens = context.appTheme;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final swatch = widget.anime.ambientColorValue;
+    final progressInk = AppSurfaces.accentInk(
+      swatch == null ? scheme.primary : Color(swatch),
+    );
     final titleStyle = theme.textTheme.titleMedium!.copyWith(
       color: tokens.textPrimary,
       height: 1.25,
@@ -387,7 +392,7 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                               child: LinearProgressIndicator(
                                 value: widget.anime.watchProgress.clamp(0, 1),
                                 minHeight: 3,
-                                color: scheme.primary,
+                                 color: progressInk,
                                 backgroundColor: tokens.surfaceOverlay,
                               ),
                             ),

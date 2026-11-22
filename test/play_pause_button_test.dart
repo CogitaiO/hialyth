@@ -31,7 +31,7 @@ void main() {
       const key = ValueKey('play');
       await tester.pumpWidget(
         MaterialApp(
-          theme: AppTheme.dark(),
+          theme: AppTheme.dark(accent: Colors.green),
           home: Scaffold(
             body: Center(
               child: PlayPauseButton(
@@ -51,19 +51,23 @@ void main() {
       await tester.pump();
       await tester.pump(AppMotion.pressIn);
       expect(taps, 0);
-      expect(decoration(tester, button).gradient, isNot(idle.gradient));
+      final pressed = decoration(tester, button);
+      expect(idle.color, Colors.black54);
+      expect(pressed.color, isNot(idle.color));
+      expect(pressed.color!.r, pressed.color!.g);
+      expect(pressed.color!.g, pressed.color!.b);
+      expect(pressed.boxShadow, isNull);
       expect(
-        decoration(tester, button).boxShadow!.single.color.a,
-        greaterThan(idle.boxShadow!.single.color.a),
+        (pressed.border as Border).top.color.a,
+        greaterThan((idle.border as Border).top.color.a),
       );
-      expect(decoration(tester, button).border, isNull);
       expect(scale(tester, button), closeTo(.97, .001));
       expect(tester.getSize(button), size);
       await gesture.up();
       expect(taps, 1);
       await tester.pumpAndSettle(const Duration(milliseconds: 120));
       expect(scale(tester, button), 1);
-      expect(decoration(tester, button).gradient, idle.gradient);
+      expect(decoration(tester, button).color, idle.color);
       final cancelled = await tester.startGesture(tester.getCenter(button));
       await tester.pump(AppMotion.pressIn);
       await cancelled.cancel();
@@ -133,10 +137,10 @@ void main() {
       final gesture = await tester.startGesture(tester.getCenter(button));
       await tester.pump();
       expect(scale(tester, button), 1);
-      expect(decoration(tester, button).gradient, isNot(idle.gradient));
+      expect(decoration(tester, button).color, isNot(idle.color));
       await gesture.up();
       await tester.pump();
-      expect(decoration(tester, button).gradient, idle.gradient);
+      expect(decoration(tester, button).color, idle.color);
     },
   );
 

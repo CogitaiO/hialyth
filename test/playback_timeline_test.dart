@@ -5,7 +5,7 @@ import 'package:nekaido_pre/presentation/player/widgets/playback_timeline.dart';
 
 void main() {
   testWidgets(
-    'mobile timeline uses the theme accent and seeks on release',
+    'mobile timeline stays neutral and seeks on release',
     (tester) async {
       Duration? sought;
       await tester.pumpWidget(
@@ -25,9 +25,8 @@ void main() {
       final finder = find.byType(Slider);
       final theme = SliderTheme.of(tester.element(finder));
       expect(theme.trackHeight, 4);
-      final accent = Theme.of(tester.element(finder)).colorScheme.primary;
-      expect(theme.activeTrackColor, accent);
-      expect(theme.thumbColor, accent);
+      expect(theme.activeTrackColor, Colors.white);
+      expect(theme.thumbColor, Colors.white);
       expect(
         (theme.thumbShape! as RoundSliderThumbShape).enabledThumbRadius,
         6,

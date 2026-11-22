@@ -218,6 +218,11 @@ class AnimeListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appTheme;
+    final progress = anime.watchProgress.clamp(0.0, 1.0);
+    final swatch = anime.ambientColorValue;
+    final progressInk = AppSurfaces.accentInk(
+      swatch == null ? Theme.of(context).colorScheme.primary : Color(swatch),
+    );
     final status = switch (anime.status) {
       AnimeStatus.planned => context.l10n.statusPlanned,
       AnimeStatus.watching => context.l10n.statusWatching,
@@ -262,19 +267,25 @@ class AnimeListTile extends StatelessWidget {
                         '$status · ${anime.progressFraction}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(
-                        value: anime.watchProgress.clamp(0, 1),
-                        minHeight: 3,
-                      ),
+                      if (progress > 0) ...[
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 3,
+                          color: progressInk,
+                          backgroundColor: colors.borderSubtle,
+                        ),
+                      ],
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  anime.progressPercentage,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
+                if (progress > 0) ...[
+                  const SizedBox(width: 16),
+                  Text(
+                    anime.progressPercentage,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ],
               ],
             ),
           ),

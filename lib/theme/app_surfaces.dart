@@ -76,6 +76,10 @@ abstract final class AppSurfaces {
   static Color controlSurface(Color color, Color background) =>
       artworkWash(color, background, strength: .31);
 
+  /// Floating surfaces on a title page should not inherit the app-wide hue.
+  static Color artworkMenu(Color color) =>
+      artworkWash(color, containerHigh, strength: .19);
+
   /// Lifts a surface with the artwork's hue without competing with white text.
   static Color artworkWash(
     Color artwork,

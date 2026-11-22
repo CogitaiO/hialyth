@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../widgets/animated_state_icon.dart';
 import '../../../theme/app_motion.dart';
 import '../../../theme/app_surfaces.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/anime.dart';
-import '../../../../data/services/android_documents.dart';
 import '../../../../widgets/anime_artwork.dart';
 import '../../../../providers/repositories_provider.dart';
-import '../../player/player_screen.dart';
 import '../dialogs/anime_dialogs.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_theme_extension.dart';
@@ -28,39 +25,9 @@ class LeftControlPanel extends ConsumerWidget {
     this.showPoster = true,
   });
 
-  Future<void> _playEpisode(BuildContext context, String path) async {
-    final exists = await AndroidDocuments.exists(path);
-    if (!context.mounted) return;
-    if (!exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.detailsMissingFile),
-          backgroundColor: context.appTheme.destructive,
-        ),
-      );
-      return;
-    }
-    Navigator.push(
-      context,
-      AppMotion.pageRoute(
-        context,
-        builder: (context) => PlayerScreen(animeId: anime.id, videoPath: path),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tokens = context.appTheme;
     final ink = AppSurfaces.accentInk(accentColor);
-    final sortedEpisodes = anime.sortedEpisodes;
-    final nextEpisodePath =
-        anime.nextEpisodeToPlay ??
-        (sortedEpisodes.isNotEmpty ? sortedEpisodes.first : '');
-    final nextEpisodeIndex = sortedEpisodes.isNotEmpty
-        ? sortedEpisodes.indexOf(nextEpisodePath) + 1
-        : 0;
-    final isAllWatched = anime.nextEpisodeToPlay == null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -78,54 +45,6 @@ class LeftControlPanel extends ConsumerWidget {
             ),
           ),
         if (showPoster) const SizedBox(height: AppSpacing.lg),
-        if (sortedEpisodes.isNotEmpty)
-          ElevatedButton(
-            onPressed: () => _playEpisode(context, nextEpisodePath),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              backgroundColor: isAllWatched
-                  ? tokens.surfaceDisabled
-                  : AppSurfaces.controlSurface(accentColor, tokens.cardSurface),
-              foregroundColor: isAllWatched ? tokens.textPrimary : ink,
-              side: isAllWatched
-                  ? BorderSide.none
-                  : BorderSide(
-                      color: AppSurfaces.artworkWash(
-                        accentColor,
-                        tokens.borderStrong,
-                        strength: .22,
-                      ),
-                    ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.lg),
-              ),
-              elevation: 0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedStateIcon(
-                  isAllWatched ? AppIcons.replay : AppIcons.play,
-                  size: 26,
-                ),
-                Transform.translate(
-                  offset: const Offset(0, -1.5),
-                  child: Text(
-                    isAllWatched
-                        ? context.l10n.detailsReplay
-                        : context.l10n.detailsEpisodeNumber(nextEpisodeIndex),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      height: 1.1,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-              ],
-            ),
-          ),
-        const SizedBox(height: AppSpacing.sm),
         LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth < 240) {
@@ -201,12 +120,22 @@ class _StatusMenu extends ConsumerWidget {
   final Color accentColor;
   const _StatusMenu({required this.anime, required this.accentColor});
 
+  String _label(BuildContext context, AnimeStatus status) => switch (status) {
+    AnimeStatus.planned => context.l10n.statusPlanned,
+    AnimeStatus.watching => context.l10n.statusWatching,
+    AnimeStatus.completed => context.l10n.statusCompleted,
+    AnimeStatus.dropped => context.l10n.statusDropped,
+  };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
+    final ink = AppSurfaces.accentInk(accentColor);
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStateProperty.all(tokens.containerHigh),
+        backgroundColor: WidgetStateProperty.all(
+          AppSurfaces.artworkMenu(accentColor),
+        ),
         shape: WidgetStateProperty.all(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.lg),
@@ -214,66 +143,36 @@ class _StatusMenu extends ConsumerWidget {
         ),
       ),
       menuChildren: [
-        MenuItemButton(
-          onPressed: () => ref
-              .read(animeRepoProvider)
-              .updateStatus(anime.id, AnimeStatus.planned),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.xs,
-              horizontal: AppSpacing.md,
+        for (final status in AnimeStatus.values)
+          MenuItemButton(
+            leadingIcon: status == anime.status
+                ? Icon(AppIcons.checkCircle, color: ink, size: 18)
+                : const SizedBox.square(dimension: 18),
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith(
+                (states) =>
+                    states.contains(WidgetState.hovered) ||
+                        states.contains(WidgetState.focused) ||
+                        states.contains(WidgetState.pressed)
+                    ? AppSurfaces.controlSurface(accentColor, AppSurfaces.quiet)
+                    : Colors.transparent,
+              ),
             ),
+            onPressed: () =>
+                ref.read(animeRepoProvider).updateStatus(anime.id, status),
             child: Text(
-              context.l10n.statusPlanned,
-              style: TextStyle(color: tokens.textPrimary),
+              _label(context, status),
+              style: TextStyle(
+                color: status == anime.status ? ink : tokens.textPrimary,
+              ),
             ),
           ),
-        ),
-        MenuItemButton(
-          onPressed: () => ref
-              .read(animeRepoProvider)
-              .updateStatus(anime.id, AnimeStatus.watching),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.xs,
-              horizontal: AppSpacing.md,
-            ),
-            child: Text(
-              context.l10n.statusWatching,
-              style: TextStyle(color: tokens.info),
-            ),
-          ),
-        ),
-        MenuItemButton(
-          onPressed: () => ref
-              .read(animeRepoProvider)
-              .updateStatus(anime.id, AnimeStatus.completed),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.xs,
-              horizontal: AppSpacing.md,
-            ),
-            child: Text(
-              context.l10n.statusCompleted,
-              style: TextStyle(color: tokens.success),
-            ),
-          ),
-        ),
-        MenuItemButton(
-          onPressed: () => ref
-              .read(animeRepoProvider)
-              .updateStatus(anime.id, AnimeStatus.dropped),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: Text(context.l10n.statusDropped),
-          ),
-        ),
       ],
       builder: (context, controller, child) {
         return Material(
           color: AppSurfaces.artworkWash(
             accentColor,
-            tokens.cardSurface,
+            AppSurfaces.quiet,
             strength: .12,
           ),
           shape: RoundedRectangleBorder(
@@ -304,23 +203,11 @@ class _StatusMenu extends ConsumerWidget {
                       switchInCurve: AppMotion.enter,
                       child: Text(
                         key: ValueKey(anime.status),
-                        anime.status == AnimeStatus.planned
-                            ? context.l10n.statusPlanned
-                            : anime.status == AnimeStatus.watching
-                            ? context.l10n.statusWatching
-                            : anime.status == AnimeStatus.completed
-                            ? context.l10n.statusCompleted
-                            : context.l10n.statusDropped,
+                        _label(context, anime.status),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: anime.status == AnimeStatus.planned
-                              ? tokens.textPrimary
-                              : anime.status == AnimeStatus.watching
-                              ? tokens.info
-                              : anime.status == AnimeStatus.completed
-                              ? tokens.success
-                              : Theme.of(context).colorScheme.primary,
+                          color: ink,
                         ),
                       ),
                     ),
@@ -370,73 +257,64 @@ class _MoreMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tokens = context.appTheme;
-    return Theme(
-      data: Theme.of(context).copyWith(
-        popupMenuTheme: PopupMenuThemeData(
-          color: tokens.cardSurface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-          ),
+    return PopupMenuButton<String>(
+      color: AppSurfaces.artworkMenu(accentColor),
+      tooltip: context.l10n.detailsMoreOptions,
+      offset: const Offset(0, 50),
+      itemBuilder: (context) => [
+        _menuItem(
+          tokens,
+          'stats',
+          AppIcons.stats,
+          context.l10n.detailsStatistics,
         ),
-      ),
-      child: PopupMenuButton<String>(
-        tooltip: context.l10n.detailsMoreOptions,
-        offset: const Offset(0, 50),
-        itemBuilder: (context) => [
-          _menuItem(
-            tokens,
-            'stats',
-            AppIcons.stats,
-            context.l10n.detailsStatistics,
-          ),
-          _menuItem(
-            tokens,
-            'mark_all',
-            AppIcons.doneAll,
-            context.l10n.detailsMarkAllWatched,
-          ),
-          _menuItem(
-            tokens,
-            'folder',
-            AppIcons.folderOpen,
-            context.l10n.detailsOpenFolderInManager,
-          ),
-          const PopupMenuDivider(),
-          _menuItem(
-            tokens,
-            'edit',
-            AppIcons.edit,
-            context.l10n.detailsEditPoster,
-          ),
-        ],
-        onSelected: (value) async {
-          if (value == 'folder') {
-            AnimeDialogs.openFolderInOs(anime.folderPath);
-          }
-          if (value == 'edit') {
-            AnimeDialogs.showEditDialog(
-              context,
-              ref,
-              anime,
-              AppSurfaces.accentInk(accentColor),
-            );
-          }
-          if (value == 'stats') {
-            AnimeDialogs.showAnimeStatsDialog(
-              context,
-              anime,
-              AppSurfaces.accentInk(accentColor),
-            );
-          }
-          if (value == 'mark_all') {
-            await ref.read(animeRepoProvider).markAllEpisodesWatched(anime.id);
-          }
-        },
-        child: _HoverButton(
-          icon: AppIcons.more,
-          tooltip: context.l10n.detailsOptions,
-          accentColor: accentColor,
+        _menuItem(
+          tokens,
+          'mark_all',
+          AppIcons.doneAll,
+          context.l10n.detailsMarkAllWatched,
         ),
+        _menuItem(
+          tokens,
+          'folder',
+          AppIcons.folderOpen,
+          context.l10n.detailsOpenFolderInManager,
+        ),
+        const PopupMenuDivider(),
+        _menuItem(
+          tokens,
+          'edit',
+          AppIcons.edit,
+          context.l10n.detailsEditPoster,
+        ),
+      ],
+      onSelected: (value) async {
+        if (value == 'folder') {
+          AnimeDialogs.openFolderInOs(anime.folderPath);
+        }
+        if (value == 'edit') {
+          AnimeDialogs.showEditDialog(
+            context,
+            ref,
+            anime,
+            AppSurfaces.accentInk(accentColor),
+          );
+        }
+        if (value == 'stats') {
+          AnimeDialogs.showAnimeStatsDialog(
+            context,
+            anime,
+            AppSurfaces.accentInk(accentColor),
+          );
+        }
+        if (value == 'mark_all') {
+          await ref.read(animeRepoProvider).markAllEpisodesWatched(anime.id);
+        }
+      },
+      child: _HoverButton(
+        icon: AppIcons.more,
+        tooltip: context.l10n.detailsOptions,
+        accentColor: accentColor,
       ),
     );
   }
@@ -483,7 +361,7 @@ class _HoverButtonState extends State<_HoverButton> {
               color: isHovered
                   ? AppSurfaces.controlSurface(
                       widget.accentColor,
-                      tokens.cardSurface,
+                      AppSurfaces.quiet,
                     )
                   : tokens.surfaceSubtle,
               borderRadius: BorderRadius.circular(AppRadii.lg),

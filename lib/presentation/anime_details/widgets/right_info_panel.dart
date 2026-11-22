@@ -68,7 +68,16 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
                   ),
                   if (anime.folderPath != null)
                     ActionChip(
-                      avatar: const Icon(AppIcons.folder, size: 16),
+                      avatar: Icon(
+                        AppIcons.folder,
+                        size: 16,
+                        color: AppSurfaces.accentInk(widget.accentColor),
+                      ),
+                      backgroundColor: AppSurfaces.artworkWash(
+                        widget.accentColor,
+                        AppSurfaces.quiet,
+                        strength: .12,
+                      ),
                       label: Text(context.l10n.detailsOpenFolder),
                       onPressed: () => OSUtils.openFolder(anime.folderPath),
                     ),
@@ -236,7 +245,13 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
           border: Border(bottom: BorderSide(color: tokens.borderSubtle)),
         ),
         child: Material(
-          color: hasResume ? tokens.cardSurface : Colors.transparent,
+          color: hasResume
+              ? AppSurfaces.artworkWash(
+                  widget.accentColor,
+                  AppSurfaces.quiet,
+                  strength: .12,
+                )
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(hasResume ? AppRadii.md : 0),
           clipBehavior: Clip.antiAlias,
           child: ListTile(
@@ -252,8 +267,6 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
                   : AppIcons.playCircleOutline,
               color: missing
                   ? context.appTheme.warning
-                  : watched
-                  ? context.appTheme.success
                   : AppSurfaces.accentInk(widget.accentColor),
             ),
             title: Text(context.l10n.detailsEpisodeNumber(widget.number)),
@@ -276,6 +289,7 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
             ),
             onTap: missing ? null : play,
             trailing: PopupMenuButton<String>(
+              color: AppSurfaces.artworkMenu(widget.accentColor),
               icon: const Icon(AppIcons.more),
               tooltip: context.l10n.detailsMoreOptions,
               onSelected: (value) {
