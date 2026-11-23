@@ -4,6 +4,7 @@ import 'dart:io';
 import '../data/services/android_documents.dart';
 import '../core/app_features.dart';
 import 'library/library_components.dart';
+import 'library/library_drawer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
@@ -17,6 +18,7 @@ import '../widgets/media_card.dart';
 import '../widgets/custom_title_bar.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_breakpoints.dart';
+import '../theme/app_surfaces.dart';
 import '../domain/anime.dart';
 import '../theme/app_theme_extension.dart';
 import '../theme/app_motion.dart';
@@ -76,9 +78,13 @@ class LibraryScreen extends ConsumerWidget {
           builder: (context, constraints) {
             final compact = constraints.maxWidth < AppBreakpoints.compact;
             return Scaffold(
-              drawer: compact
-                  ? const Drawer(child: LibraryNavigation(expanded: true))
+              drawer: compact ? const LibraryDrawer() : null,
+              // Keep the stock Back strip free, but make the pull-out target
+              // comfortable instead of a 20 px guessing game.
+              drawerEdgeDragWidth: compact
+                  ? (constraints.maxWidth * .2).clamp(56.0, 96.0)
                   : null,
+              drawerScrimColor: Colors.black.withValues(alpha: .62),
               body: SafeArea(
                 child: Column(
                   children: [
@@ -342,32 +348,59 @@ class _TopBarState extends ConsumerState<_TopBar> {
   final _debouncer = Debouncer(milliseconds: 300);
   final _searchController = TextEditingController();
 
-  Widget _buildSearch() => TextField(
-    controller: _searchController,
-    focusNode: ref.watch(librarySearchFocusProvider),
-    onChanged: (value) {
-      setState(() {});
-      _debouncer.run(() {
-        if (mounted) ref.read(searchQueryProvider.notifier).state = value;
-      });
-    },
-    decoration: InputDecoration(
-      hintText: context.l10n.librarySearchHint,
-      prefixIcon: const Icon(AppIcons.search),
-      suffixIcon: _searchController.text.isEmpty
-          ? null
-          : IconButton(
-              tooltip: context.l10n.libraryClearSearch,
-              icon: const Icon(AppIcons.close),
-              onPressed: () {
-                _debouncer.cancel();
-                _searchController.clear();
-                ref.read(searchQueryProvider.notifier).state = '';
-                setState(() {});
-              },
-            ),
-    ),
-  );
+  Widget _buildSearch({bool phone = false}) {
+    final tokens = context.appTheme;
+    final scheme = Theme.of(context).colorScheme;
+    return TextField(
+      controller: _searchController,
+      focusNode: ref.watch(librarySearchFocusProvider),
+      onChanged: (value) {
+        setState(() {});
+        _debouncer.run(() {
+          if (mounted) ref.read(searchQueryProvider.notifier).state = value;
+        });
+      },
+      style: phone ? Theme.of(context).textTheme.bodyLarge : null,
+      decoration: InputDecoration(
+        hintText: context.l10n.librarySearchHint,
+        prefixIcon: Icon(
+          AppIcons.search,
+          size: phone ? 21 : null,
+          color: tokens.textMuted,
+        ),
+        filled: true,
+        fillColor: tokens.container,
+        contentPadding: phone ? const EdgeInsets.symmetric(vertical: 14) : null,
+        enabledBorder: phone
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+                borderSide: BorderSide.none,
+              )
+            : null,
+        focusedBorder: phone
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+                borderSide: BorderSide(
+                  color: scheme.primary.withValues(alpha: .7),
+                  width: 1.5,
+                ),
+              )
+            : null,
+        suffixIcon: _searchController.text.isEmpty
+            ? null
+            : IconButton(
+                tooltip: context.l10n.libraryClearSearch,
+                icon: const Icon(AppIcons.close),
+                onPressed: () {
+                  _debouncer.cancel();
+                  _searchController.clear();
+                  ref.read(searchQueryProvider.notifier).state = '';
+                  setState(() {});
+                },
+              ),
+      ),
+    );
+  }
 
   Widget _refresh(BuildContext context, List<String> folders) => IconButton(
     key: const ValueKey('library-refresh'),
@@ -383,6 +416,269 @@ class _TopBarState extends ConsumerState<_TopBar> {
     _debouncer.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Widget _buildPhoneHeader(BuildContext context, List<String> folders) {
+    final tokens = context.appTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final index = ref.watch(selectedSidebarIndexProvider);
+    final running = ref.watch(scanProvider).running;
+    final view = ref.watch(libraryViewProvider);
+    final allCollections = ref.watch(allCollectionsProvider);
+    final selectedCollection = ref.watch(selectedCollectionProvider);
+    final titles = ref.watch(libraryProvider).valueOrNull ?? <Anime>[];
+    final count = ref.watch(filteredAnimeProvider).length;
+    final destinations = [
+      context.l10n.libraryAllTitles,
+      context.l10n.libraryWatching,
+      context.l10n.libraryPlanned,
+      context.l10n.libraryCompleted,
+      context.l10n.libraryDropped,
+      context.l10n.libraryCollections,
+    ];
+    final counts = [
+      titles.length,
+      for (final status in [
+        AnimeStatus.watching,
+        AnimeStatus.planned,
+        AnimeStatus.completed,
+        AnimeStatus.dropped,
+      ])
+        titles.where((title) => title.status == status).length,
+      allCollections.length,
+    ];
+
+    void select(int value) {
+      ref.read(selectedSidebarIndexProvider.notifier).state = value;
+      if (value == 5 &&
+          ref.read(selectedCollectionProvider) == null &&
+          allCollections.isNotEmpty) {
+        ref.read(selectedCollectionProvider.notifier).state =
+            allCollections.first;
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _HeaderAction(
+                icon: AppIcons.menu,
+                tooltip: context.l10n.libraryNavigation,
+                onTap: () => Scaffold.of(context).openDrawer(),
+              ),
+              const Spacer(),
+              _HeaderAction(
+                icon: AppIcons.rescan,
+                iconKey: const ValueKey('library-refresh'),
+                tooltip: context.l10n.settingsRescanLibrary,
+                filled: false,
+                onTap: folders.isEmpty || running
+                    ? null
+                    : () => ref.read(scanProvider.notifier).scan(folders),
+              ),
+              PopupMenuButton<LibrarySort>(
+                tooltip: context.l10n.librarySort,
+                initialValue: view.sort,
+                onSelected: ref.read(libraryViewProvider.notifier).sortBy,
+                itemBuilder: (_) => [
+                  for (final sort in LibrarySort.values)
+                    PopupMenuItem(
+                      value: sort,
+                      child: Text(switch (sort) {
+                        LibrarySort.title => context.l10n.librarySortTitle,
+                        LibrarySort.dateAdded => context.l10n.librarySortAdded,
+                        LibrarySort.lastWatched =>
+                          context.l10n.librarySortWatched,
+                        LibrarySort.progress =>
+                          context.l10n.librarySortProgress,
+                      }),
+                    ),
+                ],
+                icon: const Icon(AppIcons.sort, size: 20),
+              ),
+              IconButton(
+                tooltip: view.list
+                    ? context.l10n.libraryGrid
+                    : context.l10n.libraryList,
+                iconSize: 20,
+                icon: AnimatedStateIcon(
+                  view.list ? AppIcons.all : AppIcons.list,
+                ),
+                onPressed: () =>
+                    ref.read(libraryViewProvider.notifier).showList(!view.list),
+              ),
+              const SizedBox(width: 2),
+              _HeaderAction(
+                icon: AppIcons.addFolder,
+                tooltip: context.l10n.libraryAddFolder,
+                accent: true,
+                onTap: running ? null : () => _addLibraryFolder(context, ref),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Flexible(
+                child: Text(
+                  _getTitle(context, index),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.displayMedium,
+                ),
+              ),
+              const SizedBox(width: 9),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 7),
+                child: Text(
+                  '· $count',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    color: tokens.textMuted,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildSearch(phone: true),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 38,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: destinations.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                final active = index == i;
+                return Material(
+                  color: active
+                      ? Color.alphaBlend(
+                          scheme.primary.withValues(alpha: .28),
+                          tokens.containerHigh,
+                        )
+                      : tokens.container,
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () => select(i),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Row(
+                        children: [
+                          Text(
+                            destinations[i],
+                            style: Theme.of(context).textTheme.labelLarge!
+                                .copyWith(
+                                  color: active
+                                      ? tokens.textPrimary
+                                      : tokens.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            '${counts[i]}',
+                            style: Theme.of(context).textTheme.labelSmall!
+                                .copyWith(
+                                  color: active
+                                      ? tokens.textSecondary
+                                      : tokens.textMuted,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          if (index == 5 && allCollections.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 34,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: allCollections.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
+                itemBuilder: (context, i) {
+                  final name = allCollections[i];
+                  final active = selectedCollection == name;
+                  return Material(
+                    color: active ? tokens.containerHigh : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () =>
+                          ref.read(selectedCollectionProvider.notifier).state =
+                              name,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              AppIcons.folder,
+                              size: 15,
+                              color: active ? scheme.primary : tokens.textMuted,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              name,
+                              style: Theme.of(context).textTheme.bodySmall!
+                                  .copyWith(
+                                    color: active
+                                        ? tokens.textPrimary
+                                        : tokens.textMuted,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+          if (running) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+              child: const LinearProgressIndicator(minHeight: 3),
+            ),
+          ],
+          if (!running &&
+              (ref.watch(scanProvider).errors.isNotEmpty ||
+                  ref.watch(scanProvider).warnings > 0)) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    ref.watch(scanProvider).errors.isNotEmpty
+                        ? context.l10n.libraryScanError
+                        : context.l10n.libraryMetadataWarning,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => ref
+                      .read(scanProvider.notifier)
+                      .scan(ref.read(scanProvider).errors),
+                  child: Text(context.l10n.commonRetry),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   String _getTitle(BuildContext context, int index) {
@@ -413,6 +709,8 @@ class _TopBarState extends ConsumerState<_TopBar> {
     final tokens = context.appTheme;
     final phone = MediaQuery.sizeOf(context).width < 600;
     final folders = ref.watch(savedFoldersProvider);
+
+    if (phone) return _buildPhoneHeader(context, folders);
 
     // In a short landscape viewport a stacked header consumes the entire
     // library. Keep the primary actions on one line and let the cards breathe.
@@ -849,6 +1147,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
 
   @override
   Widget build(BuildContext context) {
+    final phone = MediaQuery.sizeOf(context).width < 600;
     final libraryAsync = ref.watch(libraryProvider);
     return libraryAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -963,32 +1262,38 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
                       anime: resumable.take(6).toList(),
                     ),
                   ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      24,
-                      showResume ? 24 : 16,
-                      24,
-                      AppSpacing.sm,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            sectionTitle,
-                            style: Theme.of(context).textTheme.titleLarge,
+                if (!phone)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        24,
+                        showResume ? 24 : 16,
+                        24,
+                        AppSpacing.sm,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              sectionTitle,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
                           ),
-                        ),
-                        Text(
-                          '${filteredList.length}',
-                          style: Theme.of(context).textTheme.labelMedium,
-                        ),
-                      ],
+                          Text(
+                            '${filteredList.length}',
+                            style: Theme.of(context).textTheme.labelMedium,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  padding: EdgeInsets.fromLTRB(
+                    phone ? 16 : 24,
+                    phone ? 12 : 0,
+                    phone ? 16 : 24,
+                    24,
+                  ),
                   sliver: view.list
                       ? SliverList.builder(
                           itemCount: filteredList.length,
@@ -996,13 +1301,19 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
                               AnimeListTile(anime: filteredList[index]),
                         )
                       : SliverGrid.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 240,
-                                childAspectRatio: .56,
-                                crossAxisSpacing: 20,
-                                mainAxisSpacing: 20,
-                              ),
+                          gridDelegate: phone
+                              ? const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio: .58,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 16,
+                                )
+                              : const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 240,
+                                  childAspectRatio: .56,
+                                  crossAxisSpacing: 20,
+                                  mainAxisSpacing: 20,
+                                ),
                           itemCount: filteredList.length,
                           itemBuilder: (context, index) =>
                               AnimeCard(anime: filteredList[index]),
@@ -1013,6 +1324,51 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
           ),
         );
       },
+    );
+  }
+}
+
+class _HeaderAction extends StatelessWidget {
+  const _HeaderAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.iconKey,
+    this.accent = false,
+    this.filled = true,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
+  final Key? iconKey;
+  final bool accent;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.appTheme;
+    final scheme = Theme.of(context).colorScheme;
+    return IconButton(
+      key: iconKey,
+      tooltip: tooltip,
+      onPressed: onTap,
+      icon: Icon(icon, size: 20),
+      style: IconButton.styleFrom(
+        fixedSize: const Size(42, 42),
+        backgroundColor: accent
+            ? Color.alphaBlend(
+                scheme.primary.withValues(alpha: .28),
+                tokens.container,
+              )
+            : (filled ? tokens.container : Colors.transparent),
+        foregroundColor: accent
+            ? AppSurfaces.accentInk(scheme.primary)
+            : tokens.textSecondary,
+        disabledBackgroundColor: filled ? tokens.container : Colors.transparent,
+        disabledForegroundColor: tokens.textDisabled,
+        shape: const CircleBorder(),
+      ),
     );
   }
 }

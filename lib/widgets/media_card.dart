@@ -209,237 +209,244 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
             child: AnimatedContainer(
               duration: AppMotion.resolveDuration(context, AppMotion.normal),
               curve: AppMotion.enter,
-            padding: const EdgeInsets.all(AppSpacing.xs),
-            decoration: BoxDecoration(
-               color: active ? tokens.cardSurface : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadii.lg),
-              border: Border.all(
-                color: _isFocused
-                    ? scheme.primary
-                     : (active ? tokens.borderSubtle : Colors.transparent),
-                width: 1,
+              padding: const EdgeInsets.all(AppSpacing.xs),
+              decoration: BoxDecoration(
+                color: active ? tokens.cardSurface : Colors.transparent,
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+                border: Border.all(
+                  color: _isFocused
+                      ? scheme.primary
+                      : (active ? tokens.borderSubtle : Colors.transparent),
+                  width: 1,
+                ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Hero(
-                    tag: 'poster_${widget.anime.id}_library',
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadii.md),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  tokens.containerHigh,
-                                  tokens.pageSurface,
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (cover == null || cover.isEmpty)
-                            placeholder
-                          else if (cover.startsWith('http'))
-                            CachedNetworkImage(
-                              imageUrl: cover,
-                              fit: BoxFit.cover,
-                               memCacheWidth: 440,
-                               fadeInDuration: Duration.zero,
-                               fadeOutDuration: Duration.zero,
-                              placeholder: (_, _) => placeholder,
-                              errorWidget: (_, _, _) => placeholder,
-                            )
-                          else if (cover.startsWith('asset:'))
-                            Image.asset(
-                              cover.substring('asset:'.length),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, _, _) => placeholder,
-                            )
-                          else
-                            Image.file(
-                              File(cover),
-                              fit: BoxFit.cover,
-                              cacheWidth: 440,
-                              errorBuilder: (_, _, _) => placeholder,
-                            ),
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            height: 72,
-                            child: DecoratedBox(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Hero(
+                      tag: 'poster_${widget.anime.id}_library',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadii.xl),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            DecoratedBox(
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                   colors: [
-                                    tokens.scrim(0.75),
-                                    Colors.transparent,
+                                    tokens.containerHigh,
+                                    tokens.pageSurface,
                                   ],
                                 ),
                               ),
                             ),
-                          ),
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              ignoring: !active,
-                              child: ExcludeSemantics(
-                                excluding: !active,
-                                child: AnimatedOpacity(
-                                  opacity: active ? 1 : 0,
-                                  duration:
-                                      AppMotion.resolveDuration(
-                                        context,
-                                        AppMotion.medium,
-                                      ),
-                                  curve: AppMotion.enter,
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      ColoredBox(color: tokens.scrim(0.28)),
-                                      if (widget.anime.episodePaths.isNotEmpty)
-                                        Center(
-                                          child: IconButton.filled(
-                                            tooltip: context.l10n.detailsContinue(
-                                              widget.anime.sortedEpisodes.indexOf(
-                                                    widget
-                                                            .anime
-                                                            .nextEpisodeToPlay ??
-                                                        widget
-                                                            .anime
-                                                            .sortedEpisodes
-                                                            .first,
-                                                  ) +
-                                                  1,
-                                            ),
-                                            iconSize: 30,
-                                            padding: const EdgeInsets.all(16),
-                                            onPressed: _play,
-                                            icon: const Icon(AppIcons.play),
-                                          ),
-                                        ),
-                                      Positioned(
-                                        top: 4,
-                                        right: 4,
-                                        child: Builder(
-                                          builder: (buttonContext) => IconButton(
-                                            tooltip:
-                                                context.l10n.detailsMoreOptions,
-                                            style: IconButton.styleFrom(
-                                              backgroundColor:
-                                                  tokens.surfaceOverlay,
-                                              foregroundColor:
-                                                  tokens.textPrimary,
-                                            ),
-                                            icon: const Icon(AppIcons.more),
-                                            onPressed: () {
-                                              final box =
-                                                  buttonContext
-                                                          .findRenderObject()!
-                                                      as RenderBox;
-                                              _showContextMenu(
-                                                context,
-                                                ref,
-                                                box.localToGlobal(Offset.zero),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ),
+                            if (cover == null || cover.isEmpty)
+                              placeholder
+                            else if (cover.startsWith('http'))
+                              CachedNetworkImage(
+                                imageUrl: cover,
+                                fit: BoxFit.cover,
+                                memCacheWidth: 440,
+                                fadeInDuration: Duration.zero,
+                                fadeOutDuration: Duration.zero,
+                                placeholder: (_, _) => placeholder,
+                                errorWidget: (_, _, _) => placeholder,
+                              )
+                            else if (cover.startsWith('asset:'))
+                              Image.asset(
+                                cover.substring('asset:'.length),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => placeholder,
+                              )
+                            else
+                              Image.file(
+                                File(cover),
+                                fit: BoxFit.cover,
+                                cacheWidth: 440,
+                                errorBuilder: (_, _, _) => placeholder,
+                              ),
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              height: 72,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      tokens.scrim(0.75),
+                                      Colors.transparent,
                                     ],
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          Positioned(
-                            top: AppSpacing.xs,
-                            left: AppSpacing.xs,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: tokens.surfaceOverlay,
-                                borderRadius: BorderRadius.circular(
-                                  AppRadii.pill,
-                                ),
-                                border: Border.all(color: tokens.borderFaint),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.xs,
-                                  vertical: 3,
-                                ),
-                                child: Text(
-                                  statusLabel,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: statusColor),
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                ignoring: !active,
+                                child: ExcludeSemantics(
+                                  excluding: !active,
+                                  child: AnimatedOpacity(
+                                    opacity: active ? 1 : 0,
+                                    duration: AppMotion.resolveDuration(
+                                      context,
+                                      AppMotion.medium,
+                                    ),
+                                    curve: AppMotion.enter,
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        ColoredBox(color: tokens.scrim(0.28)),
+                                        if (widget
+                                            .anime
+                                            .episodePaths
+                                            .isNotEmpty)
+                                          Center(
+                                            child: IconButton.filled(
+                                              tooltip: context.l10n.detailsContinue(
+                                                widget.anime.sortedEpisodes.indexOf(
+                                                      widget
+                                                              .anime
+                                                              .nextEpisodeToPlay ??
+                                                          widget
+                                                              .anime
+                                                              .sortedEpisodes
+                                                              .first,
+                                                    ) +
+                                                    1,
+                                              ),
+                                              iconSize: 30,
+                                              padding: const EdgeInsets.all(16),
+                                              onPressed: _play,
+                                              icon: const Icon(AppIcons.play),
+                                            ),
+                                          ),
+                                        Positioned(
+                                          top: 4,
+                                          right: 4,
+                                          child: Builder(
+                                            builder: (buttonContext) => IconButton(
+                                              tooltip: context
+                                                  .l10n
+                                                  .detailsMoreOptions,
+                                              style: IconButton.styleFrom(
+                                                backgroundColor:
+                                                    tokens.surfaceOverlay,
+                                                foregroundColor:
+                                                    tokens.textPrimary,
+                                              ),
+                                              icon: const Icon(AppIcons.more),
+                                              onPressed: () {
+                                                final box =
+                                                    buttonContext
+                                                            .findRenderObject()!
+                                                        as RenderBox;
+                                                _showContextMenu(
+                                                  context,
+                                                  ref,
+                                                  box.localToGlobal(
+                                                    Offset.zero,
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          if (widget.anime.watchProgress > 0)
                             Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: LinearProgressIndicator(
-                                value: widget.anime.watchProgress.clamp(0, 1),
-                                minHeight: 3,
-                                 color: progressInk,
-                                backgroundColor: tokens.surfaceOverlay,
+                              top: AppSpacing.xs,
+                              left: AppSpacing.xs,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: tokens.surfaceOverlay,
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadii.pill,
+                                  ),
+                                  border: Border.all(color: tokens.borderFaint),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.xs,
+                                    vertical: 3,
+                                  ),
+                                  child: Text(
+                                    statusLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(color: statusColor),
+                                  ),
+                                ),
                               ),
                             ),
-                        ],
+                            if (widget.anime.watchProgress > 0)
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: LinearProgressIndicator(
+                                  value: widget.anime.watchProgress.clamp(0, 1),
+                                  minHeight: 3,
+                                  color: progressInk,
+                                  backgroundColor: tokens.surfaceOverlay,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                 SizedBox(
-                   height: titleHeight,
-                   child: Text(
-                     widget.anime.title,
-                     maxLines: 2,
-                     overflow: TextOverflow.ellipsis,
-                     style: titleStyle,
-                   ),
-                 ),
-                 const SizedBox(height: AppSpacing.xxs),
-                 Semantics(
-                   label: context.l10n.detailsWatched(
-                     widget.anime.episodePaths.length,
-                     watched,
-                   ),
-                   excludeSemantics: true,
-                   child: Row(
-                     children: [
-                       Icon(
-                         AppIcons.checkCircle,
-                         size: 14,
-                         color: tokens.textMuted,
-                       ),
-                       const SizedBox(width: AppSpacing.xxs),
-                       Flexible(
-                         child: Text(
-                           widget.anime.progressFraction,
-                           maxLines: 1,
-                           overflow: TextOverflow.ellipsis,
-                           style: theme.textTheme.bodySmall,
-                         ),
-                       ),
-                     ],
-                   ),
-                 ),
-              ],
+                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(
+                    height: titleHeight,
+                    child: Text(
+                      widget.anime.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: titleStyle,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Semantics(
+                    label: context.l10n.detailsWatched(
+                      widget.anime.episodePaths.length,
+                      watched,
+                    ),
+                    excludeSemantics: true,
+                    child: Row(
+                      children: [
+                        Icon(
+                          AppIcons.checkCircle,
+                          size: 14,
+                          color: tokens.textMuted,
+                        ),
+                        const SizedBox(width: AppSpacing.xxs),
+                        Flexible(
+                          child: Text(
+                            widget.anime.progressFraction,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
           ),
         ),
       ),

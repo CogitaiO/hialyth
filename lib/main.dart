@@ -14,7 +14,6 @@ import 'domain/anime.dart';
 import 'data/repositories/anime_repository.dart';
 import 'providers/repositories_provider.dart';
 import 'presentation/library_screen.dart';
-import 'presentation/mobile_navigation_gesture.dart';
 import 'providers/library_provider.dart';
 import 'providers/settings_provider.dart';
 import 'theme/app_theme.dart';
@@ -69,14 +68,18 @@ Future<void> runHialyth({bool showcaseMode = false}) async {
     }
     final prefs = await SharedPreferences.getInstance();
     final databaseDirectory = showcaseMode
-        ? Directory(ShowcaseStorage.databasePath(
-            (await getApplicationSupportDirectory()).path))
+        ? Directory(
+            ShowcaseStorage.databasePath(
+              (await getApplicationSupportDirectory()).path,
+            ),
+          )
         : await getApplicationDocumentsDirectory();
     if (showcaseMode) {
       await databaseDirectory.create(recursive: true);
     }
-    final isar =
-        await Isar.open([AnimeSchema], directory: databaseDirectory.path);
+    final isar = await Isar.open([
+      AnimeSchema,
+    ], directory: databaseDirectory.path);
     final repository = AnimeRepository(isar);
     if (showcaseMode) {
       await ShowcaseFixtures.seedOnFirstLaunch(repository, prefs);
@@ -102,32 +105,24 @@ Future<void> runHialyth({bool showcaseMode = false}) async {
     );
   } catch (e, st) {
     talker.handle(e, st, 'Critical startup error');
-    runApp(_StartupErrorApp(
-        onRetry: () => runHialyth(showcaseMode: showcaseMode)));
+    runApp(
+      _StartupErrorApp(onRetry: () => runHialyth(showcaseMode: showcaseMode)),
+    );
   }
 }
 
-class MyApp extends ConsumerStatefulWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key, this.showcaseMode = false});
   final bool showcaseMode;
 
   @override
-  ConsumerState<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends ConsumerState<MyApp> {
-  final _mobileNavigation = MobileNavigationController();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final accentColorValue = settings.accentColorValue;
     final accentColor = Color(accentColorValue);
 
     return MaterialApp(
-      navigatorKey: _mobileNavigation.key,
-      navigatorObservers: [_mobileNavigation],
-      onGenerateTitle: (context) => widget.showcaseMode
+      onGenerateTitle: (context) => showcaseMode
           ? 'Hialyth Showcase'
           : AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
@@ -136,40 +131,35 @@ class _MyAppState extends ConsumerState<MyApp> {
           : _legacyTheme(accentColor),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      routes: {
-        if (kDebugMode) '/_design': (_) => const DesignSystemGallery(),
-      },
+      routes: {if (kDebugMode) '/_design': (_) => const DesignSystemGallery()},
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(
           disableAnimations:
               settings.reduceMotion || AppMotion.isReduced(context),
         ),
         child: HeroMode(
-          enabled: !(settings.reduceMotion ||
-              AppMotion.isReduced(context)),
-          child: MobileNavigationGesture(
-            controller: _mobileNavigation,
-            child: child!,
-          ),
+          enabled: !(settings.reduceMotion || AppMotion.isReduced(context)),
+          child: child!,
         ),
       ),
-      home: LibraryScreen(showcaseMode: widget.showcaseMode),
+      home: LibraryScreen(showcaseMode: showcaseMode),
     );
   }
 }
 
 ThemeData _legacyTheme(Color accentColor) {
   const appTheme = AppThemeExtension.dark();
-  final colorScheme = ColorScheme.fromSeed(
-    seedColor: accentColor,
-    brightness: Brightness.dark,
-  ).copyWith(
-    primary: accentColor,
-    onPrimary: AppPalette.onAccent(accentColor),
-    secondary: accentColor,
-    onSecondary: AppPalette.onAccent(accentColor),
-    surface: appTheme.pageSurface,
-  );
+  final colorScheme =
+      ColorScheme.fromSeed(
+        seedColor: accentColor,
+        brightness: Brightness.dark,
+      ).copyWith(
+        primary: accentColor,
+        onPrimary: AppPalette.onAccent(accentColor),
+        secondary: accentColor,
+        onSecondary: AppPalette.onAccent(accentColor),
+        surface: appTheme.pageSurface,
+      );
 
   return ThemeData.dark(useMaterial3: true).copyWith(
     scaffoldBackgroundColor: appTheme.pageSurface,
@@ -188,25 +178,36 @@ class _StartupErrorApp extends StatelessWidget {
   final VoidCallback onRetry;
   @override
   Widget build(BuildContext context) => MaterialApp(
-        theme: AppTheme.dark(),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: Builder(
-            builder: (context) => Scaffold(
-                    body: Center(
-                        child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Text(AppLocalizations.of(context).startupFailed,
-                        style: Theme.of(context).textTheme.headlineMedium),
-                    const SizedBox(height: 16),
-                    Text(AppLocalizations.of(context).startupFailedBody,
-                        textAlign: TextAlign.center),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                        onPressed: onRetry,
-                        child: Text(AppLocalizations.of(context).commonRetry)),
-                  ]),
-                )))),
-      );
+    theme: AppTheme.dark(),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    home: Builder(
+      builder: (context) => Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  AppLocalizations.of(context).startupFailed,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context).startupFailedBody,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: onRetry,
+                  child: Text(AppLocalizations.of(context).commonRetry),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }

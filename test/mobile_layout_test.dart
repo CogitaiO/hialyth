@@ -293,7 +293,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(
-        tester.getCenter(find.byIcon(AppIcons.close).first).dx,
+        tester.getCenter(find.byIcon(AppIcons.close).last).dx,
         closeTo(size.width - 16 - 23, 1),
       );
       if (size.width < 600) {
@@ -302,7 +302,7 @@ void main() {
         final list = find.byTooltip('List view');
         expect(
           tester.getCenter(search).dy,
-          closeTo(tester.getCenter(sort).dy, 1),
+          greaterThan(tester.getCenter(sort).dy + 20),
         );
         await tester.tap(list);
         await tester.pumpAndSettle();

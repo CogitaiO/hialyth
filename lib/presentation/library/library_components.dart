@@ -29,14 +29,16 @@ class ContinueWatchingSection extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final cardWidth = width < 600
-            ? (width - 68).clamp(216.0, 360.0)
+        final phone = width < 600;
+        final inset = phone ? 16.0 : 24.0;
+        final cardWidth = phone
+            ? (width - inset * 2 - 20).clamp(240.0, 340.0)
             : ((width - 72) / 3).clamp(280.0, 360.0);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+              padding: EdgeInsets.fromLTRB(inset, 8, inset, 12),
               child: Row(
                 children: [
                   Expanded(
@@ -55,7 +57,7 @@ class ContinueWatchingSection extends StatelessWidget {
             SizedBox(
               height: 148,
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: inset),
                 scrollDirection: Axis.horizontal,
                 itemCount: anime.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 12),
