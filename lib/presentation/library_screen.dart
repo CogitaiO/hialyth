@@ -79,17 +79,7 @@ class LibraryScreen extends ConsumerWidget {
                                       ),
                                     ),
                                   ),
-                                Expanded(
-                                  child: _ContentGrid(
-                                    header: phone
-                                        ? const SliverPersistentHeader(
-                                            pinned: true,
-                                            delegate:
-                                                PhoneLibraryHeaderDelegate(),
-                                          )
-                                        : null,
-                                  ),
-                                ),
+                                Expanded(child: _ContentGrid()),
                               ],
                             ),
                           ),
@@ -787,21 +777,38 @@ class _TopBarState extends ConsumerState<_TopBar> {
 }
 
 class _ContentGrid extends ConsumerStatefulWidget {
-  const _ContentGrid({this.header});
-
-  final Widget? header;
+  const _ContentGrid();
 
   @override
   ConsumerState<_ContentGrid> createState() => _ContentGridState();
 }
 
 class _ContentGridState extends ConsumerState<_ContentGrid> {
+  final _scrollController = ScrollController();
+  final _headerProgress = ValueNotifier<double>(0);
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_syncHeaderProgress);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _checkAndShowVpnWarning();
     });
+  }
+
+  void _syncHeaderProgress() {
+    final range = kPhoneLibraryHeaderExpanded - kPhoneLibraryHeaderCollapsed;
+    final next = (_scrollController.offset / range).clamp(0.0, 1.0);
+    if ((_headerProgress.value - next).abs() > .002) {
+      _headerProgress.value = next;
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _headerProgress.dispose();
+    super.dispose();
   }
 
   Future<void> _checkAndShowVpnWarning() async {
@@ -876,7 +883,18 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
       ),
       data: (allAnimes) {
         final filteredList = ref.watch(filteredAnimeProvider);
-        final slivers = <Widget>[if (widget.header != null) widget.header!];
+        final slivers = <Widget>[
+          if (phone)
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: PhoneLibraryHeaderDelegate(
+                child: PhoneLibraryHeader(
+                  key: const ValueKey('phone-library-header'),
+                  progress: _headerProgress,
+                ),
+              ),
+            ),
+        ];
 
         if (filteredList.isEmpty) {
           final emptyLibrary = allAnimes.isEmpty;
@@ -1057,6 +1075,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1440),
             child: CustomScrollView(
+              controller: _scrollController,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               slivers: slivers,
             ),

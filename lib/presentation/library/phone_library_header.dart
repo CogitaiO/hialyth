@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,7 +22,9 @@ const double kPhoneLibraryHeaderExpanded = 250;
 const double kPhoneLibraryHeaderCollapsed = 130;
 
 class PhoneLibraryHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const PhoneLibraryHeaderDelegate();
+  const PhoneLibraryHeaderDelegate({required this.child});
+
+  final Widget child;
 
   @override
   double get minExtent => kPhoneLibraryHeaderCollapsed;
@@ -34,23 +37,18 @@ class PhoneLibraryHeaderDelegate extends SliverPersistentHeaderDelegate {
     BuildContext context,
     double shrinkOffset,
     bool overlapsContent,
-  ) {
-    final collapse = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
-    return PhoneLibraryHeader(
-      key: const ValueKey('phone-library-header'),
-      collapse: collapse,
-    );
-  }
+  ) => child;
 
   @override
-  bool shouldRebuild(covariant PhoneLibraryHeaderDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant PhoneLibraryHeaderDelegate oldDelegate) =>
+      oldDelegate.child != child;
 }
 
 class PhoneLibraryHeader extends ConsumerStatefulWidget {
-  const PhoneLibraryHeader({super.key, required this.collapse});
+  const PhoneLibraryHeader({super.key, required this.progress});
 
   /// 0 at rest, 1 when the header is pinned in its compact form.
-  final double collapse;
+  final ValueListenable<double> progress;
 
   @override
   ConsumerState<PhoneLibraryHeader> createState() => _PhoneLibraryHeaderState();
@@ -143,7 +141,6 @@ class _PhoneLibraryHeaderState extends ConsumerState<PhoneLibraryHeader> {
     });
 
     final tokens = context.appTheme;
-    final t = widget.collapse.clamp(0.0, 1.0);
     final selected = ref.watch(selectedSidebarIndexProvider);
     final collection = ref.watch(selectedCollectionProvider);
     final collections = ref.watch(allCollectionsProvider);
@@ -174,18 +171,47 @@ class _PhoneLibraryHeaderState extends ConsumerState<PhoneLibraryHeader> {
       collections.length,
     ];
 
-    final titleTravel = Curves.easeInOutCubic.transform(
-      ((t - .22) / .68).clamp(0.0, 1.0),
+    final searchField = _searchField(context);
+    final extraActions = Row(
+      children: [
+        _HeaderAction(
+          icon: AppIcons.rescan,
+          iconKey: const ValueKey('library-refresh'),
+          tooltip: context.l10n.settingsRescanLibrary,
+          filled: false,
+          onTap: folders.isEmpty || running
+              ? null
+              : () => ref.read(scanProvider.notifier).scan(folders),
+        ),
+        PopupMenuButton<LibrarySort>(
+          tooltip: context.l10n.librarySort,
+          initialValue: view.sort,
+          onSelected: ref.read(libraryViewProvider.notifier).sortBy,
+          itemBuilder: (_) => [
+            for (final sort in LibrarySort.values)
+              PopupMenuItem(
+                value: sort,
+                child: Text(switch (sort) {
+                  LibrarySort.title => context.l10n.librarySortTitle,
+                  LibrarySort.dateAdded => context.l10n.librarySortAdded,
+                  LibrarySort.lastWatched => context.l10n.librarySortWatched,
+                  LibrarySort.progress => context.l10n.librarySortProgress,
+                }),
+              ),
+          ],
+          icon: const Icon(AppIcons.sort, size: 20),
+        ),
+        IconButton(
+          tooltip: view.list
+              ? context.l10n.libraryGrid
+              : context.l10n.libraryList,
+          iconSize: 20,
+          icon: AnimatedStateIcon(view.list ? AppIcons.all : AppIcons.list),
+          onPressed: () =>
+              ref.read(libraryViewProvider.notifier).showList(!view.list),
+        ),
+      ],
     );
-    final titleLeft =
-        16 + 46 * Curves.easeOutCubic.transform((t / .55).clamp(0.0, 1.0));
-    final titleRight = 16 + 60 * ((t - .3) / .5).clamp(0.0, 1.0);
-    final titleFont = 32 - 13 * titleTravel;
-    final titleHeight = titleFont * 1.3;
-    final countOpacity = (1 - ((t - .55) / .35).clamp(0.0, 1.0));
-    final searchOpacity = (1 - t * 3).clamp(0.0, 1.0);
-    final extraActionsOpacity = (1 - t * 2.6).clamp(0.0, 1.0);
-    final chipsHeight = 40 - 4 * t;
 
     return ClipRect(
       child: Stack(
@@ -208,14 +234,15 @@ class _PhoneLibraryHeaderState extends ConsumerState<PhoneLibraryHeader> {
             left: 0,
             right: 0,
             bottom: 30,
-            height: chipsHeight,
-            child: _filters(
-              context,
-              selected: selected,
-              destinations: destinations,
-              counts: counts,
-              compactness: t,
-              onSelect: (index) => _select(index, collections),
+            height: 40,
+            child: RepaintBoundary(
+              child: _filters(
+                context,
+                selected: selected,
+                destinations: destinations,
+                counts: counts,
+                onSelect: (index) => _select(index, collections),
+              ),
             ),
           ),
           Positioned(
@@ -231,62 +258,19 @@ class _PhoneLibraryHeaderState extends ConsumerState<PhoneLibraryHeader> {
                   onTap: () => Scaffold.of(context).openDrawer(),
                 ),
                 const Spacer(),
-                Opacity(
-                  opacity: extraActionsOpacity,
-                  child: IgnorePointer(
-                    ignoring: extraActionsOpacity < .5,
-                    child: Row(
-                      children: [
-                        _HeaderAction(
-                          icon: AppIcons.rescan,
-                          iconKey: const ValueKey('library-refresh'),
-                          tooltip: context.l10n.settingsRescanLibrary,
-                          filled: false,
-                          onTap: folders.isEmpty || running
-                              ? null
-                              : () => ref
-                                    .read(scanProvider.notifier)
-                                    .scan(folders),
-                        ),
-                        PopupMenuButton<LibrarySort>(
-                          tooltip: context.l10n.librarySort,
-                          initialValue: view.sort,
-                          onSelected: ref
-                              .read(libraryViewProvider.notifier)
-                              .sortBy,
-                          itemBuilder: (_) => [
-                            for (final sort in LibrarySort.values)
-                              PopupMenuItem(
-                                value: sort,
-                                child: Text(switch (sort) {
-                                  LibrarySort.title =>
-                                    context.l10n.librarySortTitle,
-                                  LibrarySort.dateAdded =>
-                                    context.l10n.librarySortAdded,
-                                  LibrarySort.lastWatched =>
-                                    context.l10n.librarySortWatched,
-                                  LibrarySort.progress =>
-                                    context.l10n.librarySortProgress,
-                                }),
-                              ),
-                          ],
-                          icon: const Icon(AppIcons.sort, size: 20),
-                        ),
-                        IconButton(
-                          tooltip: view.list
-                              ? context.l10n.libraryGrid
-                              : context.l10n.libraryList,
-                          iconSize: 20,
-                          icon: AnimatedStateIcon(
-                            view.list ? AppIcons.all : AppIcons.list,
-                          ),
-                          onPressed: () => ref
-                              .read(libraryViewProvider.notifier)
-                              .showList(!view.list),
-                        ),
-                      ],
-                    ),
-                  ),
+                ValueListenableBuilder<double>(
+                  valueListenable: widget.progress,
+                  child: extraActions,
+                  builder: (context, t, child) {
+                    final opacity = (1 - t * 2.8).clamp(0.0, 1.0);
+                    return Opacity(
+                      opacity: opacity,
+                      child: IgnorePointer(
+                        ignoring: opacity < .5,
+                        child: child,
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 2),
                 _HeaderAction(
@@ -298,57 +282,80 @@ class _PhoneLibraryHeaderState extends ConsumerState<PhoneLibraryHeader> {
               ],
             ),
           ),
-          Positioned(
-            left: titleLeft,
-            right: titleRight,
-            top: 62 - 50 * titleTravel,
-            height: titleHeight,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Flexible(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.displayMedium!.copyWith(
-                      fontSize: titleFont,
-                      height: 1.2,
+          Positioned.fill(
+            child: ValueListenableBuilder<double>(
+              valueListenable: widget.progress,
+              child: searchField,
+              builder: (context, t, searchField) {
+                final travel = Curves.easeInOutCubic.transform(t);
+                final titleLeft =
+                    16 +
+                    46 *
+                        Curves.easeOutCubic.transform((t / .3).clamp(0.0, 1.0));
+                final titleRight = 16 + 60 * ((t - .3) / .25).clamp(0.0, 1.0);
+                final titleFont = 32 - 13 * travel;
+                final titleTop = 62 - 44 * travel;
+                final countOpacity = (1 - ((t - .55) / .35).clamp(0.0, 1.0));
+                final searchOpacity = (1 - t * 5).clamp(0.0, 1.0);
+
+                return Stack(
+                  children: [
+                    Positioned(
+                      left: titleLeft,
+                      right: titleRight,
+                      top: titleTop,
+                      height: titleFont * 1.3,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.displayMedium!
+                                  .copyWith(fontSize: titleFont, height: 1.2),
+                            ),
+                          ),
+                          if (countOpacity > 0) ...[
+                            const SizedBox(width: 8),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 3),
+                              child: Opacity(
+                                opacity: countOpacity,
+                                child: Text(
+                                  '· $count',
+                                  style: TextStyle(
+                                    color: tokens.textMuted,
+                                    fontSize: titleFont * .5,
+                                    fontWeight: FontWeight.w600,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                if (countOpacity > 0) ...[
-                  const SizedBox(width: 8),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 3),
-                    child: Opacity(
-                      opacity: countOpacity,
-                      child: Text(
-                        '· $count',
-                        style: TextStyle(
-                          color: tokens.textMuted,
-                          fontSize: titleFont * .5,
-                          fontWeight: FontWeight.w600,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                    Positioned(
+                      left: 16,
+                      right: 16,
+                      top: 112,
+                      height: 48,
+                      child: IgnorePointer(
+                        ignoring: searchOpacity < .3,
+                        child: Opacity(
+                          opacity: searchOpacity,
+                          child: searchField,
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            top: 112,
-            height: 48,
-            child: IgnorePointer(
-              ignoring: searchOpacity < .3,
-              child: Opacity(
-                opacity: searchOpacity,
-                child: _searchField(context),
-              ),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -361,81 +368,91 @@ class _PhoneLibraryHeaderState extends ConsumerState<PhoneLibraryHeader> {
     required int selected,
     required List<String> destinations,
     required List<int> counts,
-    required double compactness,
     required ValueChanged<int> onSelect,
   }) {
     final tokens = context.appTheme;
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ShaderMask(
-        blendMode: BlendMode.dstIn,
-        shaderCallback: (bounds) => const LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [Colors.white, Colors.white, Colors.transparent],
-          stops: [0, .93, 1],
-        ).createShader(bounds),
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.only(right: 16),
-          itemCount: destinations.length,
-          separatorBuilder: (_, _) => SizedBox(width: 8 - 2 * compactness),
-          itemBuilder: (context, index) {
-            final active = selected == index;
-            return AnimatedContainer(
-              duration: AppMotion.resolveDuration(context, AppMotion.normal),
-              curve: AppMotion.enter,
-              decoration: BoxDecoration(
-                color: active
-                    ? Color.alphaBlend(
-                        scheme.primary.withValues(alpha: .28),
-                        tokens.containerHigh,
-                      )
-                    : tokens.container,
-                borderRadius: BorderRadius.circular(AppRadii.pill),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Material(
-                type: MaterialType.transparency,
-                child: InkWell(
-                  onTap: () => onSelect(index),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 14 - 3 * compactness,
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          destinations[index],
-                          style: Theme.of(context).textTheme.labelLarge!
-                              .copyWith(
-                                color: active
-                                    ? tokens.textPrimary
-                                    : tokens.textSecondary,
-                                fontSize: 12 - compactness,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        SizedBox(width: 7 - 2 * compactness),
-                        Text(
-                          '${counts[index]}',
-                          style: Theme.of(context).textTheme.labelSmall!
-                              .copyWith(
-                                color: active
-                                    ? tokens.textSecondary
-                                    : tokens.textMuted,
-                                fontSize: 11 - .5 * compactness,
-                              ),
-                        ),
-                      ],
+      child: Stack(
+        children: [
+          ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(right: 16),
+            itemCount: destinations.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final active = selected == index;
+              return AnimatedContainer(
+                duration: AppMotion.resolveDuration(context, AppMotion.normal),
+                curve: AppMotion.enter,
+                decoration: BoxDecoration(
+                  color: active
+                      ? Color.alphaBlend(
+                          scheme.primary.withValues(alpha: .28),
+                          tokens.containerHigh,
+                        )
+                      : tokens.container,
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    onTap: () => onSelect(index),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      child: Row(
+                        children: [
+                          Text(
+                            destinations[index],
+                            style: Theme.of(context).textTheme.labelLarge!
+                                .copyWith(
+                                  color: active
+                                      ? tokens.textPrimary
+                                      : tokens.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            '${counts[index]}',
+                            style: Theme.of(context).textTheme.labelSmall!
+                                .copyWith(
+                                  color: active
+                                      ? tokens.textSecondary
+                                      : tokens.textMuted,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
+              );
+            },
+          ),
+          Positioned(
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: 28,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerRight,
+                    end: Alignment.centerLeft,
+                    colors: [
+                      tokens.pageSurface,
+                      tokens.pageSurface.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
