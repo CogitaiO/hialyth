@@ -174,14 +174,14 @@ void main() {
                 'A journey through memories, friendships, and the passage of time.')
             .join(' ');
       final prefs = await SharedPreferences.getInstance();
-      Widget app(double scale) => ProviderScope(
+       Widget app(double scale) => ProviderScope(
               overrides: [
                 sharedPrefsProvider.overrideWithValue(prefs),
                 animeDetailsProvider(1)
                     .overrideWith((ref) => Stream.value(anime)),
               ],
-              child: MaterialApp(
-                theme: AppTheme.dark(),
+               child: MaterialApp(
+                 theme: AppTheme.dark().copyWith(platform: TargetPlatform.linux),
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 builder: (context, child) => MediaQuery(
@@ -265,6 +265,15 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.byType(ContinueWatchingSection), findsOneWidget);
       expect(find.text('Continue watching'), findsOneWidget);
+      final posters = find.byWidgetPredicate(
+        (widget) => widget is Hero && widget.tag.toString().endsWith('_library'),
+      );
+      final posterHeights = <double>[
+        for (var index = 0; index < posters.evaluate().length; index++)
+          tester.getSize(posters.at(index)).height,
+      ];
+      expect(posterHeights.length, greaterThan(1));
+      expect(posterHeights, everyElement(closeTo(posterHeights.first, .01)));
       await expectLater(find.byType(Scaffold),
           matchesGoldenFile('goldens/library_$label.png'));
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);

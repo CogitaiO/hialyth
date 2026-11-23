@@ -12,8 +12,21 @@ abstract final class AppTheme {
   /// Builds the dark theme with the given accent color.
   /// [accent] defaults to [AppPalette.fallbackAccent] (Iris).
   static ThemeData dark({Color accent = AppPalette.fallbackAccent}) {
-    final scheme = _buildColorScheme(accent, Brightness.dark);
-    final extension = AppThemeExtension.dark();
+    const base = AppThemeExtension.dark();
+    final extension = base.copyWith(
+      cardSurface: AppSurfaces.artworkWash(
+        accent,
+        base.cardSurface,
+        strength: .04,
+      ),
+      container: AppSurfaces.artworkWash(accent, base.container, strength: .07),
+      containerHigh: AppSurfaces.artworkWash(
+        accent,
+        base.containerHigh,
+        strength: .10,
+      ),
+    );
+    final scheme = _buildColorScheme(accent, Brightness.dark, extension);
 
     return ThemeData(
       brightness: Brightness.dark,
@@ -82,6 +95,20 @@ abstract final class AppTheme {
 
       // Chips
       chipTheme: _chipTheme(scheme, extension),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) return null;
+          return states.contains(WidgetState.selected)
+              ? AppSurfaces.accentInk(accent)
+              : extension.textMuted;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) return null;
+          return states.contains(WidgetState.selected)
+              ? AppSurfaces.controlSurface(accent, extension.containerHigh)
+              : extension.container;
+        }),
+      ),
 
       // Sliders
       sliderTheme: _sliderTheme(scheme, extension),
@@ -122,8 +149,8 @@ abstract final class AppTheme {
 
       // Bottom sheets
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: extension.container,
-        modalBackgroundColor: extension.container,
+        backgroundColor: extension.containerHigh,
+        modalBackgroundColor: extension.containerHigh,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(AppRadii.xxl),
@@ -176,7 +203,11 @@ abstract final class AppTheme {
   // ColorScheme construction
   // ──────────────────────────────────────────────────────────────
 
-  static ColorScheme _buildColorScheme(Color accent, Brightness brightness) {
+  static ColorScheme _buildColorScheme(
+    Color accent,
+    Brightness brightness,
+    AppThemeExtension surfaces,
+  ) {
     final onAccent = AppPalette.onAccent(accent);
     final base = brightness == Brightness.dark
         ? AppSurfaces.base
@@ -202,8 +233,10 @@ abstract final class AppTheme {
       onSurface: brightness == Brightness.dark
           ? AppSurfaces.contentPrimary
           : Colors.black,
-      surfaceContainer: AppSurfaces.container,
-      surfaceContainerHigh: AppSurfaces.containerHigh,
+      surfaceContainer: surfaces.container,
+      surfaceContainerLow: AppSurfaces.quiet,
+      surfaceContainerLowest: AppSurfaces.base,
+      surfaceContainerHigh: surfaces.containerHigh,
       surfaceContainerHighest: AppSurfaces.hover,
       onSurfaceVariant: brightness == Brightness.dark
           ? AppSurfaces.contentMuted
@@ -432,9 +465,9 @@ abstract final class AppTheme {
     AppThemeExtension ext,
   ) {
     return DialogThemeData(
-      backgroundColor: ext.container,
+      backgroundColor: ext.containerHigh,
       surfaceTintColor: Colors.transparent,
-      elevation: 0,
+      elevation: 8,
       shadowColor: Colors.black.withValues(alpha: 0.38),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.xxl),
@@ -449,9 +482,9 @@ abstract final class AppTheme {
   static MenuThemeData _menuTheme(ColorScheme scheme, AppThemeExtension ext) {
     return MenuThemeData(
       style: MenuStyle(
-        backgroundColor: WidgetStateProperty.all(ext.container),
+        backgroundColor: WidgetStateProperty.all(ext.containerHigh),
         surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
-        elevation: WidgetStateProperty.all(0),
+        elevation: WidgetStateProperty.all(6),
         shadowColor: WidgetStateProperty.all(
           Colors.black.withValues(alpha: 0.32),
         ),
@@ -474,9 +507,9 @@ abstract final class AppTheme {
     AppThemeExtension ext,
   ) {
     return PopupMenuThemeData(
-      color: ext.container,
+      color: ext.containerHigh,
       surfaceTintColor: Colors.transparent,
-      elevation: 0,
+      elevation: 6,
       shadowColor: Colors.black.withValues(alpha: 0.32),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.lg),
@@ -493,13 +526,19 @@ abstract final class AppTheme {
     return ChipThemeData(
       backgroundColor: ext.container,
       disabledColor: ext.surfaceDisabled,
-      selectedColor: scheme.primaryContainer,
-      secondarySelectedColor: scheme.primaryContainer,
+      selectedColor: AppSurfaces.controlSurface(
+        scheme.primary,
+        ext.cardSurface,
+      ),
+      secondarySelectedColor: AppSurfaces.controlSurface(
+        scheme.primary,
+        ext.cardSurface,
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       labelPadding: const EdgeInsets.symmetric(horizontal: 8),
       labelStyle: AppTypography.label.copyWith(color: ext.textPrimary),
       secondaryLabelStyle: AppTypography.label.copyWith(
-        color: scheme.onPrimaryContainer,
+        color: AppSurfaces.accentInk(scheme.primary),
       ),
       brightness: Brightness.dark,
       elevation: 0,

@@ -113,15 +113,6 @@ class _PlayPauseButtonState extends State<PlayPauseButton>
   @override
   Widget build(BuildContext context) {
     final tokens = context.appTheme;
-    final accent = Theme.of(context).colorScheme.primary;
-    final base = Color.alphaBlend(
-      accent.withValues(alpha: .44),
-      tokens.videoSurface,
-    );
-    final highlight = Color.alphaBlend(
-      tokens.textPrimary.withValues(alpha: .18),
-      accent,
-    );
     return SizedBox.square(
       dimension: widget.size,
       child: Listener(
@@ -136,28 +127,21 @@ class _PlayPauseButtonState extends State<PlayPauseButton>
           animation: _feedback,
           builder: (context, child) {
             final value = _feedback.value;
-            final surface = Color.lerp(base, highlight, value)!;
+            final surface = Color.lerp(
+              Colors.black54,
+              const Color(0xCC383838),
+              value,
+            );
             return Transform.scale(
               scale: _reduceMotion ? 1 : 1 - .03 * value,
               transformHitTests: false,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      surface,
-                      Color.lerp(surface, tokens.videoSurface, .2)!,
-                    ],
+                  color: surface,
+                  border: Border.all(
+                    color: Color.lerp(Colors.white24, Colors.white70, value)!,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accent.withValues(alpha: .08 + .32 * value),
-                      blurRadius: 12 + 12 * value,
-                      spreadRadius: 3 * value,
-                    ),
-                  ],
                 ),
                 child: child,
               ),

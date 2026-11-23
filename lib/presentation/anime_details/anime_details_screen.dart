@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/app_features.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/color_provider.dart';
 import '../../widgets/escapable.dart';
 import '../../widgets/custom_title_bar.dart';
 import '../../widgets/anime_artwork.dart';
 import '../../theme/app_icons.dart';
+import '../../theme/app_theme_extension.dart';
 import '../../core/localization/l10n.dart';
 import 'widgets/ambient_background.dart';
 import 'widgets/left_control_panel.dart';
 import 'widgets/right_info_panel.dart';
+import 'widgets/sticker_poster.dart';
 
 class AnimeDetailsScreen extends ConsumerWidget {
   const AnimeDetailsScreen({
@@ -55,15 +58,25 @@ class AnimeDetailsScreen extends ConsumerWidget {
                         child: Text(context.l10n.detailsTitleNotFound),
                       );
                     }
-                    final ambient =
-                        ref.watch(animeColorProvider(anime)).valueOrNull ??
-                        Theme.of(context).colorScheme.primary;
-                    final accent = Theme.of(context).colorScheme.primary;
+                    final ambient = AppFeatures.designV2
+                        ? ref.watch(
+                            animeColorProvider(
+                              anime,
+                            ).select((color) => color.valueOrNull),
+                          )
+                        : null;
+                    final accent =
+                        ambient ?? Theme.of(context).colorScheme.primary;
                     return Stack(
                       children: [
-                        Positioned.fill(
-                          child: AmbientBackground(color: ambient),
-                        ),
+                        if (ambient != null)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 440,
+                            child: AmbientBackground(color: ambient),
+                          ),
                         Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 1200),
@@ -91,7 +104,15 @@ class AnimeDetailsScreen extends ConsumerWidget {
                                             accentColor: accent,
                                             showTitle: false,
                                             header: Padding(
-                                              padding: const EdgeInsets.only(
+                                              padding: EdgeInsets.only(
+                                                // Leave room for the lifted
+                                                // corners inside the viewport.
+                                                top:
+                                                    StickerPoster.supportsPlatform(
+                                                      context,
+                                                    )
+                                                    ? AppSpacing.lg
+                                                    : 0,
                                                 bottom: 24,
                                               ),
                                               child: Row(
@@ -103,8 +124,11 @@ class AnimeDetailsScreen extends ConsumerWidget {
                                                     height: 240,
                                                     child: Hero(
                                                       tag: heroTag,
-                                                      child: AnimeArtwork(
-                                                        cover: anime.coverUrl,
+                                                      child: StickerPoster(
+                                                        child: AnimeArtwork(
+                                                          cover: anime.coverUrl,
+                                                          title: anime.title,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -119,7 +143,12 @@ class AnimeDetailsScreen extends ConsumerWidget {
                                                           anime.title,
                                                           style: Theme.of(context)
                                                               .textTheme
-                                                              .headlineMedium,
+                                                              .headlineLarge
+                                                              ?.copyWith(
+                                                                height: 1.12,
+                                                                letterSpacing:
+                                                                    -.5,
+                                                              ),
                                                           maxLines: 3,
                                                           overflow: TextOverflow
                                                               .ellipsis,

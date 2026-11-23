@@ -15,6 +15,7 @@ import 'dart:async';
 import 'dart:io';
 import '../../theme/app_theme_extension.dart';
 import '../../theme/app_motion.dart';
+import '../../theme/app_theme.dart';
 import '../../core/localization/l10n.dart';
 import 'widgets/player_status_overlay.dart';
 
@@ -34,6 +35,7 @@ class PlayerScreen extends ConsumerStatefulWidget {
 
 class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   static const _playerUi = MethodChannel('hialyth/player_ui');
+  static final _neutralTheme = AppTheme.dark(accent: Colors.white);
   late final VideoController _videoController;
   late final AppLifecycleListener _lifecycleListener;
   final FocusNode _playerFocusNode = FocusNode();
@@ -115,7 +117,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     );
     final tokens = context.appTheme;
 
-    return Scaffold(
+    final player = Scaffold(
       backgroundColor: tokens.videoSurface,
       body: Shortcuts(
         shortcuts: <ShortcutActivator, Intent>{
@@ -342,6 +344,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
         ),
       ),
     );
+    return Theme(data: _neutralTheme, child: player);
   }
 
   Widget _buildNextEpisodeScreen(WidgetRef ref, dynamic notifier) {
@@ -377,7 +380,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                     children: [
                       CircularProgressIndicator(
                         value: value,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Colors.white,
                         backgroundColor: tokens.borderSubtle,
                         strokeWidth: 8,
                       ),
@@ -419,7 +422,8 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 ElevatedButton(
                   onPressed: () => notifier.playNext(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
                       vertical: AppSpacing.md,
@@ -427,7 +431,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   ),
                   child: Text(
                     context.l10n.playerWatchNow,
-                    style: TextStyle(color: tokens.textPrimary, fontSize: 16),
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ),
               ],

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
-import '../data/services/android_documents.dart';
 import '../core/app_features.dart';
 import 'library/library_components.dart';
+import 'library/library_drawer.dart';
+import 'library/library_folder_actions.dart';
+import 'library/phone_library_header.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import 'package:nekaido_pre/presentation/debug/showcase_console_screen.dart';
 import '../../providers/library_provider.dart';
@@ -22,40 +22,8 @@ import '../theme/app_theme_extension.dart';
 import '../theme/app_motion.dart';
 import '../widgets/animated_state_icon.dart';
 
-Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) async {
-  if (ref.read(scanProvider).running) return;
-  try {
-    final path = Platform.isAndroid
-        ? await AndroidDocuments.pickFolder()
-        : await FilePicker.getDirectoryPath();
-    if (path == null || !context.mounted) return;
-    final result = await ref.read(scanProvider.notifier).scan([path]);
-    if (!result.cancelled && result.errors.isEmpty) {
-      ref.read(savedFoldersProvider.notifier).addFolder(path);
-    }
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.cancelled
-                ? context.l10n.libraryScanCancelled
-                : result.errors.isNotEmpty
-                ? context.l10n.libraryScanError
-                : result.warnings > 0
-                ? context.l10n.libraryMetadataWarning
-                : context.l10n.libraryFolderAdded,
-          ),
-        ),
-      );
-    }
-  } catch (_) {
-    if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.libraryScanError)));
-    }
-  }
-}
+Future<void> _addLibraryFolder(BuildContext context, WidgetRef ref) =>
+    addLibraryFolder(context, ref);
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key, this.showcaseMode = false});
@@ -75,10 +43,14 @@ class LibraryScreen extends ConsumerWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = constraints.maxWidth < AppBreakpoints.compact;
+            final phone = constraints.maxWidth < 600;
             return Scaffold(
-              drawer: compact
-                  ? const Drawer(child: _LibraryNavigation(expanded: true))
-                  : null,
+              drawer: compact ? const LibraryDrawer() : null,
+              // Keep the stock Back strip free, but make the pull-out target
+              // comfortable instead of a 20 px guessing game.
+              // A left-half pull opens the menu, not just a thin edge strip.
+              drawerEdgeDragWidth: compact ? constraints.maxWidth * .5 : null,
+              drawerScrimColor: Colors.black.withValues(alpha: .62),
               body: SafeArea(
                 child: Column(
                   children: [
@@ -89,20 +61,23 @@ class LibraryScreen extends ConsumerWidget {
                       child: Row(
                         children: [
                           if (!compact)
-                            _LibraryNavigation(
+                            LibraryNavigation(
                               expanded: constraints.maxWidth >= 1200,
                             ),
                           Expanded(
                             child: Column(
                               children: [
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxHeight: constraints.maxHeight * .6,
+                                if (!phone)
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxHeight: constraints.maxHeight * .6,
+                                    ),
+                                    child: SingleChildScrollView(
+                                      child: _TopBar(
+                                        showcaseMode: showcaseMode,
+                                      ),
+                                    ),
                                   ),
-                                  child: SingleChildScrollView(
-                                    child: _TopBar(showcaseMode: showcaseMode),
-                                  ),
-                                ),
                                 Expanded(child: _ContentGrid()),
                               ],
                             ),
@@ -121,9 +96,24 @@ class LibraryScreen extends ConsumerWidget {
   }
 }
 
-class _LibraryNavigation extends ConsumerWidget {
+class LibraryNavigation extends ConsumerWidget {
   final bool expanded;
-  const _LibraryNavigation({required this.expanded});
+  final VoidCallback? onLibrarySelected;
+  final VoidCallback? onSettingsSelected;
+  const LibraryNavigation({
+    super.key,
+    required this.expanded,
+    this.onLibrarySelected,
+    this.onSettingsSelected,
+  });
+
+  void _openLibrary(BuildContext context) {
+    if (onLibrarySelected case final callback?) {
+      callback();
+    } else {
+      Scaffold.of(context).closeDrawer();
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -251,7 +241,7 @@ class _LibraryNavigation extends ConsumerWidget {
                                           .first;
                                     }
                                   }
-                                  Scaffold.of(context).closeDrawer();
+                                  _openLibrary(context);
                                 },
                               ),
                             ),
@@ -278,7 +268,7 @@ class _LibraryNavigation extends ConsumerWidget {
                                     .read(selectedCollectionProvider.notifier)
                                     .state =
                                 collection;
-                            Scaffold.of(context).closeDrawer();
+                            _openLibrary(context);
                           },
                         ),
                   ],
@@ -293,16 +283,18 @@ class _LibraryNavigation extends ConsumerWidget {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                     leading: const Icon(AppIcons.settings, size: 24),
                     title: expanded ? Text(context.l10n.settingsTitle) : null,
-                    onTap: () {
-                      Scaffold.of(context).closeDrawer();
-                      Navigator.push(
-                        context,
-                        AppMotion.pageRoute(
-                          context,
-                          builder: (_) => const SettingsScreen(),
-                        ),
-                      );
-                    },
+                    onTap:
+                        onSettingsSelected ??
+                        () {
+                          Scaffold.of(context).closeDrawer();
+                          Navigator.push(
+                            context,
+                            AppMotion.pageRoute(
+                              context,
+                              builder: (_) => const SettingsScreen(),
+                            ),
+                          );
+                        },
                   ),
                 ),
               ),
@@ -325,31 +317,67 @@ class _TopBarState extends ConsumerState<_TopBar> {
   final _debouncer = Debouncer(milliseconds: 300);
   final _searchController = TextEditingController();
 
-  Widget _buildSearch() => TextField(
-    controller: _searchController,
-    focusNode: ref.watch(librarySearchFocusProvider),
-    onChanged: (value) {
-      setState(() {});
-      _debouncer.run(() {
-        if (mounted) ref.read(searchQueryProvider.notifier).state = value;
-      });
-    },
-    decoration: InputDecoration(
-      hintText: context.l10n.librarySearchHint,
-      prefixIcon: const Icon(AppIcons.search),
-      suffixIcon: _searchController.text.isEmpty
-          ? null
-          : IconButton(
-              tooltip: context.l10n.libraryClearSearch,
-              icon: const Icon(AppIcons.close),
-              onPressed: () {
-                _debouncer.cancel();
-                _searchController.clear();
-                ref.read(searchQueryProvider.notifier).state = '';
-                setState(() {});
-              },
-            ),
-    ),
+  Widget _buildSearch({bool phone = false}) {
+    final tokens = context.appTheme;
+    final scheme = Theme.of(context).colorScheme;
+    return TextField(
+      controller: _searchController,
+      focusNode: ref.watch(librarySearchFocusProvider),
+      onChanged: (value) {
+        setState(() {});
+        _debouncer.run(() {
+          if (mounted) ref.read(searchQueryProvider.notifier).state = value;
+        });
+      },
+      style: phone ? Theme.of(context).textTheme.bodyLarge : null,
+      decoration: InputDecoration(
+        hintText: context.l10n.librarySearchHint,
+        prefixIcon: Icon(
+          AppIcons.search,
+          size: phone ? 21 : null,
+          color: tokens.textMuted,
+        ),
+        filled: true,
+        fillColor: tokens.container,
+        contentPadding: phone ? const EdgeInsets.symmetric(vertical: 14) : null,
+        enabledBorder: phone
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+                borderSide: BorderSide.none,
+              )
+            : null,
+        focusedBorder: phone
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+                borderSide: BorderSide(
+                  color: scheme.primary.withValues(alpha: .7),
+                  width: 1.5,
+                ),
+              )
+            : null,
+        suffixIcon: _searchController.text.isEmpty
+            ? null
+            : IconButton(
+                tooltip: context.l10n.libraryClearSearch,
+                icon: const Icon(AppIcons.close),
+                onPressed: () {
+                  _debouncer.cancel();
+                  _searchController.clear();
+                  ref.read(searchQueryProvider.notifier).state = '';
+                  setState(() {});
+                },
+              ),
+      ),
+    );
+  }
+
+  Widget _refresh(BuildContext context, List<String> folders) => IconButton(
+    key: const ValueKey('library-refresh'),
+    tooltip: context.l10n.settingsRescanLibrary,
+    icon: const Icon(AppIcons.rescan),
+    onPressed: folders.isEmpty || ref.watch(scanProvider).running
+        ? null
+        : () => ref.read(scanProvider.notifier).scan(folders),
   );
 
   @override
@@ -415,14 +443,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
                       : () => _addLibraryFolder(context, ref),
                   icon: const Icon(AppIcons.addFolder),
                 ),
-                IconButton(
-                  key: const ValueKey('library-refresh'),
-                  tooltip: context.l10n.settingsRescanLibrary,
-                  icon: const Icon(AppIcons.rescan),
-                  onPressed: folders.isEmpty || ref.watch(scanProvider).running
-                      ? null
-                      : () => ref.read(scanProvider.notifier).scan(folders),
-                ),
+                _refresh(context, folders),
                 PopupMenuButton<LibrarySort>(
                   tooltip: context.l10n.librarySort,
                   initialValue: view.sort,
@@ -495,12 +516,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(
-            phone ? 16 : 24,
-            phone ? 8 : 16,
-            phone ? 16 : 24,
-            8,
-          ),
+          padding: EdgeInsets.fromLTRB(24, phone ? 8 : 16, 24, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -521,7 +537,7 @@ class _TopBarState extends ConsumerState<_TopBar> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: phone
-                              ? Theme.of(context).textTheme.headlineSmall
+                              ? Theme.of(context).textTheme.headlineLarge
                               : Theme.of(context).textTheme.displayMedium,
                         ),
                         const SizedBox(height: 4),
@@ -546,9 +562,14 @@ class _TopBarState extends ConsumerState<_TopBar> {
                         ),
                       ),
                     ),
+                  if (phone) _refresh(context, folders),
                   if (phone)
-                    IconButton.filled(
+                    IconButton(
                       tooltip: context.l10n.libraryAddFolder,
+                      style: IconButton.styleFrom(
+                        backgroundColor: tokens.container,
+                        foregroundColor: tokens.textPrimary,
+                      ),
                       onPressed: ref.watch(scanProvider).running
                           ? null
                           : () => _addLibraryFolder(context, ref),
@@ -565,27 +586,21 @@ class _TopBarState extends ConsumerState<_TopBar> {
                 ],
               ),
               const SizedBox(height: 12),
-              _buildSearch(),
-              const SizedBox(height: 12),
+              if (!phone) ...[_buildSearch(), const SizedBox(height: 12)],
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      context.l10n.libraryBrowse,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    child: phone
+                        ? _buildSearch()
+                        : Text(
+                            context.l10n.libraryBrowse,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                   ),
-                  IconButton(
-                    key: const ValueKey('library-refresh'),
-                    tooltip: context.l10n.settingsRescanLibrary,
-                    icon: const Icon(AppIcons.rescan),
-                    onPressed:
-                        folders.isEmpty || ref.watch(scanProvider).running
-                        ? null
-                        : () => ref.read(scanProvider.notifier).scan(folders),
-                  ),
+                  if (phone) const SizedBox(width: AppSpacing.xxs),
+                  if (!phone) _refresh(context, folders),
                   PopupMenuButton<LibrarySort>(
                     tooltip: context.l10n.librarySort,
                     initialValue: ref.watch(libraryViewProvider).sort,
@@ -607,20 +622,37 @@ class _TopBarState extends ConsumerState<_TopBar> {
                     ],
                     icon: const Icon(AppIcons.sort),
                   ),
-                  IconButton(
-                    isSelected: !ref.watch(libraryViewProvider).list,
-                    tooltip: context.l10n.libraryGrid,
-                    icon: const Icon(AppIcons.all),
-                    onPressed: () =>
-                        ref.read(libraryViewProvider.notifier).showList(false),
-                  ),
-                  IconButton(
-                    isSelected: ref.watch(libraryViewProvider).list,
-                    tooltip: context.l10n.libraryList,
-                    icon: const Icon(AppIcons.list),
-                    onPressed: () =>
-                        ref.read(libraryViewProvider.notifier).showList(true),
-                  ),
+                  if (phone)
+                    IconButton(
+                      tooltip: ref.watch(libraryViewProvider).list
+                          ? context.l10n.libraryGrid
+                          : context.l10n.libraryList,
+                      icon: AnimatedStateIcon(
+                        ref.watch(libraryViewProvider).list
+                            ? AppIcons.all
+                            : AppIcons.list,
+                      ),
+                      onPressed: () => ref
+                          .read(libraryViewProvider.notifier)
+                          .showList(!ref.read(libraryViewProvider).list),
+                    )
+                  else ...[
+                    IconButton(
+                      isSelected: !ref.watch(libraryViewProvider).list,
+                      tooltip: context.l10n.libraryGrid,
+                      icon: const Icon(AppIcons.all),
+                      onPressed: () => ref
+                          .read(libraryViewProvider.notifier)
+                          .showList(false),
+                    ),
+                    IconButton(
+                      isSelected: ref.watch(libraryViewProvider).list,
+                      tooltip: context.l10n.libraryList,
+                      icon: const Icon(AppIcons.list),
+                      onPressed: () =>
+                          ref.read(libraryViewProvider.notifier).showList(true),
+                    ),
+                  ],
                 ],
               ),
               if (!ref.watch(scanProvider).running &&
@@ -751,12 +783,31 @@ class _ContentGrid extends ConsumerStatefulWidget {
 }
 
 class _ContentGridState extends ConsumerState<_ContentGrid> {
+  final _scrollController = ScrollController();
+  final _headerProgress = ValueNotifier<double>(0);
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_syncHeaderProgress);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _checkAndShowVpnWarning();
     });
+  }
+
+  void _syncHeaderProgress() {
+    final range = kPhoneLibraryHeaderExpanded - kPhoneLibraryHeaderCollapsed;
+    final next = (_scrollController.offset / range).clamp(0.0, 1.0);
+    if ((_headerProgress.value - next).abs() > .002) {
+      _headerProgress.value = next;
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _headerProgress.dispose();
+    super.dispose();
   }
 
   Future<void> _checkAndShowVpnWarning() async {
@@ -819,6 +870,7 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
 
   @override
   Widget build(BuildContext context) {
+    final phone = MediaQuery.sizeOf(context).width < 600;
     final libraryAsync = ref.watch(libraryProvider);
     return libraryAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -830,155 +882,201 @@ class _ContentGridState extends ConsumerState<_ContentGrid> {
       ),
       data: (allAnimes) {
         final filteredList = ref.watch(filteredAnimeProvider);
+        final slivers = <Widget>[
+          if (phone)
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: PhoneLibraryHeaderDelegate(
+                child: PhoneLibraryHeader(
+                  key: const ValueKey('phone-library-header'),
+                  progress: _headerProgress,
+                ),
+              ),
+            ),
+        ];
+
         if (filteredList.isEmpty) {
           final emptyLibrary = allAnimes.isEmpty;
           final noFiles =
               emptyLibrary && ref.watch(savedFoldersProvider).isNotEmpty;
-          final emptyContent = Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
+          slivers.add(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      emptyLibrary ? AppIcons.videoLibrary : AppIcons.search,
-                      size: 48,
-                      color: context.appTheme.textMuted,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      emptyLibrary
-                          ? (noFiles
-                                ? context.l10n.libraryNoFilesTitle
-                                : context.l10n.libraryEmptyTitle)
-                          : context.l10n.libraryNothingFound,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      emptyLibrary
-                          ? (noFiles
-                                ? context.l10n.libraryNoFilesBody
-                                : context.l10n.libraryEmptyBody)
-                          : context.l10n.libraryNoResultsBody,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    if (emptyLibrary)
-                      FilledButton.icon(
-                        onPressed: ref.watch(scanProvider).running
-                            ? null
-                            : () => _addLibraryFolder(context, ref),
-                        icon: const Icon(AppIcons.addFolder),
-                        label: Text(context.l10n.libraryAddFolder),
-                      )
-                    else
-                      TextButton(
-                        onPressed: () {
-                          ref.read(searchQueryProvider.notifier).state = '';
-                          ref
-                                  .read(selectedSidebarIndexProvider.notifier)
-                                  .state =
-                              0;
-                          ref.read(selectedCollectionProvider.notifier).state =
-                              null;
-                        },
-                        child: Text(context.l10n.libraryResetFilters),
+                padding: const EdgeInsets.only(top: 40),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            emptyLibrary
+                                ? AppIcons.videoLibrary
+                                : AppIcons.search,
+                            size: 48,
+                            color: context.appTheme.textMuted,
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            emptyLibrary
+                                ? (noFiles
+                                      ? context.l10n.libraryNoFilesTitle
+                                      : context.l10n.libraryEmptyTitle)
+                                : context.l10n.libraryNothingFound,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            emptyLibrary
+                                ? (noFiles
+                                      ? context.l10n.libraryNoFilesBody
+                                      : context.l10n.libraryEmptyBody)
+                                : context.l10n.libraryNoResultsBody,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          if (emptyLibrary)
+                            FilledButton.icon(
+                              onPressed: ref.watch(scanProvider).running
+                                  ? null
+                                  : () => _addLibraryFolder(context, ref),
+                              icon: const Icon(AppIcons.addFolder),
+                              label: Text(context.l10n.libraryAddFolder),
+                            )
+                          else
+                            TextButton(
+                              onPressed: () {
+                                ref.read(searchQueryProvider.notifier).state =
+                                    '';
+                                ref
+                                        .read(
+                                          selectedSidebarIndexProvider.notifier,
+                                        )
+                                        .state =
+                                    0;
+                                ref
+                                        .read(
+                                          selectedCollectionProvider.notifier,
+                                        )
+                                        .state =
+                                    null;
+                              },
+                              child: Text(context.l10n.libraryResetFilters),
+                            ),
+                        ],
                       ),
-                  ],
+                    ),
+                  ),
                 ),
               ),
             ),
           );
-          return LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: emptyContent,
+        } else {
+          final view = ref.watch(libraryViewProvider);
+          final canShowResume =
+              AppFeatures.designV2 &&
+              ref.watch(selectedSidebarIndexProvider) == 0 &&
+              ref.watch(searchQueryProvider).isEmpty;
+          final resumable = canShowResume
+              ? ref.watch(continueWatchingProvider)
+              : const <Anime>[];
+          final showResume = canShowResume && resumable.isNotEmpty;
+          final sectionTitle = switch (ref.watch(
+            selectedSidebarIndexProvider,
+          )) {
+            1 => context.l10n.libraryWatching,
+            2 => context.l10n.libraryPlanned,
+            3 => context.l10n.libraryCompleted,
+            4 => context.l10n.libraryDropped,
+            5 =>
+              ref.watch(selectedCollectionProvider) ??
+                  context.l10n.libraryCollections,
+            _ => context.l10n.libraryAllTitles,
+          };
+          if (showResume) {
+            slivers.add(
+              SliverToBoxAdapter(
+                child: ContinueWatchingSection(
+                  anime: resumable.take(6).toList(),
+                ),
               ),
+            );
+          }
+          if (!phone) {
+            slivers.add(
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    24,
+                    showResume ? 24 : 16,
+                    24,
+                    AppSpacing.sm,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          sectionTitle,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
+                      Text(
+                        '${filteredList.length}',
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+          slivers.add(
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                phone ? 16 : 24,
+                phone ? 12 : 0,
+                phone ? 16 : 24,
+                24,
+              ),
+              sliver: view.list
+                  ? SliverList.builder(
+                      itemCount: filteredList.length,
+                      itemBuilder: (context, index) =>
+                          AnimeListTile(anime: filteredList[index]),
+                    )
+                  : SliverGrid.builder(
+                      gridDelegate: phone
+                          ? const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: .58,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 16,
+                            )
+                          : const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 240,
+                              childAspectRatio: .56,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                            ),
+                      itemCount: filteredList.length,
+                      itemBuilder: (context, index) =>
+                          AnimeCard(anime: filteredList[index]),
+                    ),
             ),
           );
         }
-        final view = ref.watch(libraryViewProvider);
-        final canShowResume =
-            AppFeatures.designV2 &&
-            ref.watch(selectedSidebarIndexProvider) == 0 &&
-            ref.watch(searchQueryProvider).isEmpty;
-        final resumable = canShowResume
-            ? ref.watch(continueWatchingProvider)
-            : const <Anime>[];
-        final showResume = canShowResume && resumable.isNotEmpty;
-        final sectionTitle = switch (ref.watch(selectedSidebarIndexProvider)) {
-          1 => context.l10n.libraryWatching,
-          2 => context.l10n.libraryPlanned,
-          3 => context.l10n.libraryCompleted,
-          4 => context.l10n.libraryDropped,
-          5 =>
-            ref.watch(selectedCollectionProvider) ??
-                context.l10n.libraryCollections,
-          _ => context.l10n.libraryAllTitles,
-        };
+
         return Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1440),
             child: CustomScrollView(
-              slivers: [
-                if (showResume)
-                  SliverToBoxAdapter(
-                    child: ContinueWatchingSection(
-                      anime: resumable.take(6).toList(),
-                    ),
-                  ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      24,
-                      showResume ? 24 : 16,
-                      24,
-                      AppSpacing.sm,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            sectionTitle,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ),
-                        Text(
-                          '${filteredList.length}',
-                          style: Theme.of(context).textTheme.labelMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  sliver: view.list
-                      ? SliverList.builder(
-                          itemCount: filteredList.length,
-                          itemBuilder: (context, index) =>
-                              AnimeListTile(anime: filteredList[index]),
-                        )
-                      : SliverGrid.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                                maxCrossAxisExtent: 240,
-                                childAspectRatio: .56,
-                                crossAxisSpacing: 20,
-                                mainAxisSpacing: 20,
-                              ),
-                          itemCount: filteredList.length,
-                          itemBuilder: (context, index) =>
-                              AnimeCard(anime: filteredList[index]),
-                        ),
-                ),
-              ],
+              controller: _scrollController,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: slivers,
             ),
           ),
         );

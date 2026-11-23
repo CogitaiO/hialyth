@@ -9,6 +9,7 @@ import 'package:flutter/material.dart' show Icons;
 /// use Linear. To swap icon families, edit only this file.
 abstract final class AppIcons {
   static const back = Iconsax.arrow_left_copy;
+  static const menu = Icons.menu_rounded;
   static const close = Iconsax.close_circle_copy;
   static const search = Iconsax.search_normal_copy;
   static const settings = Iconsax.setting_2_copy;
