@@ -7,6 +7,7 @@ import 'package:nekaido_pre/data/services/file_discovery_service.dart';
 import 'package:nekaido_pre/domain/anime.dart';
 import 'package:nekaido_pre/l10n/app_localizations.dart';
 import 'package:nekaido_pre/presentation/library_screen.dart';
+import 'package:nekaido_pre/presentation/library/phone_library_header.dart';
 import 'package:nekaido_pre/presentation/settings/settings_screen.dart';
 import 'package:nekaido_pre/providers/library_provider.dart';
 import 'package:nekaido_pre/theme/app_theme.dart';
@@ -15,7 +16,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 class _UnusedRepository extends Fake implements AnimeRepository {}
 
 void main() {
-  Future<ProviderContainer> mount(WidgetTester tester) async {
+  Future<ProviderContainer> mount(
+    WidgetTester tester, {
+    List<Anime> animes = const [],
+  }) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(390, 800);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -42,7 +46,7 @@ void main() {
         scannerProvider.overrideWithValue(
           FileDiscoveryService(_UnusedRepository()),
         ),
-        libraryProvider.overrideWith((ref) => Stream.value(<Anime>[])),
+        libraryProvider.overrideWith((ref) => Stream.value(animes)),
       ],
     );
     addTearDown(container.dispose);
@@ -92,6 +96,42 @@ void main() {
     await tester.dragFrom(const Offset(40, 420), const Offset(0, -150));
     await tester.pumpAndSettle();
     expect(find.byType(Drawer), findsNothing);
+  });
+
+  testWidgets('the header shrinks and keeps filters pinned while scrolling', (
+    tester,
+  ) async {
+    final animes = [
+      for (var i = 1; i <= 10; i++)
+        Anime()
+          ..id = i
+          ..title = 'Anime $i'
+          ..status = i.isEven ? AnimeStatus.watching : AnimeStatus.planned
+          ..episodePaths = ['/missing/episode-$i.mkv'],
+    ];
+    await mount(tester, animes: animes);
+    final header = find.byKey(const ValueKey('phone-library-header'));
+    expect(
+      tester.getSize(header).height,
+      closeTo(kPhoneLibraryHeaderExpanded, .5),
+    );
+    expect(find.byType(TextField).hitTestable(), findsOneWidget);
+
+    await tester.dragFrom(const Offset(200, 620), const Offset(0, -260));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(header).height,
+      closeTo(kPhoneLibraryHeaderCollapsed, .5),
+    );
+    expect(find.byType(TextField).hitTestable(), findsNothing);
+    expect(find.text('All titles').hitTestable(), findsOneWidget);
+
+    await tester.dragFrom(const Offset(200, 300), const Offset(0, 500));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(header).height,
+      closeTo(kPhoneLibraryHeaderExpanded, .5),
+    );
   });
 
   testWidgets('drawer destinations switch the library and open settings', (
