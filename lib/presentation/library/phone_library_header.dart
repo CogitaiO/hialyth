@@ -288,13 +288,9 @@ class _PhoneLibraryHeaderState extends ConsumerState<PhoneLibraryHeader> {
               child: searchField,
               builder: (context, t, searchField) {
                 final travel = Curves.easeInOutCubic.transform(t);
-                final titleLeft =
-                    16 +
-                    46 *
-                        Curves.easeOutCubic.transform((t / .3).clamp(0.0, 1.0));
-                final titleRight = 16 + 60 * ((t - .3) / .25).clamp(0.0, 1.0);
-                final titleFont = 32 - 13 * travel;
+                final titleLeft = 16 + 46 * (t / .4).clamp(0.0, 1.0);
                 final titleTop = 62 - 44 * travel;
+                final titleScale = (32 - 13 * travel) / 32;
                 final countOpacity = (1 - ((t - .55) / .35).clamp(0.0, 1.0));
                 final searchOpacity = (1 - t * 5).clamp(0.0, 1.0);
 
@@ -302,42 +298,48 @@ class _PhoneLibraryHeaderState extends ConsumerState<PhoneLibraryHeader> {
                   children: [
                     Positioned(
                       left: titleLeft,
-                      right: titleRight,
+                      right: 76,
                       top: titleTop,
-                      height: titleFont * 1.3,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.displayMedium!
-                                  .copyWith(fontSize: titleFont, height: 1.2),
+                      height: 42,
+                      child: Transform.scale(
+                        scale: titleScale,
+                        alignment: Alignment.topLeft,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .displayMedium!
+                                    .copyWith(height: 1.2),
+                              ),
                             ),
-                          ),
-                          if (countOpacity > 0) ...[
-                            const SizedBox(width: 8),
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 3),
-                              child: Opacity(
-                                opacity: countOpacity,
-                                child: Text(
-                                  '· $count',
-                                  style: TextStyle(
-                                    color: tokens.textMuted,
-                                    fontSize: titleFont * .5,
-                                    fontWeight: FontWeight.w600,
-                                    fontFeatures: const [
-                                      FontFeature.tabularFigures(),
-                                    ],
+                            if (countOpacity > 0) ...[
+                              const SizedBox(width: 8),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 3),
+                                child: Opacity(
+                                  opacity: countOpacity,
+                                  child: Text(
+                                    '· $count',
+                                    style: TextStyle(
+                                      color: tokens.textMuted,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                     Positioned(
