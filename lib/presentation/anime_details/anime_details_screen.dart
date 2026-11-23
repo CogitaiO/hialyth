@@ -127,6 +127,7 @@ class AnimeDetailsScreen extends ConsumerWidget {
                                                       child: StickerPoster(
                                                         child: AnimeArtwork(
                                                           cover: anime.coverUrl,
+                                                          title: anime.title,
                                                         ),
                                                       ),
                                                     ),

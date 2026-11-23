@@ -85,11 +85,9 @@ class ContinueWatchingCard extends StatelessWidget {
     final ambient = anime.ambientColorValue;
     final accent = ambient == null ? scheme.primary : Color(ambient);
     final ink = AppSurfaces.accentInk(accent);
-    final printColor = AppSurfaces.artworkWash(
-      accent,
-      colors.cardSurface,
-      strength: .32,
-    );
+    final printColor = ambient == null
+        ? colors.cardSurface
+        : AppSurfaces.artworkWash(accent, colors.cardSurface, strength: .22);
     final next = anime.nextEpisodeToPlay;
     final watched = anime.episodePaths
         .toSet()
@@ -118,6 +116,7 @@ class ContinueWatchingCard extends StatelessWidget {
                 width: 98,
                 child: AnimeArtwork(
                   cover: anime.coverUrl,
+                  title: anime.title,
                   radius: 0,
                   cacheWidth: 240,
                 ),
@@ -225,35 +224,41 @@ class AnimeListTile extends StatelessWidget {
     final progressInk = AppSurfaces.accentInk(
       swatch == null ? Theme.of(context).colorScheme.primary : Color(swatch),
     );
-    final status = switch (anime.status) {
-      AnimeStatus.planned => context.l10n.statusPlanned,
-      AnimeStatus.watching => context.l10n.statusWatching,
-      AnimeStatus.completed => context.l10n.statusCompleted,
-      AnimeStatus.dropped => context.l10n.statusDropped,
-    };
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.borderSubtle)),
+    final (status, statusColor) = switch (anime.status) {
+      AnimeStatus.planned => (context.l10n.statusPlanned, colors.statusPlanned),
+      AnimeStatus.watching => (
+        context.l10n.statusWatching,
+        colors.statusWatching,
       ),
+      AnimeStatus.completed => (
+        context.l10n.statusCompleted,
+        colors.statusCompleted,
+      ),
+      AnimeStatus.dropped => (context.l10n.statusDropped, colors.statusDropped),
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: Colors.transparent,
+        color: colors.container,
+        borderRadius: BorderRadius.circular(AppRadii.xl),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => _details(context, anime),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
             child: Row(
               children: [
                 SizedBox(
-                  width: 44,
-                  height: 66,
+                  width: 54,
+                  height: 76,
                   child: AnimeArtwork(
                     cover: anime.coverUrl,
-                    radius: 8,
-                    cacheWidth: 120,
+                    title: anime.title,
+                    radius: 10,
+                    cacheWidth: 140,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,28 +269,51 @@ class AnimeListTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$status · ${anime.progressFraction}',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              '$status · ${anime.progressFraction}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall!
+                                  .copyWith(color: colors.textMuted),
+                            ),
+                          ),
+                        ],
                       ),
                       if (progress > 0) ...[
-                        const SizedBox(height: 8),
-                        LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 3,
-                          color: progressInk,
-                          backgroundColor: colors.borderSubtle,
+                        const SizedBox(height: 9),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(AppRadii.pill),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            minHeight: 3,
+                            color: progressInk,
+                            backgroundColor: colors.borderSubtle,
+                          ),
                         ),
                       ],
                     ],
                   ),
                 ),
                 if (progress > 0) ...[
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Text(
                     anime.progressPercentage,
-                    style: Theme.of(context).textTheme.labelLarge,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelMedium!.copyWith(color: colors.textMuted),
                   ),
                 ],
               ],

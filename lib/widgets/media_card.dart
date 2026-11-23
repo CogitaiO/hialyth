@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import '../theme/app_surfaces.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:nekaido_pre/data/services/shikimori_service.dart';
-import 'dart:io';
 
 import '../domain/anime.dart';
 import '../presentation/anime_details/anime_details_screen.dart';
 import '../../providers/repositories_provider.dart';
 import '../presentation/anime_details/dialogs/anime_dialogs.dart';
 import '../theme/app_icons.dart';
+import 'anime_artwork.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_theme_extension.dart';
 import '../core/localization/l10n.dart';
@@ -163,7 +162,6 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
         .toSet()
         .intersection(widget.anime.watchedEpisodes.toSet())
         .length;
-    final cover = widget.anime.coverUrl;
     final (statusLabel, statusColor) = switch (widget.anime.status) {
       AnimeStatus.planned => (context.l10n.statusPlanned, tokens.statusPlanned),
       AnimeStatus.watching => (
@@ -176,9 +174,6 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
       ),
       AnimeStatus.dropped => (context.l10n.statusDropped, tokens.statusDropped),
     };
-    final placeholder = Center(
-      child: Icon(AppIcons.image, color: tokens.textMuted, size: 40),
-    );
     return FocusableActionDetector(
       onShowFocusHighlight: (value) => setState(() => _isFocused = value),
       actions: {
@@ -231,43 +226,12 @@ class _AnimeCardState extends ConsumerState<AnimeCard> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    tokens.containerHigh,
-                                    tokens.pageSurface,
-                                  ],
-                                ),
-                              ),
+                            AnimeArtwork(
+                              cover: widget.anime.coverUrl,
+                              title: widget.anime.title,
+                              radius: 0,
+                              cacheWidth: 440,
                             ),
-                            if (cover == null || cover.isEmpty)
-                              placeholder
-                            else if (cover.startsWith('http'))
-                              CachedNetworkImage(
-                                imageUrl: cover,
-                                fit: BoxFit.cover,
-                                memCacheWidth: 440,
-                                fadeInDuration: Duration.zero,
-                                fadeOutDuration: Duration.zero,
-                                placeholder: (_, _) => placeholder,
-                                errorWidget: (_, _, _) => placeholder,
-                              )
-                            else if (cover.startsWith('asset:'))
-                              Image.asset(
-                                cover.substring('asset:'.length),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => placeholder,
-                              )
-                            else
-                              Image.file(
-                                File(cover),
-                                fit: BoxFit.cover,
-                                cacheWidth: 440,
-                                errorBuilder: (_, _, _) => placeholder,
-                              ),
                             Positioned(
                               left: 0,
                               right: 0,

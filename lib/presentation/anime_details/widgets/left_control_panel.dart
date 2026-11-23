@@ -39,6 +39,7 @@ class LeftControlPanel extends ConsumerWidget {
               tag: heroTag,
               child: AnimeArtwork(
                 cover: anime.coverUrl,
+                title: anime.title,
                 radius: 16,
                 cacheWidth: 560,
               ),
