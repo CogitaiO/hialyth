@@ -91,7 +91,7 @@ class _PlaybackTimelineState extends State<PlaybackTimeline> {
                 _pendingSeek ??
                 widget.position.inMilliseconds.toDouble())
             .clamp(0.0, maximum > 0 ? maximum : 1.0);
-    final accent = Theme.of(context).colorScheme.primary;
+    const accent = Colors.white;
     final tokens = context.appTheme;
     final inactive = widget.mobileStyle ? Colors.white30 : tokens.borderStrong;
     final active = _hovering || _dragValue != null;

@@ -10,7 +10,9 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../widgets/custom_title_bar.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_palette.dart';
+import '../../theme/app_surfaces.dart';
 import '../../theme/app_theme_extension.dart';
+import '../../core/app_features.dart';
 import '../../core/localization/l10n.dart';
 import '../../core/logger.dart';
 import '../../data/services/android_documents.dart';
@@ -40,129 +42,135 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Escapable(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: SafeArea(
-          child: Column(
-            children: [
-              if (phone)
-                Row(
-                  children: [
-                    BackButton(color: tokens.textPrimary),
-                    Text(
-                      context.l10n.settingsTitle,
-                      style: Theme.of(context).textTheme.titleLarge,
+        body: _SettingsBackdrop(
+          accent: accentColor,
+          child: SafeArea(
+            child: Column(
+              children: [
+                if (phone)
+                  Row(
+                    children: [
+                      BackButton(color: tokens.textPrimary),
+                      Text(
+                        context.l10n.settingsTitle,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                CustomTitleBar(
+                  leading: IconButton(
+                    icon: Icon(AppIcons.back, color: tokens.textPrimary),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  title: Text(
+                    context.l10n.settingsTitle,
+                    style: TextStyle(
+                      color: tokens.textPrimary,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
-              CustomTitleBar(
-                leading: IconButton(
-                  icon: Icon(AppIcons.back, color: tokens.textPrimary),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                title: Text(
-                  context.l10n.settingsTitle,
-                  style: TextStyle(
-                    color: tokens.textPrimary,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final compact = constraints.maxWidth < 900;
-                    final destinations = [
-                      (context.l10n.settingsAppearance, AppIcons.appearance),
-                      (context.l10n.settingsPlayback, AppIcons.playback),
-                      (context.l10n.settingsLibrary, AppIcons.library),
-                      (context.l10n.settingsIntegrations, AppIcons.settings),
-                      (
-                        context.l10n.settingsAdvanced,
-                        AppIcons.advancedSettings,
-                      ),
-                    ];
-                    final content = AnimatedSwitcher(
-                      duration: AppMotion.resolveDuration(
-                        context,
-                        const Duration(milliseconds: 200),
-                      ),
-                      child: _buildContent(_selectedIndex, accentColor, ref),
-                    );
-                    return Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 960),
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          child: compact
-                              ? Column(
-                                  children: [
-                                    SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        children: [
-                                          for (
-                                            var i = 0;
-                                            i < destinations.length;
-                                            i++
-                                          )
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                right: 8,
-                                              ),
-                                              child: ChoiceChip(
-                                                avatar: Icon(
-                                                  destinations[i].$2,
-                                                  size: 18,
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final compact = constraints.maxWidth < 900;
+                      final destinations = [
+                        (context.l10n.settingsAppearance, AppIcons.appearance),
+                        (context.l10n.settingsPlayback, AppIcons.playback),
+                        (context.l10n.settingsLibrary, AppIcons.library),
+                        (context.l10n.settingsIntegrations, AppIcons.settings),
+                        (
+                          context.l10n.settingsAdvanced,
+                          AppIcons.advancedSettings,
+                        ),
+                      ];
+                      final content = AnimatedSwitcher(
+                        duration: AppMotion.resolveDuration(
+                          context,
+                          const Duration(milliseconds: 200),
+                        ),
+                        child: _buildContent(_selectedIndex, accentColor, ref),
+                      );
+                      return Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 960),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: compact
+                                ? Column(
+                                    children: [
+                                      SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                          children: [
+                                            for (
+                                              var i = 0;
+                                              i < destinations.length;
+                                              i++
+                                            )
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  right: 8,
                                                 ),
-                                                label: Text(destinations[i].$1),
-                                                selected: _selectedIndex == i,
-                                                onSelected: (_) => setState(
+                                                child: ChoiceChip(
+                                                  avatar: Icon(
+                                                    destinations[i].$2,
+                                                    size: 18,
+                                                  ),
+                                                  label: Text(
+                                                    destinations[i].$1,
+                                                  ),
+                                                  selected: _selectedIndex == i,
+                                                  onSelected: (_) => setState(
+                                                    () => _selectedIndex = i,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      Expanded(child: content),
+                                    ],
+                                  )
+                                : Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        width: 220,
+                                        child: ListView(
+                                          children: [
+                                            for (
+                                              var i = 0;
+                                              i < destinations.length;
+                                              i++
+                                            )
+                                              _MenuTab(
+                                                title: destinations[i].$1,
+                                                icon: destinations[i].$2,
+                                                index: i,
+                                                currentIndex: _selectedIndex,
+                                                accentColor: accentColor,
+                                                onTap: () => setState(
                                                   () => _selectedIndex = i,
                                                 ),
                                               ),
-                                            ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Expanded(child: content),
-                                  ],
-                                )
-                              : Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(
-                                      width: 220,
-                                      child: ListView(
-                                        children: [
-                                          for (
-                                            var i = 0;
-                                            i < destinations.length;
-                                            i++
-                                          )
-                                            _MenuTab(
-                                              title: destinations[i].$1,
-                                              icon: destinations[i].$2,
-                                              index: i,
-                                              currentIndex: _selectedIndex,
-                                              accentColor: accentColor,
-                                              onTap: () => setState(
-                                                () => _selectedIndex = i,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 32),
-                                    Expanded(child: content),
-                                  ],
-                                ),
+                                      const SizedBox(width: 32),
+                                      Expanded(child: content),
+                                    ],
+                                  ),
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -196,6 +204,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       default:
         return const SizedBox.shrink();
     }
+  }
+}
+
+class _SettingsBackdrop extends StatelessWidget {
+  const _SettingsBackdrop({required this.accent, required this.child});
+
+  final Color accent;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!AppFeatures.designV2) return child;
+    final black = context.appTheme.pageSurface;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        RepaintBoundary(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  black,
+                  black,
+                  AppSurfaces.artworkWash(accent, black, strength: .31),
+                  black,
+                ],
+                stops: const [0, .27, .84, 1],
+              ),
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
   }
 }
 

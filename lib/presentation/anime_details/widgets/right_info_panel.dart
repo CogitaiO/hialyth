@@ -9,6 +9,7 @@ import '../../../../utils/os_utils.dart';
 import '../../player/player_screen.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_motion.dart';
+import '../../../theme/app_surfaces.dart';
 import '../../../theme/app_theme_extension.dart';
 import '../../../core/localization/l10n.dart';
 
@@ -34,6 +35,8 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
   Widget build(BuildContext context) {
     final anime = widget.anime;
     final paths = anime.sortedEpisodes;
+    final tokens = context.appTheme;
+    final text = Theme.of(context).textTheme;
     return CustomScrollView(
       slivers: [
         if (widget.header != null) SliverToBoxAdapter(child: widget.header),
@@ -51,40 +54,45 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
                 const SizedBox(height: 16),
               ],
               Wrap(
-                spacing: 8,
+                spacing: 16,
                 runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Chip(
-                    avatar: const Icon(AppIcons.videoLibrary, size: 16),
+                  _DetailFact(
+                    icon: AppIcons.videoLibrary,
                     label: Text(context.l10n.detailsEpisodes(paths.length)),
                   ),
-                  Chip(
-                    avatar: const Icon(AppIcons.checkCircle, size: 16),
+                  _DetailFact(
+                    icon: AppIcons.checkCircle,
                     label: Text(anime.progressPercentage),
                   ),
                   if (anime.folderPath != null)
                     ActionChip(
-                      avatar: const Icon(AppIcons.folder, size: 16),
+                      avatar: Icon(
+                        AppIcons.folder,
+                        size: 16,
+                        color: AppSurfaces.accentInk(widget.accentColor),
+                      ),
+                      backgroundColor: AppSurfaces.artworkWash(
+                        widget.accentColor,
+                        AppSurfaces.quiet,
+                        strength: .12,
+                      ),
                       label: Text(context.l10n.detailsOpenFolder),
                       onPressed: () => OSUtils.openFolder(anime.folderPath),
                     ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: context.appTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: context.appTheme.borderSubtle),
-                ),
+              const SizedBox(height: AppSpacing.sm),
+              Divider(color: tokens.borderSubtle, height: AppSpacing.lg),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       context.l10n.detailsDescription,
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: text.titleLarge,
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -93,10 +101,20 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
                       overflow: expanded
                           ? TextOverflow.visible
                           : TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      style: text.bodyLarge?.copyWith(
+                        color: tokens.textSecondary,
+                        height: 1.55,
+                      ),
                     ),
                     if (anime.descripion != null)
                       TextButton(
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 44),
+                          foregroundColor: AppSurfaces.accentInk(
+                            widget.accentColor,
+                          ),
+                        ),
                         onPressed: () => setState(() => expanded = !expanded),
                         child: Text(
                           expanded
@@ -107,7 +125,7 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 context.l10n.detailsEpisodesLabel,
                 style: Theme.of(context).textTheme.titleLarge,
@@ -128,6 +146,7 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
             anime: anime,
             path: paths[index],
             number: index + 1,
+            accentColor: widget.accentColor,
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -136,16 +155,40 @@ class _RightInfoPanelState extends State<RightInfoPanel> {
   }
 }
 
+class _DetailFact extends StatelessWidget {
+  const _DetailFact({required this.icon, required this.label});
+
+  final IconData icon;
+  final Widget label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 16, color: context.appTheme.textMuted),
+      const SizedBox(width: AppSpacing.xs),
+      DefaultTextStyle(
+        style: Theme.of(
+          context,
+        ).textTheme.labelLarge!.copyWith(color: context.appTheme.textSecondary),
+        child: label,
+      ),
+    ],
+  );
+}
+
 class EpisodeRow extends ConsumerStatefulWidget {
   const EpisodeRow({
     super.key,
     required this.anime,
     required this.path,
     required this.number,
+    required this.accentColor,
   });
   final Anime anime;
   final String path;
   final int number;
+  final Color accentColor;
   @override
   ConsumerState<EpisodeRow> createState() => _EpisodeRowState();
 }
@@ -188,6 +231,7 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
     builder: (context, snapshot) {
       final missing = snapshot.hasData && !snapshot.data!;
       final watched = widget.anime.watchedEpisodes.contains(widget.path);
+      final tokens = context.appTheme;
       final saved =
           widget.anime.playbackPositions
               .where((p) => p.path == widget.path)
@@ -195,11 +239,20 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
               ?.position ??
           0;
       final time = '${saved ~/ 60}:${(saved % 60).toString().padLeft(2, '0')}';
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+      final hasResume = saved > 0 && !missing && !watched;
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: tokens.borderSubtle)),
+        ),
         child: Material(
-          color: context.appTheme.cardSurface,
-          borderRadius: BorderRadius.circular(12),
+          color: hasResume
+              ? AppSurfaces.artworkWash(
+                  widget.accentColor,
+                  AppSurfaces.quiet,
+                  strength: .12,
+                )
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(hasResume ? AppRadii.md : 0),
           clipBehavior: Clip.antiAlias,
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
@@ -214,9 +267,7 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
                   : AppIcons.playCircleOutline,
               color: missing
                   ? context.appTheme.warning
-                  : watched
-                  ? context.appTheme.success
-                  : Theme.of(context).colorScheme.primary,
+                  : AppSurfaces.accentInk(widget.accentColor),
             ),
             title: Text(context.l10n.detailsEpisodeNumber(widget.number)),
             subtitle: Column(
@@ -238,6 +289,7 @@ class _EpisodeRowState extends ConsumerState<EpisodeRow> {
             ),
             onTap: missing ? null : play,
             trailing: PopupMenuButton<String>(
+              color: AppSurfaces.artworkMenu(widget.accentColor),
               icon: const Icon(AppIcons.more),
               tooltip: context.l10n.detailsMoreOptions,
               onSelected: (value) {

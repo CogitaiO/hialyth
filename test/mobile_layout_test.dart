@@ -18,6 +18,7 @@ import 'package:nekaido_pre/presentation/player/widgets/mobile_player_overlay.da
 import 'package:nekaido_pre/providers/player/player_provider.dart';
 import 'package:nekaido_pre/providers/library_provider.dart';
 import 'package:nekaido_pre/theme/app_theme.dart';
+import 'package:nekaido_pre/theme/app_surfaces.dart';
 import 'package:nekaido_pre/theme/app_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'player_loading_test.dart' as player_fakes;
@@ -185,7 +186,8 @@ void main() {
         const insets = EdgeInsets.fromLTRB(32, 40, 24, 28);
         final anime = Anime()
           ..id = 1
-          ..title = 'Test anime';
+          ..title = 'Test anime'
+          ..episodePaths = ['/missing/test-episode-01.mkv'];
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
@@ -200,7 +202,7 @@ void main() {
               ).overrideWith((ref) async => Colors.blue),
             ],
             child: MaterialApp(
-              theme: AppTheme.dark(),
+              theme: AppTheme.dark(accent: Colors.green),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               builder: (context, child) => MediaQuery(
@@ -230,6 +232,14 @@ void main() {
         );
         await tester.tap(find.text('Open details'));
         await tester.pumpAndSettle();
+        if (size.width < size.height) {
+          expect(find.text('Episode 1'), findsOneWidget);
+          final menu = tester.widget<MenuAnchor>(find.byType(MenuAnchor));
+          expect(
+            menu.style!.backgroundColor!.resolve({}),
+            AppSurfaces.artworkMenu(Colors.blue),
+          );
+        }
         final back = find.byKey(const ValueKey('details-back'));
         final rect = tester.getRect(back);
         expect(rect.top, greaterThanOrEqualTo(insets.top));
@@ -283,9 +293,26 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(
-        tester.getCenter(find.byIcon(AppIcons.close).first).dx,
+        tester.getCenter(find.byIcon(AppIcons.close).last).dx,
         closeTo(size.width - 16 - 23, 1),
       );
+      if (size.width < 600) {
+        final search = find.byType(TextField);
+        final sort = find.byTooltip('Sort library');
+        final list = find.byTooltip('List view');
+        expect(
+          tester.getCenter(search).dy,
+          greaterThan(tester.getCenter(sort).dy + 20),
+        );
+        await tester.tap(list);
+        await tester.pumpAndSettle();
+        expect(find.byTooltip('Grid view').hitTestable(), findsOneWidget);
+        await tester.enterText(search, 'Frieren');
+        await tester.pumpAndSettle();
+        await tester.tap(find.byTooltip('Clear search'));
+        await tester.pumpAndSettle();
+        tester.testTextInput.hide();
+      }
       final navigation = find.byTooltip('Library navigation');
       if (navigation.evaluate().isEmpty) {
         await tester.tap(find.byTooltip('Settings').last);

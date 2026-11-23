@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nekaido_pre/theme/app_palette.dart';
 import 'package:nekaido_pre/theme/app_breakpoints.dart';
 import 'package:nekaido_pre/theme/app_motion.dart';
+import 'package:nekaido_pre/theme/app_surfaces.dart';
+import 'package:nekaido_pre/theme/app_theme.dart';
 import 'package:nekaido_pre/theme/app_theme_extension.dart';
 import 'package:nekaido_pre/theme/app_typography.dart';
 
@@ -12,29 +14,29 @@ void main() {
       const theme = AppThemeExtension.dark();
 
       // Surfaces
-      expect(theme.pageSurface, const Color(0xFF0E0F11));
-      expect(theme.titleBarSurface, const Color(0xFF15171A));
-      expect(theme.cardSurface, const Color(0xFF1B1E22));
-      expect(theme.container, const Color(0xFF1B1E22));
-      expect(theme.containerHigh, const Color(0xFF22262B));
-      expect(theme.hover, const Color(0xFF262B31));
+      expect(theme.pageSurface, AppSurfaces.base);
+      expect(theme.titleBarSurface, AppSurfaces.raised);
+      expect(theme.cardSurface, AppSurfaces.quiet);
+      expect(theme.container, AppSurfaces.container);
+      expect(theme.containerHigh, AppSurfaces.containerHigh);
+      expect(theme.hover, AppSurfaces.hover);
       expect(theme.surfaceSubtle, const Color(0x0DFFFFFF));
       expect(theme.surfaceFaint, const Color(0x08FFFFFF));
-      expect(theme.surfaceHover, const Color(0xFF262B31));
+      expect(theme.surfaceHover, AppSurfaces.hover);
       expect(theme.surfaceDisabled, const Color(0x33FFFFFF));
-      expect(theme.surfaceTooltip, const Color(0xFF0E0F11));
+      expect(theme.surfaceTooltip, AppSurfaces.base);
       expect(theme.surfaceOverlay, const Color(0xE10A0B0D));
       expect(theme.glass, const Color(0x8C14161A));
       expect(theme.videoSurface, Colors.black);
       expect(theme.borderFaint, const Color(0x1AFFFFFF));
-      expect(theme.borderSubtle, const Color(0xFF262B31));
-      expect(theme.borderStrong, const Color(0xFF343A42));
+      expect(theme.borderSubtle, AppSurfaces.borderSubtle);
+      expect(theme.borderStrong, AppSurfaces.borderStrong);
 
       // Content
-      expect(theme.textPrimary, const Color(0xFFF4F6F8));
-      expect(theme.textSecondary, const Color(0xFFB9C0C9));
-      expect(theme.textMuted, const Color(0xFF858D98));
-      expect(theme.textSubtle, const Color(0xFFB9C0C9));
+      expect(theme.textPrimary, AppSurfaces.contentPrimary);
+      expect(theme.textSecondary, AppSurfaces.contentSecondary);
+      expect(theme.textMuted, AppSurfaces.contentMuted);
+      expect(theme.textSubtle, AppSurfaces.contentSecondary);
       expect(theme.textDisabled, const Color(0x33FFFFFF));
 
       // Semantic colors
@@ -77,6 +79,58 @@ void main() {
       expect(AppRadii.pill, 999);
     });
 
+    test('raised layers stay distinct and artwork tints preserve contrast', () {
+      const theme = AppThemeExtension.dark();
+      final layers = [
+        theme.pageSurface,
+        theme.titleBarSurface,
+        theme.cardSurface,
+        theme.container,
+        theme.containerHigh,
+      ];
+      for (var i = 1; i < layers.length; i++) {
+        expect(
+          layers[i].computeLuminance(),
+          greaterThan(layers[i - 1].computeLuminance()),
+        );
+      }
+      for (final artwork in [
+        Colors.white,
+        Colors.black,
+        Colors.yellow,
+        Colors.purple,
+      ]) {
+        final wash = AppSurfaces.artworkWash(artwork, theme.titleBarSurface);
+        expect(
+          (theme.textSecondary.computeLuminance() + .05) /
+              (wash.computeLuminance() + .05),
+          greaterThanOrEqualTo(4.5),
+        );
+      }
+    });
+
+    test('an accent only tints controls; the page remains pure black', () {
+      final teal = AppTheme.dark(accent: Colors.teal);
+      final plum = AppTheme.dark(accent: Colors.purple);
+      expect(teal.scaffoldBackgroundColor, Colors.black);
+      expect(plum.scaffoldBackgroundColor, Colors.black);
+      expect(
+        teal.colorScheme.surfaceContainer,
+        isNot(plum.colorScheme.surfaceContainer),
+      );
+      for (final states in [
+        <WidgetState>{},
+        {WidgetState.selected},
+      ]) {
+        final thumb = teal.switchTheme.thumbColor!.resolve(states)!;
+        final track = teal.switchTheme.trackColor!.resolve(states)!;
+        expect(
+          (thumb.computeLuminance() + .05) / (track.computeLuminance() + .05),
+          greaterThan(3),
+        );
+      }
+    });
+
     test('keeps the shared type, motion, and desktop layout scales named', () {
       expect(AppTypography.displayLarge.fontSize, 36);
       expect(AppTypography.headline.fontSize, 24);
@@ -88,8 +142,11 @@ void main() {
       expect(AppMotion.fast, const Duration(milliseconds: 100));
       expect(AppMotion.page, const Duration(milliseconds: 250));
       expect(
-        AppMotion.effective(AppMotion.slow,
-            decorative: true, reduceMotion: true),
+        AppMotion.effective(
+          AppMotion.slow,
+          decorative: true,
+          reduceMotion: true,
+        ),
         Duration.zero,
       );
 

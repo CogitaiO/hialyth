@@ -6,20 +6,23 @@ import 'package:flutter/material.dart';
 abstract final class AppSurfaces {
   // ── Dark base surfaces ──
 
-  /// Base application background — #0E0F11
-  static const Color base = Color(0xFF0E0F11);
+  /// Unlit space between content and around the system bars.
+  static const Color base = Colors.black;
 
-  /// Raised panels: title bar, sidebar, top bar — #15171A
-  static const Color raised = Color(0xFF15171A);
+  /// Navigation chrome, one step above the backdrop.
+  static const Color raised = Color(0xFF0C0D0E);
 
-  /// Cards, fields, tabs — #1B1E22
-  static const Color container = Color(0xFF1B1E22);
+  /// Recessed/quiet content surfaces, beneath interactive controls.
+  static const Color quiet = Color(0xFF121415);
 
-  /// Hover/active backgrounds, menus — #22262B
-  static const Color containerHigh = Color(0xFF22262B);
+  /// Fields and control groups.
+  static const Color container = Color(0xFF191B1C);
 
-  /// Hover overlay — #262B31
-  static const Color hover = Color(0xFF262B31);
+  /// Floating menus and dialogs should remain legible over the content below.
+  static const Color containerHigh = Color(0xFF222526);
+
+  /// Hover and active surfaces.
+  static const Color hover = Color(0xFF303436);
 
   /// Opaque fallback for overlays when glass is disabled — rgba(10,11,13,0.88)
   static const Color overlay = Color(0xE10A0B0D); // 0.88 alpha
@@ -38,28 +41,58 @@ abstract final class AppSurfaces {
   /// Faint borders — white 0.1
   static const Color borderFaint = Color(0x1AFFFFFF);
 
-  /// Subtle dividers — #262B31
-  static const Color borderSubtle = Color(0xFF262B31);
+  /// Subtle dividers.
+  static const Color borderSubtle = Color(0xFF242729);
 
-  /// Strong borders, hover — #343A42
-  static const Color borderStrong = Color(0xFF343A42);
+  /// Outlines that convey focus or a control boundary.
+  static const Color borderStrong = Color(0xFF565C60);
 
   /// Focus ring — accent color (resolved at runtime)
   static Color borderFocus(Color accent) => accent;
 
   // ── Content ──
 
-  /// Primary text — #F4F6F8
-  static const Color contentPrimary = Color(0xFFF4F6F8);
+  /// Primary text.
+  static const Color contentPrimary = Color(0xFFF1F2F2);
 
-  /// Secondary text — #B9C0C9
-  static const Color contentSecondary = Color(0xFFB9C0C9);
+  /// Secondary text.
+  static const Color contentSecondary = Color(0xFFC2C7C9);
 
-  /// Muted text — #858D98
-  static const Color contentMuted = Color(0xFF858D98);
+  /// Metadata and input hints.
+  static const Color contentMuted = Color(0xFFA0A8AC);
 
   /// Disabled text — #58606B
   static const Color contentDisabled = Color(0xFF58606B);
+
+  /// A pale ink of the same hue for icons and text on tinted dark controls.
+  static Color accentInk(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    return hsl
+        .withSaturation(hsl.saturation.clamp(0.0, .46))
+        .withLightness(.77)
+        .toColor();
+  }
+
+  static Color controlSurface(Color color, Color background) =>
+      artworkWash(color, background, strength: .31);
+
+  /// Floating surfaces on a title page should not inherit the app-wide hue.
+  static Color artworkMenu(Color color) =>
+      artworkWash(color, containerHigh, strength: .19);
+
+  /// Lifts a surface with the artwork's hue without competing with white text.
+  static Color artworkWash(
+    Color artwork,
+    Color surface, {
+    double strength = .36,
+  }) {
+    final hsl = HSLColor.fromColor(artwork);
+    final tint = hsl
+        .withSaturation(hsl.saturation.clamp(0.0, .62))
+        .withLightness(hsl.lightness.clamp(.34, .44))
+        .toColor();
+    return Color.alphaBlend(tint.withValues(alpha: strength), surface);
+  }
 
   // ── Semantic status colors (not accent) ──
 
