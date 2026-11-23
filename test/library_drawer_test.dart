@@ -70,9 +70,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('a generous left-edge swipe opens the library drawer', (
-    tester,
-  ) async {
+  testWidgets('a left-half swipe opens the library drawer', (tester) async {
     await mount(tester);
     expect(find.byType(Drawer), findsNothing);
 
@@ -87,7 +85,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Drawer), findsNothing);
 
-    // The middle of the page belongs to the content, not to navigation.
+    // The activation strip now reaches the horizontal middle of the page.
+    await tester.dragFrom(const Offset(170, 420), const Offset(210, 0));
+    await tester.pumpAndSettle();
+    expect(find.byType(Drawer), findsOneWidget);
+    await tester.tapAt(const Offset(360, 420));
+    await tester.pumpAndSettle();
+    expect(find.byType(Drawer), findsNothing);
+
+    // A drag that starts past the middle still belongs to the content.
     await tester.dragFrom(const Offset(220, 420), const Offset(180, 0));
     await tester.pumpAndSettle();
     expect(find.byType(Drawer), findsNothing);

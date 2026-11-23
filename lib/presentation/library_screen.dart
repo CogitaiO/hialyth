@@ -48,9 +48,8 @@ class LibraryScreen extends ConsumerWidget {
               drawer: compact ? const LibraryDrawer() : null,
               // Keep the stock Back strip free, but make the pull-out target
               // comfortable instead of a 20 px guessing game.
-              drawerEdgeDragWidth: compact
-                  ? (constraints.maxWidth * .2).clamp(56.0, 96.0)
-                  : null,
+              // A left-half pull opens the menu, not just a thin edge strip.
+              drawerEdgeDragWidth: compact ? constraints.maxWidth * .5 : null,
               drawerScrimColor: Colors.black.withValues(alpha: .62),
               body: SafeArea(
                 child: Column(

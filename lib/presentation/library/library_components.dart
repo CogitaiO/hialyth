@@ -32,7 +32,7 @@ class ContinueWatchingSection extends StatelessWidget {
         final phone = width < 600;
         final inset = phone ? 16.0 : 24.0;
         final cardWidth = phone
-            ? (width - inset * 2 - 20).clamp(240.0, 340.0)
+            ? width - inset * 2
             : ((width - 72) / 3).clamp(280.0, 360.0);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
